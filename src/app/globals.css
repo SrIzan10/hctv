@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 23.077% 94.902%;
+    --foreground: 233.793 16.022% 35.49%;
+
+    --muted: 222.857 15.909% 82.745%;
+    --muted-foreground: 233.333 12.796% 41.373%;
+
+    --popover: 220 23.077% 94.902%;
+    --popover-foreground: 233.793 16.022% 35.49%;
+
+    --card: 220 23.077% 94.902%;
+    --card-foreground: 233.793 16.022% 35.49%;
+
+    --border: 225 13.559% 76.863%;
+    --input: 225 13.559% 76.863%;
+
+    --primary: 219.907 91.489% 53.922%;
+    --primary-foreground: 220 23.077% 94.902%;
+
+    --secondary: 222.857 15.909% 82.745%;
+    --secondary-foreground: 233.793 16.022% 35.49%;
+
+    --accent: 222.857 15.909% 82.745%;
+    --accent-foreground: 233.793 16.022% 35.49%;
+
+    --destructive: 347.077 86.667% 44.118%;
+    --destructive-foreground: 220 21.951% 91.961%;
+
+    --ring: 233.793 16.022% 35.49%;
+
+    --surface-1: 225 14% 77%;
+    --surface-2: 227 12% 71%;
+
+    --mantle: 220 22% 92%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 21.053% 14.902%;
+    --foreground: 226.154 63.934% 88.039%;
+
+    --muted: 236.842 16.239% 22.941%;
+    --muted-foreground: 226.667 35.294% 80%;
+
+    --popover: 240 21.053% 14.902%;
+    --popover-foreground: 226.154 63.934% 88.039%;
+
+    --card: 240 21.053% 14.902%;
+    --card-foreground: 226.154 63.934% 88.039%;
+
+    --border: 234.286 13.208% 31.176%;
+    --input: 234.286 13.208% 31.176%;
+
+    --primary: 217.168 91.87% 75.882%;
+    --primary-foreground: 240 21.053% 14.902%;
+
+    --secondary: 236.842 16.239% 22.941%;
+    --secondary-foreground: 226.154 63.934% 88.039%;
+
+    --accent: 236.842 16.239% 22.941%;
+    --accent-foreground: 226.154 63.934% 88.039%;
+
+    --destructive: 343.269 81.25% 74.902%;
+    --destructive-foreground: 240 21.311% 11.961%;
+
+    --ring: 226.154 63.934% 88.039%;
+
+    --surface-1: 234 13% 31%;
+    --surface-2: 233 12% 39%;
+
+    --mantle: 240 21.311% 11.961%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+h1 {
+  @apply scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl;
+}
+h2 {
+  @apply scroll-m-20 pb-2 text-3xl font-semibold tracking-tight first:mt-0;
+}
