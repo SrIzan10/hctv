@@ -3,8 +3,10 @@ import { Lucia, Session, User } from 'lucia';
 import prisma from '../db';
 import { cache } from 'react';
 import { cookies } from 'next/headers';
+import { Slack } from 'arctic';
 
 const adapter = new PrismaAdapter(prisma.session, prisma.user);
+export const slack = new Slack(process.env.SLACK_ID!, process.env.SLACK_SECRET!, process.env.SLACK_REDIRECT_URI!);
 
 export const lucia = new Lucia(adapter, {
   sessionCookie: {
@@ -18,7 +20,9 @@ export const lucia = new Lucia(adapter, {
   },
   getUserAttributes: (attributes) => {
     return {
+      slack_id: attributes.slack_id,
       username: attributes.username,
+      pfpUrl: attributes.pfpUrl,
     };
   },
 });
@@ -58,5 +62,7 @@ declare module 'lucia' {
 }
 
 interface DatabaseUserAttributes {
+  slack_id: string;
   username: string;
+  pfpUrl: string;
 }

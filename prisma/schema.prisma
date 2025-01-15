@@ -15,8 +15,9 @@ datasource db {
 
 model User {
   id       String    @id @default(cuid())
+  slack_id String
+  pfpUrl   String
   username String @unique
-  hashed_password String
   sessions Session[]
 }
 

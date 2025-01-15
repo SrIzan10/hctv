@@ -1,11 +1,6 @@
 'use client';
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-/**
- * v0 by Vercel.
- * @see https://v0.dev/t/igzEEdGqAvH
- * Documentation: https://v0.dev/docs#integrating-generated-code-into-your-nextjs-app
- */
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -21,6 +16,7 @@ import { useSession } from '@/lib/providers/SessionProvider';
 import Link from 'next/link';
 import MobileNavbarLinks from '../MobileNavbarLinks/MobileNavbarLinks';
 import { ThemeSwitcher } from '../ThemeSwitcher/ThemeSwitcher';
+import { Slack } from 'lucide-react';
 
 export const links = [
   { href: '/', name: 'Home' },
@@ -60,7 +56,7 @@ export default function Navbar() {
               <DropdownMenuTrigger asChild className="cursor-pointer">
                 <Avatar>
                   {/* TODO: Implement avatar system */}
-                  {/*<AvatarImage src={"https://srizan.dev/pfp.webp"} alt="@srizan" />*/}
+                  <AvatarImage src={user.pfpUrl} alt={`@${user.username}`} />
                   <AvatarFallback>{user.username}</AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
@@ -81,8 +77,8 @@ export default function Navbar() {
             </DropdownMenu>
           </>
         ) : (
-          <Link href="/auth/login">
-            <Button variant="outline">Sign in</Button>
+          <Link href="/auth/slack">
+            <Button variant="outline" className='gap-2'><Slack className='w-4 h-4' />Sign in</Button>
           </Link>
         )}
       </nav>
