@@ -12,8 +12,8 @@ import {
 } from '@livekit/components-react';
 import { getTrackReferenceId } from '@livekit/components-core';
 import { Track } from 'livekit-client';
-import { LoaderCircleIcon } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { LoaderCircleIcon, Maximize, Minimize, Volume2, VolumeX } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function LiveStream({ username }: { username: string }) {
   const [token, setToken] = useState('');
@@ -33,7 +33,32 @@ export default function LiveStream({ username }: { username: string }) {
   );
 }
 
+function useFullscreen(ref: React.RefObject<HTMLElement>) {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      ref.current?.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
+  return { isFullscreen, toggleFullscreen };
+}
+
 function StreamView() {
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+  const handleVolumeChange = (newVolume: number, muted: boolean) => {
+    setVolume(newVolume);
+    setIsMuted(muted);
+  };
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { isFullscreen, toggleFullscreen } = useFullscreen(containerRef);
+
   const tracks = useTracks([
     Track.Source.Camera,
     Track.Source.Microphone,
@@ -86,7 +111,7 @@ function StreamView() {
   const trackRef = broadcasterTracks[0];
 
   return (
-    <div className="w-1/2 aspect-video bg-black">
+    <div className="w-1/2 aspect-video bg-black relative group" ref={containerRef}>
       <TrackRefContext.Provider value={trackRef}>
         <VideoTrack trackRef={trackRef} className="w-full h-full" />
         <StartAudio
@@ -97,11 +122,79 @@ function StreamView() {
           <AudioTrack
             key={getTrackReferenceId(trackRef)}
             trackRef={trackRef}
-            volume={1.0}
-            muted={false}
+            volume={volume}
+            muted={isMuted}
           />
         ))}
       </TrackRefContext.Provider>
+
+      {/* controls */}
+      <div className="absolute flex bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <VolumeControl
+          onChange={handleVolumeChange}
+          initialVolume={volume}
+          initialMuted={isMuted}
+        />
+        <div className="flex-1" />
+        <button onClick={toggleFullscreen} className="hover:text-primary transition-colors">
+          {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function VolumeControl({ 
+  onChange, 
+  initialVolume = 1, 
+  initialMuted = false 
+}: { 
+  onChange: (volume: number, muted: boolean) => void;
+  initialVolume?: number;
+  initialMuted?: boolean;
+}) {
+  const [volume, setVolume] = useState(initialVolume);
+  const [isMuted, setIsMuted] = useState(initialMuted);
+  const [showVolume, setShowVolume] = useState(false);
+
+  const handleVolumeChange = (newVolume: number) => {
+    setVolume(newVolume);
+    onChange(newVolume, newVolume === 0);
+  };
+
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+    onChange(volume, !isMuted);
+  };
+
+  return (
+    <div
+      className="relative flex items-center gap-2"
+      onMouseEnter={() => setShowVolume(true)}
+      onMouseLeave={() => setShowVolume(false)}
+    >
+      <button
+      onClick={toggleMute}
+      className="hover:text-primary transition-colors"
+    >
+      {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+    </button>
+
+      <div
+        className={`flex items-center transition-all duration-200 ${
+          showVolume ? 'w-24 opacity-100' : 'w-0 opacity-0'
+        }`}
+      >
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value={isMuted ? 0 : volume}
+          onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+          className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+        />
+      </div>
     </div>
   );
 }
