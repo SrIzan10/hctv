@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
+    "@livekit/components-react": "^2.7.0",
     "@lucia-auth/adapter-prisma": "^4.0.1",
     "@node-rs/argon2": "^2.0.2",
     "@prisma/client": "^6.0.1",
@@ -24,6 +25,8 @@
     "arctic": "^3.1.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.0",
+    "livekit-client": "^2.8.0",
+    "livekit-server-sdk": "^2.9.7",
     "lucia": "^3.2.2",
     "lucide-react": "^0.368.0",
     "next": "^15.1.2",
