@@ -20,8 +20,8 @@ export async function GET(request: NextRequest) {
   at.addGrant({
     room,
     roomJoin: true,
-    canPublish: false,
     canSubscribe: true,
+    canPublish: false,
     canPublishData: false,
   });
 
