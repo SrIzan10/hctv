@@ -17,11 +17,10 @@ import Link from 'next/link';
 import MobileNavbarLinks from '../MobileNavbarLinks/MobileNavbarLinks';
 import { ThemeSwitcher } from '../ThemeSwitcher/ThemeSwitcher';
 import { Slack } from 'lucide-react';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 export const links = [
-  { href: '/', name: 'Home' },
-  { href: 'https://github.com/SrIzan10/stack', name: 'Github' },
-  { href: '/protected', name: 'Protected route' },
+  { href: '/srizan', name: 'test stream' },
 ];
 
 function NavbarLinks() {
@@ -40,45 +39,49 @@ export default function Navbar() {
   const { user } = useSession();
   return (
     <>
-      <nav className="flex items-center h-16 px-4 border-b gap-3 shrink-0">
-        <Link href="/" className="hidden md:flex">
-          <Button>stack</Button>
-        </Link>
+      <nav className="flex items-center h-16 px-4 border-b gap-3 w-full z-20 fixed top-0 left-0 shadow-md bg-mantle">
+        <div className='flex items-center'>
+          <SidebarTrigger />
+          <Link href="/" className="flex items-center">
+            <Button>hackclub.tv</Button>
+          </Link>
+        </div>
         <MobileNavbarLinks />
+        <div className="flex-1" />
         <div className="hidden md:flex">
           <NavbarLinks />
         </div>
         <div className="flex-1" />
         <ThemeSwitcher />
         {user ? (
-          <>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild className="cursor-pointer">
-                <Avatar>
-                  {/* TODO: Implement avatar system */}
-                  <AvatarImage src={user.pfpUrl} alt={`@${user.username}`} />
-                  <AvatarFallback>{user.username}</AvatarFallback>
-                </Avatar>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  <DropdownMenuItem
-                    className="cursor-pointer"
-                    onClick={() => {
-                      logout();
-                    }}
-                  >
-                    Sign out
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild className="cursor-pointer">
+              <Avatar>
+                <AvatarImage src={user.pfpUrl} alt={`@${user.username}`} />
+                <AvatarFallback>{user.username}</AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => {
+                    logout();
+                  }}
+                >
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         ) : (
           <Link href="/auth/slack">
-            <Button variant="outline" className='gap-2'><Slack className='w-4 h-4' />Sign in</Button>
+            <Button variant="outline" className="gap-2">
+              <Slack className="w-4 h-4" />
+              Sign in
+            </Button>
           </Link>
         )}
       </nav>

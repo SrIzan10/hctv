@@ -75,7 +75,7 @@ export default function StreamPlayer() {
   const trackRef = broadcasterTracks[0];
 
   return (
-    <div className="w-1/2 aspect-video bg-black relative group" ref={containerRef}>
+    <div className="w-full aspect-video bg-black relative group" ref={containerRef}>
       <TrackRefContext.Provider value={trackRef}>
         <VideoTrack trackRef={trackRef} className="w-full h-full" />
         <StartAudio
