@@ -6,10 +6,8 @@ import { SessionProvider } from '@/lib/providers/SessionProvider';
 import { validateRequest } from '@/lib/auth';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/lib/providers/ThemeProvider';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/app/Sidebar/Sidebar';
-import { roomService } from '@/lib/services/livekit';
-import { Room } from 'livekit-server-sdk';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -24,9 +22,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const sessionData = await validateRequest();
-  roomService.listRooms().then((rooms: Room[]) => {
-    console.log('existing rooms', rooms);
-  });
   return (
     <html lang="en">
       <body className="flex flex-col h-screen">
