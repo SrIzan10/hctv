@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
 
   const at = new AccessToken(process.env.LIVEKIT_API_KEY, process.env.LIVEKIT_SECRET, {
     identity: user.id,
+    name: user.username,
     ttl: 3600,
   });
 
