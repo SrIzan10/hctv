@@ -1,3 +1,5 @@
+'use client';
+
 import useFullscreen from '@/lib/hooks/useFullscreen';
 import {
   useTracks,

@@ -1,18 +1,19 @@
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import type { StreamInfo, User } from '@prisma/client';
 
-export default function UserInfoCard() {
+export default function UserInfoCard(props: Props) {
   return (
     <div className="bg-mantle rounded-lg p-4">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-4">
           <Avatar className="h-16 w-16">
-            <AvatarImage src="https://ca.slack-edge.com/T0266FRGM-U079VBNLTPD-1df1edc198bf-192" alt="Bartosz" />
+            <AvatarImage src={props.streamInfo.ownedBy.pfpUrl} alt={props.streamInfo.ownedBy.username} />
             <AvatarFallback>CM</AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="text-2xl font-bold">test stream</h1>
-            <p>probably bartosz</p>
+            <h1 className="text-2xl font-bold">{props.streamInfo.title}</h1>
+            <p>{props.streamInfo.username}</p>
           </div>
         </div>
         <Button>Follow</Button>
@@ -34,4 +35,8 @@ export default function UserInfoCard() {
       </div> */}
     </div>
   );
+}
+
+interface Props {
+  streamInfo: StreamInfo & { ownedBy: User };
 }

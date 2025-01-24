@@ -19,6 +19,7 @@ model User {
   pfpUrl   String
   username String @unique
   sessions Session[]
+  streams  StreamInfo[]
 }
 
 model Session {
@@ -26,4 +27,18 @@ model Session {
   userId    String
   expiresAt DateTime
   user      User     @relation(references: [id], fields: [userId], onDelete: Cascade)
+}
+
+model StreamInfo {
+  id        String @id @default(cuid())
+  username  String @unique
+  title     String
+  thumbnail String
+  viewers   Int
+  category  String
+  startedAt DateTime
+  isLive    Boolean
+  
+  ownedBy   User   @relation(fields: [userId], references: [id])
+  userId    String
 }

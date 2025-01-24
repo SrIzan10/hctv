@@ -1,6 +1,6 @@
 'use client';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Path, PathValue, useForm } from 'react-hook-form';
+import { Path, useForm } from 'react-hook-form';
 import {
   Form,
   FormControl,
@@ -19,11 +19,10 @@ import React from 'react';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { accountSchema } from '@/lib/form/zod';
+import { streamInfoEditSchema } from '@/lib/form/zod';
 
 export const schemaDb = [
-  { name: 'login', zod: accountSchema },
-  { name: 'register', zod: accountSchema },
+  { name: 'streamInfoEdit', zod: streamInfoEditSchema }
 ] as const;
 
 export function UniversalForm<T extends z.ZodType>({

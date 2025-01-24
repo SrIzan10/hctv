@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -19,9 +19,7 @@ import { ThemeSwitcher } from '../ThemeSwitcher/ThemeSwitcher';
 import { Slack } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 
-export const links = [
-  { href: '/srizan', name: 'test stream' },
-];
+export const links = [{ href: '/srizan', name: 'test stream' }];
 
 function NavbarLinks() {
   return (
@@ -35,12 +33,12 @@ function NavbarLinks() {
   );
 }
 
-export default function Navbar() {
+export default function Navbar(props: Props) {
   const { user } = useSession();
   return (
     <>
       <nav className="flex items-center h-16 px-4 border-b gap-3 w-full z-20 fixed top-0 left-0 shadow-md bg-mantle">
-        <div className='flex items-center'>
+        <div className="flex items-center">
           <SidebarTrigger />
           <Link href="/" className="flex items-center">
             <Button>hackclub.tv</Button>
@@ -52,6 +50,7 @@ export default function Navbar() {
           <NavbarLinks />
         </div>
         <div className="flex-1" />
+        {props.editLivestream}
         <ThemeSwitcher />
         {user ? (
           <DropdownMenu>
@@ -87,4 +86,8 @@ export default function Navbar() {
       </nav>
     </>
   );
+}
+
+interface Props {
+  editLivestream: Promise<JSX.Element>;
 }
