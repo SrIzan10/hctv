@@ -18,7 +18,6 @@ export async function syncStream() {
       const originalStreamInfo = await prisma.streamInfo.findUnique({
         where: { username: room.name }
       });
-      console.log(room)
       
       // Upsert stream info
       await prisma.streamInfo.upsert({
