@@ -12,6 +12,7 @@ import prisma from '@/lib/db';
 import { roomService } from '@/lib/services/livekit';
 import { UniversalForm } from '../UniversalForm/UniversalForm';
 import { editStreamInfo } from '@/lib/form/actions';
+import RegenerateKey from '../RegenerateKey/RegenerateKey';
 
 export default async function EditLivestream() {
   const { user } = await validateRequest();
@@ -55,6 +56,9 @@ export default async function EditLivestream() {
           action={editStreamInfo}
           submitButtonDivClassname="float-right"
           submitText="Save"
+          otherSubmitButton={
+            <RegenerateKey />
+          }
           key={streamInfo?.id}
         />
       </DialogContent>

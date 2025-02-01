@@ -38,6 +38,7 @@
     "react-dom": "19",
     "react-hook-form": "^7.54.2",
     "sonner": "^1.4.41",
+    "swr": "^2.3.0",
     "tailwind-merge": "^2.2.2",
     "tailwindcss-animate": "^1.0.7",
     "valtio": "^2.1.2",
