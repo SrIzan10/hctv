@@ -9,14 +9,13 @@ import {
 } from '@/components/ui/dialog';
 import { validateRequest } from '@/lib/auth';
 import prisma from '@/lib/db';
-import { roomService } from '@/lib/services/livekit';
 import { UniversalForm } from '../UniversalForm/UniversalForm';
 import { editStreamInfo } from '@/lib/form/actions';
 import RegenerateKey from '../RegenerateKey/RegenerateKey';
 
 export default async function EditLivestream() {
   const { user } = await validateRequest();
-  if ((await prisma.streamInfo.count({ where: { username: user!.username } })) === 0) {
+  /* if ((await prisma.streamInfo.count({ where: { username: user!.username } })) === 0) {
     const isLive =
       (await roomService.listRooms()).filter((r) => r.name === user!.username)[0].numPublishers >= 1;
     await prisma.streamInfo.create({
@@ -33,6 +32,7 @@ export default async function EditLivestream() {
     });
     console.log('created');
   }
+  }); */
   const streamInfo = await prisma.streamInfo.findUnique({
     where: { username: user!.username! },
   });
