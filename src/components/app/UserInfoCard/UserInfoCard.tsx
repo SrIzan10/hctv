@@ -8,7 +8,7 @@ export default function UserInfoCard(props: Props) {
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-4">
           <Avatar className="h-16 w-16">
-            <AvatarImage src={props.streamInfo.ownedBy.pfpUrl} alt={props.streamInfo.ownedBy.username} />
+            <AvatarImage src={props.streamInfo.ownedBy.pfpUrl} alt={props.streamInfo.username} />
             <AvatarFallback>CM</AvatarFallback>
           </Avatar>
           <div>

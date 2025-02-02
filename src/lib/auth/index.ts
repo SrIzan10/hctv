@@ -21,8 +21,8 @@ export const lucia = new Lucia(adapter, {
   getUserAttributes: (attributes) => {
     return {
       slack_id: attributes.slack_id,
-      username: attributes.username,
       pfpUrl: attributes.pfpUrl,
+      hasOnboarded: attributes.hasOnboarded,
     };
   },
 });
@@ -63,6 +63,6 @@ declare module 'lucia' {
 
 interface DatabaseUserAttributes {
   slack_id: string;
-  username: string;
   pfpUrl: string;
+  hasOnboarded: boolean;
 }

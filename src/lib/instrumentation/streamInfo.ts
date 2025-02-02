@@ -2,16 +2,50 @@ import prisma from "@/lib/db";
 import { roomService } from "@/lib/services/livekit";
 
 export default async function runner() {
+  await initializeStreamInfo();
   await syncStream();
   setInterval(syncStream, 5000);
 }
 
+export async function initializeStreamInfo(channelId?: string) {
+  const channels = await prisma.channel.findMany({
+    where: {
+      id: channelId
+    },
+    include: {
+      streamInfo: true
+    }
+  });
+
+  for (const channel of channels) {
+    if (!channel.streamInfo.length) {
+      await prisma.streamInfo.create({
+        data: {
+          username: channel.name,
+          title: 'Untitled',
+          category: 'Uncategorized',
+          startedAt: new Date(0),
+          thumbnail: 'https://placehold.co/150',
+          viewers: 0,
+          isLive: false,
+          channel: {
+            connect: { id: channel.id }
+          },
+          ownedBy: {
+            connect: { id: channel.ownerId }
+          }
+        }
+      });
+    }
+  }
+}
+
 export async function syncStream() {
   try {
-    // Get all active rooms
+    // get all active rooms
     const rooms = await roomService.listRooms();
     
-    // Process each room
+    // process each room
     for (const room of rooms) {
       const isLive = room.numPublishers >= 1;
 
@@ -19,23 +53,11 @@ export async function syncStream() {
         where: { username: room.name }
       });
       
-      // Upsert stream info
+      // upsert stream info
       await prisma.streamInfo.upsert({
         where: { 
           username: room.name
         },
-        /* create: {
-          username: room.name,
-          title: originalStreamInfo?.title || 'Untitled',
-          category: originalStreamInfo?.category || 'Uncategorized',
-          startedAt: originalStreamInfo?.isLive ? originalStreamInfo.startedAt : new Date(),
-          thumbnail: originalStreamInfo?.thumbnail || 'https://placehold.co/150',
-          viewers: room.numParticipants,
-          isLive,
-          ownedBy: {
-            connect: { username: room.name } 
-          }
-        }, */
         create: {
           username: room.name,
           title: 'Untitled',
@@ -43,9 +65,12 @@ export async function syncStream() {
           startedAt: new Date(),
           thumbnail: 'https://placehold.co/150',
           viewers: 0,
+          channel: {
+            connect: { id: room.name }
+          },
           isLive,
-          ownedBy: { 
-            connect: { username: room.name } 
+          ownedBy: {
+            connect: { id: room.name } 
           }
         },
         update: {

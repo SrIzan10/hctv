@@ -50,8 +50,8 @@ export async function GET(request: Request): Promise<Response> {
       data: {
         id: userId,
         slack_id: slackUser.sub,
-        username: slackUser.name,
         pfpUrl: slackUser.picture,
+        hasOnboarded: false,
       },
     });
 

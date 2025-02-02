@@ -12,6 +12,7 @@ import prisma from '@/lib/db';
 import { UniversalForm } from '../UniversalForm/UniversalForm';
 import { editStreamInfo } from '@/lib/form/actions';
 import RegenerateKey from '../RegenerateKey/RegenerateKey';
+import EditLivestreamDialog from './dialog';
 
 export default async function EditLivestream() {
   const { user } = await validateRequest();
@@ -33,35 +34,14 @@ export default async function EditLivestream() {
     console.log('created');
   }
   }); */
-  const streamInfo = await prisma.streamInfo.findUnique({
-    where: { username: user!.username! },
+  if (!user?.hasOnboarded) {
+    return null;
+  }
+  const ownedChannels = await prisma.channel.findMany({
+    where: {
+      OR: [{ ownerId: user.id }, { managers: { some: { id: user.id } } }],
+    },
   });
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline">Edit Livestream</Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Edit livestream</DialogTitle>
-          <DialogDescription>Regenerate a key or edit your stream metadata</DialogDescription>
-        </DialogHeader>
-        <UniversalForm
-          fields={[
-            { name: 'username', label: 'Username', value: user?.username!, type: 'hidden' },
-            { name: 'title', label: 'Title', type: 'text', value: streamInfo?.title },
-            { name: 'category', label: 'Category', type: 'text', value: streamInfo?.category },
-          ]}
-          schemaName="streamInfoEdit"
-          action={editStreamInfo}
-          submitButtonDivClassname="float-right"
-          submitText="Save"
-          otherSubmitButton={
-            <RegenerateKey />
-          }
-          key={streamInfo?.id}
-        />
-      </DialogContent>
-    </Dialog>
-  );
+
+  return <EditLivestreamDialog ownedChannels={ownedChannels} />;
 }

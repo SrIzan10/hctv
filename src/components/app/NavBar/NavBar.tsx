@@ -56,8 +56,8 @@ export default function Navbar(props: Props) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild className="cursor-pointer">
               <Avatar>
-                <AvatarImage src={user.pfpUrl} alt={`@${user.username}`} />
-                <AvatarFallback>{user.username}</AvatarFallback>
+                <AvatarImage src={user.pfpUrl} alt={`@${user.id}`} />
+                <AvatarFallback>{user.pfpUrl}</AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56">

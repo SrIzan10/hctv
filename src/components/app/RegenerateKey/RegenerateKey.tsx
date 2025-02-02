@@ -6,9 +6,9 @@ import React from 'react';
 import { toast } from 'sonner';
 import useSWR from 'swr/mutation';
 
-export default function RegenerateKey() {
+export default function RegenerateKey(props: Props) {
   const { error, isMutating, trigger } = useSWR('/api/livekit/broadcasterToken', async (url) =>
-    defaultFetcher(url)
+    defaultFetcher(url, { body: JSON.stringify({ channel: props.channel }), method: 'POST' })
   );
 
   React.useEffect(() => {
@@ -34,4 +34,8 @@ export default function RegenerateKey() {
       Regenerate key
     </Button>
   );
+}
+
+interface Props {
+  channel: string;
 }

@@ -14,6 +14,6 @@ export default function SubmitButton(props: Props) {
     )
 }
 
-export interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
+interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
     buttonText: string;
 }
