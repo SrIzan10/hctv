@@ -64,7 +64,12 @@ export default function EditLivestreamDialog(props: Props) {
   }, [selectedChannel]);
 
   return (
-    <Dialog>
+    <Dialog onOpenChange={op => {
+      if (op) {
+        setSelectedChannel('');
+        setStreamInfo(undefined);
+      }
+    }}>
       <DialogTrigger asChild>
         <Button variant="outline">Edit Livestream</Button>
       </DialogTrigger>
@@ -130,7 +135,7 @@ export function ChannelSelect(props: SelectProps) {
   return (
     <Select onValueChange={props.onSelect}>
       <SelectTrigger className="w-[180px]">
-        <SelectValue placeholder="Theme" />
+        <SelectValue placeholder="Channel" />
       </SelectTrigger>
       <SelectContent>
         {channelList.map((channel) => (
