@@ -2,6 +2,10 @@ import prisma from "@/lib/db";
 import { roomService } from "@/lib/services/livekit";
 
 export default async function runner() {
+  // if there are no users it explodes so yeah
+  if (await prisma.user.count() === 0) {
+    return;
+  }
   await initializeStreamInfo();
   await syncStream();
   setInterval(syncStream, 5000);
