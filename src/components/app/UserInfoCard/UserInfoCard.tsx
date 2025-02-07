@@ -9,7 +9,6 @@ export default function UserInfoCard(props: Props) {
         <div className="flex items-center space-x-4">
           <Avatar className="h-16 w-16">
             <AvatarImage src={props.streamInfo.ownedBy.pfpUrl} alt={props.streamInfo.username} />
-            <AvatarFallback>CM</AvatarFallback>
           </Avatar>
           <div>
             <h1 className="text-2xl font-bold">{props.streamInfo.title}</h1>

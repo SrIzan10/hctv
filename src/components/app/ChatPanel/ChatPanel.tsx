@@ -22,18 +22,24 @@ export default function ChatPanel() {
     <div className="border-l flex flex-col w-[350px] min-w-[350px] h-full">
       <div ref={scrollRef} className="flex-1 p-4 overflow-y-auto flex flex-col">
         <div className="space-y-4 flex-1">
-          {chat.chatMessages.map((msg, i) => (
-            // jank asf, but works (thanks claude)
-            <div key={i} className="flex space-x-2">
-              <div className="font-bold shrink-0">{msg.from?.name}</div>
-              <div
-                lang="en"
-                className="max-w-[calc(100%-4rem)] break-all whitespace-pre-wrap hyphens-auto"
-              >
-                {msg.message}
+          {chat.chatMessages.map((msg, i) => {
+            const splitName = msg.from?.name?.split('-');
+            const name = splitName?.slice(0, -1).join('-');
+            return (
+              // jank asf, but works (thanks claude)
+              <div key={i} className="flex space-x-2">
+                <div className="font-bold shrink-0">
+                  {name}
+                </div>
+                <div
+                  lang="en"
+                  className="max-w-[calc(100%-4rem)] break-all whitespace-pre-wrap hyphens-auto"
+                >
+                  {msg.message}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
       <div className="p-4 border-t">
