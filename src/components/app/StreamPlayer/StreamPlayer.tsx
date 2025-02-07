@@ -36,6 +36,11 @@ export default function StreamPlayer() {
   const [isConnecting, setIsConnecting] = useState(true);
 
   const broadcasterTracks = tracks.filter((track) => track.participant.identity === 'streamer');
+  const audioTracks = broadcasterTracks.filter(track => 
+    track.publication.kind === "audio" || 
+    track.source === Track.Source.Microphone || 
+    track.source === Track.Source.ScreenShareAudio
+  );
 
   // very hacky but works
   useEffect(() => {
@@ -84,7 +89,7 @@ export default function StreamPlayer() {
           label="Click to allow audio playback"
           className="absolute top-0 h-full w-full bg-gray-2-translucent text-white"
         />
-        {broadcasterTracks.map((trackRef) => (
+        {audioTracks.map((trackRef) => (
           <AudioTrack
             key={getTrackReferenceId(trackRef)}
             trackRef={trackRef}
@@ -140,7 +145,7 @@ function VolumeControl({
       onMouseLeave={() => setShowVolume(false)}
     >
       <button onClick={toggleMute} className="hover:text-primary transition-colors">
-        {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+        {isMuted || volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
       </button>
 
       <div
