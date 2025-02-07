@@ -28,9 +28,7 @@ export default function ChatPanel() {
             return (
               // jank asf, but works (thanks claude)
               <div key={i} className="flex space-x-2">
-                <div className="font-bold shrink-0">
-                  {name}
-                </div>
+                <div className="font-bold shrink-0">{name}</div>
                 <div
                   lang="en"
                   className="max-w-[calc(100%-4rem)] break-all whitespace-pre-wrap hyphens-auto"
@@ -56,7 +54,14 @@ export default function ChatPanel() {
             placeholder="Type a message"
             className="flex-1 bg-transparent focus-visible:ring-offset-0"
           />
-          <Button size="icon" className="text-black transition-colors">
+          <Button
+            size="icon"
+            className="text-black transition-colors"
+            onClick={() => {
+              chat.send(message);
+              setMessage('');
+            }}
+          >
             <Send className="h-4 w-4" />
           </Button>
         </div>
