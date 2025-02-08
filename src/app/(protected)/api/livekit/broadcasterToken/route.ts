@@ -1,7 +1,8 @@
 import { validateRequest } from '@/lib/auth';
 import prisma from '@/lib/db';
 import { ingressClient, roomService } from '@/lib/services/livekit';
-import { IngressInput } from 'livekit-server-sdk';
+import { Track, VideoQuality } from 'livekit-client';
+import { IngressAudioEncodingPreset, IngressAudioOptions, IngressInput, IngressVideoEncodingPreset, IngressVideoOptions, TrackSource, VideoCodec } from 'livekit-server-sdk';
 
 export async function POST(request: Request) {
   try {
@@ -56,6 +57,37 @@ export async function POST(request: Request) {
       name: channel,
       roomName: channel,
       participantIdentity: 'streamer',
+      video: new IngressVideoOptions({
+        source: TrackSource.CAMERA,
+        encodingOptions: {
+          case: 'options',
+          value: {
+            videoCodec: VideoCodec.H264_BASELINE,
+            frameRate: 30,
+            layers: [
+              {
+                quality: VideoQuality.MEDIUM, 
+                width: 1280,
+                height: 720,
+                bitrate: 2_500_000, // 2.5 mbps
+              },
+              {
+                quality: VideoQuality.LOW, 
+                width: 640,
+                height: 360,
+                bitrate: 500_000, // 500 kbps
+              }
+            ]
+          }
+        },
+      }),
+      audio: new IngressAudioOptions({
+        source: TrackSource.MICROPHONE,
+        encodingOptions: {
+          case: 'preset',
+          value: IngressAudioEncodingPreset.OPUS_STEREO_96KBPS,
+        }
+      })
     });
 
     return Response.json({ 
