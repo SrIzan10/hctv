@@ -61,8 +61,8 @@
     --background: 240 21.053% 14.902%;
     --foreground: 226.154 63.934% 88.039%;
 
-    --muted: 236.842 16.239% 22.941%;
-    --muted-foreground: 226.667 35.294% 80%;
+    --muted: 240 12% 19%;
+    --muted-foreground: 240 12% 69%;
 
     --popover: 240 21.053% 14.902%;
     --popover-foreground: 226.154 63.934% 88.039%;
@@ -73,8 +73,8 @@
     --border: 234.286 13.208% 31.176%;
     --input: 234.286 13.208% 31.176%;
 
-    --primary: 217.168 91.87% 75.882%;
-    --primary-foreground: 240 21.053% 14.902%;
+    --primary: 267 84% 81%;
+    --primary-foreground: 267 84% 21%;
 
     --secondary: 236.842 16.239% 22.941%;
     --secondary-foreground: 226.154 63.934% 88.039%;

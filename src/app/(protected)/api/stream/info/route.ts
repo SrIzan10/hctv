@@ -23,12 +23,16 @@ export async function GET(request: NextRequest) {
         ]
       },
       include: {
-        streamInfo: true
+        streamInfo: true,
       }
     });
     return Response.json(db.map((channel) => channel.streamInfo)[0]);
   } else {
-    const db = await prisma.streamInfo.findMany();
+    const db = await prisma.streamInfo.findMany({
+      include: {
+        channel: true,
+      }
+    });
     return Response.json(db);
   }
 }
