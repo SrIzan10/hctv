@@ -15,18 +15,14 @@ export async function GET(request: NextRequest) {
       return new Response('No user found in cookies', { status: 401 });
     }
     
-    const db = await prisma.channel.findMany({
+    const db = await prisma.streamInfo.findMany({
       where: {
-        OR: [
-          { ownerId: user.id },
-          { managers: { some: { id: user.id } } },
-        ]
+        channel: {
+          ownerId: user.id,
+        },
       },
-      include: {
-        streamInfo: true,
-      }
     });
-    return Response.json(db.map((channel) => channel.streamInfo)[0]);
+    return Response.json(db);
   } else {
     const db = await prisma.streamInfo.findMany({
       include: {

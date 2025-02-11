@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/sidebar';
 import { StreamInfoResponse, useStreams } from '@/lib/providers/StreamInfoProvider';
 import { useRouter } from 'next/navigation';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Sidebar({ ...props }: React.ComponentProps<typeof UISidebar>) {
   const { stream, isLoading } = useStreams();
@@ -26,7 +27,7 @@ export default function Sidebar({ ...props }: React.ComponentProps<typeof UISide
     console.log('stream info', stream);
   }, [stream]);
 
-  if (isLoading) return <>asdf</>;
+  if (isLoading) return <SidebarSkeleton />;
 
   const liveStreamers = stream?.filter((s) => s.isLive) || [];
   const offlineStreamers = stream?.filter((s) => !s.isLive) || [];
@@ -105,6 +106,62 @@ function StreamerItem({ streamer }: { streamer: StreamInfoResponse[0] }) {
               {streamer.viewers} viewer{streamer.viewers === 1 ? '' : 's'}
             </p>
           )}
+        </div>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+}
+
+function SidebarSkeleton({ ...props }: React.ComponentProps<typeof UISidebar>) {
+  return (
+    <UISidebar {...props}>
+      <SidebarHeader>
+        <h2 className="text-sm font-medium">FOLLOWED CHANNELS</h2>
+      </SidebarHeader>
+
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel asChild>
+            <button className="w-full flex items-center justify-between">
+              <span>Live Channels</span>
+              <ChevronUp className="h-4 w-4" />
+            </button>
+          </SidebarGroupLabel>
+
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {Array(3).fill(0).map((_, i) => (
+                <StreamerItemSkeleton key={i} />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Offline Channels</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {Array(5).fill(0).map((_, i) => (
+                <StreamerItemSkeleton key={i} />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </UISidebar>
+  );
+}
+
+function StreamerItemSkeleton() {
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton className="flex items-center gap-3 h-full">
+        <div className="relative">
+          <Skeleton className="h-9 w-9 rounded-full" />
+        </div>
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-3 w-16" />
         </div>
       </SidebarMenuButton>
     </SidebarMenuItem>
