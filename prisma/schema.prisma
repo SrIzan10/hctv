@@ -26,6 +26,7 @@ model User {
   managedChannels   Channel[] @relation("ChannelManagers")
   sessions          Session[]
   streams           StreamInfo[]
+  followers         Follow[]  @relation("UserFollows")
 
   @@index([personalChannelId])
 }
@@ -44,7 +45,8 @@ model Channel {
   ownerId   String
   managers  User[]   @relation("ChannelManagers")
   streamInfo StreamInfo[]
-
+  followers Follow[] @relation("ChannelFollowers")
+  
   @@index([ownerId])
 }
 
@@ -72,4 +74,19 @@ model StreamInfo {
   userId    String
 
   // TODO: index on username
+}
+
+model Follow {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  
+  user      User     @relation("UserFollows", fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  
+  channel   Channel  @relation("ChannelFollowers", fields: [channelId], references: [id], onDelete: Cascade)
+  channelId String
+
+  @@unique([userId, channelId])
+  @@index([userId])
+  @@index([channelId])
 }
