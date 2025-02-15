@@ -1,104 +1,67 @@
-// https://v0.dev/r/DxCSk58T8pM
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import LandingPage from '@/components/app/LandingPage/LandingPage';
+import { Card, CardContent } from '@/components/ui/card';
+import { validateRequest } from '@/lib/auth';
+import prisma from '@/lib/db';
+import { Avatar, AvatarImage, AvatarFallback } from '@radix-ui/react-avatar';
+import Image from 'next/image';
+import Link from 'next/link';
 
-export default function Home() {
+export default async function Home() {
+  const { user } = await validateRequest();
+  const streams = await prisma.streamInfo.findMany({
+    where: {
+      isLive: true,
+    },
+    include: {
+      channel: true,
+    },
+  });
+  if (!user) {
+    return <LandingPage />;
+  }
+  if (!streams.length) {
+    return <div>No streams found</div>;
+  }
+
   return (
-    <>
-      <main className="flex-1">
-          <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48">
-            <div className="container px-4 md:px-6">
-              <div className="flex flex-col items-center space-y-4 text-center">
-                <div className="space-y-2">
-                  <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
-                    The modern tech stack for your next(.js) project
-                  </h1>
-                  <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
-                    stack is a comprehensive tech stack that includes everything you need to build and deploy your next
-                    web application.
-                  </p>
-                </div>
-                <div className="space-x-4">
-                  <Link href="https://github.com/SrIzan10/stack">
-                    <Button>Start right NOW!</Button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </section>
-          <section className="w-full py-12 md:py-24 lg:py-32 bg-mantle" id="features">
-            <div className="container px-4 md:px-6">
-              <div className="flex flex-col items-center justify-center space-y-4 text-center">
-                <div className="space-y-2">
-                  <div className="inline-block rounded-lg bg-gray-100 px-3 py-1 text-sm dark:bg-gray-800">
-                    Key Features
+    <div className='p-4'>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {streams.map((stream) => (
+          <Link href={`/${stream.username}`} key={stream.id}>
+            <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+              <CardContent className="p-0">
+                <div className="relative">
+                  <Image
+                    src={stream.channel.pfpUrl || '/placeholder.svg'}
+                    width={512}
+                    height={512}
+                    alt={stream.title}
+                    className="w-full h-48 object-cover"
+                  />
+                  <div className="absolute bottom-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
+                    LIVE
                   </div>
-                  <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-                    Everything you need to build and deploy
-                  </h2>
-                  <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                    Stack is a comprehensive tech stack that includes everything you need to build and deploy your next
-                    web application.
-                  </p>
+                  <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                    {stream.viewers} viewers
+                  </div>
                 </div>
-              </div>
-              <div className="mx-auto max-w-5xl items-center gap-6 py-12 lg:grid-cols-2 lg:gap-12">
-                <div className="flex flex-col justify-center items-center text-center space-y-4">
-                  <ul className="grid gap-6">
-                    <li>
-                      <div className="grid gap-1">
-                        <h3 className="text-xl font-bold">Next.js</h3>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          Build server-rendered React applications with Next.js.
-                        </p>
-                      </div>
-                    </li>
-                    <li>
-                      <div className="grid gap-1">
-                        <h3 className="text-xl font-bold">Prisma</h3>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          Access your database with Prisma, the best way to work with databases in Ethan&apos;s opinion
-                        </p>
-                      </div>
-                    </li>
-                    <li>
-                      <div className="grid gap-1">
-                        <h3 className="text-xl font-bold">Tailwind CSS</h3>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          Style your application with Tailwind CSS, the utility-first CSS framework.
-                        </p>
-                      </div>
-                    </li>
-                    <li>
-                      <div className="grid gap-1">
-                        <h3 className="text-xl font-bold">shadcn/ui</h3>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          The customizability of the components makes it one of the best UI libraries out there.
-                        </p>
-                      </div>
-                    </li>
-                    <li>
-                      <div className="grid gap-1">
-                        <h3 className="text-xl font-bold">Vercel</h3>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          Deploy your application to the cloud with Vercel, the serverless platform.
-                        </p>
-                      </div>
-                    </li>
-                    <li>
-                      <div className="grid gap-1">
-                          <h3 className="text-xl font-bold">Lucia</h3>
-                          <p className="text-gray-500 dark:text-gray-400">
-                            Manage authentication with Lucia auth, the best selfhosted authentication library.
-                          </p>
-                      </div>
-                    </li>
-                  </ul>
+                <div className="p-4">
+                  <div className="flex items-start">
+                    <Avatar className="h-10 w-10 mr-3">
+                      <AvatarImage src={stream.channel.pfpUrl} />
+                      <AvatarFallback>{stream.channel.name}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-semibold line-clamp-1">{stream.title}</h3>
+                      <p className="text-sm text-muted-foreground">{stream.category}</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </section>
-        </main>
-      </>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 }

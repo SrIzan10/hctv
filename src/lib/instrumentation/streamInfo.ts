@@ -29,7 +29,7 @@ export async function initializeStreamInfo(channelId?: string) {
           title: 'Untitled',
           category: 'Uncategorized',
           startedAt: new Date(0),
-          thumbnail: 'https://placehold.co/150',
+          thumbnail: 'https://picsum.photos/600/400',
           viewers: 0,
           isLive: false,
           channel: {
@@ -67,7 +67,7 @@ export async function syncStream() {
           title: 'Untitled',
           category: 'Uncategorized',
           startedAt: new Date(),
-          thumbnail: 'https://placehold.co/150',
+          thumbnail: 'https://picsum.photos/600/400',
           viewers: 0,
           channel: {
             connect: { id: room.name }
