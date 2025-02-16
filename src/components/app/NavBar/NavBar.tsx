@@ -38,10 +38,10 @@ export default function Navbar(props: Props) {
   return (
     <>
       <nav className="flex items-center h-16 px-4 border-b gap-3 w-full z-20 fixed top-0 left-0 shadow-md bg-mantle">
-        <div className="flex items-center">
+        <div className="flex items-center space-x-5">
           <SidebarTrigger />
           <Link href="/" className="flex items-center">
-            <Button>hackclub.tv</Button>
+            <Button variant={'ghost'}>hackclub.tv</Button>
           </Link>
         </div>
         <MobileNavbarLinks />
@@ -51,7 +51,6 @@ export default function Navbar(props: Props) {
         </div>
         <div className="flex-1" />
         {props.editLivestream}
-        <ThemeSwitcher />
         {user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild className="cursor-pointer">
@@ -72,6 +71,10 @@ export default function Navbar(props: Props) {
                 >
                   Sign out
                 </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <ThemeSwitcher />
               </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>

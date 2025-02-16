@@ -34,10 +34,6 @@ export default function Sidebar({ ...props }: React.ComponentProps<typeof UISide
 
   return (
     <UISidebar {...props}>
-      <SidebarHeader>
-        <h2 className="text-sm font-medium">FOLLOWED CHANNELS</h2>
-      </SidebarHeader>
-
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel asChild>
@@ -115,10 +111,6 @@ function StreamerItem({ streamer }: { streamer: StreamInfoResponse[0] }) {
 function SidebarSkeleton({ ...props }: React.ComponentProps<typeof UISidebar>) {
   return (
     <UISidebar {...props}>
-      <SidebarHeader>
-        <h2 className="text-sm font-medium">FOLLOWED CHANNELS</h2>
-      </SidebarHeader>
-
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel asChild>

@@ -40,7 +40,6 @@ export default async function RootLayout({
                 {/* this promise is ugly but i'm lazy to fix the type errors */}
                 <Navbar editLivestream={Promise.resolve(<EditLivestream />)} />
                 <div className="flex flex-1 pt-16">
-                  {' '}
                   {/* pt-16 for navbar height */}
                   <Sidebar className="pt-16" />
                   <main className="flex-1 overflow-auto">{children}</main>

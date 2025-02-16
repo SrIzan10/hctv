@@ -55,15 +55,16 @@ export default function EditLivestreamDialog(props: Props) {
 
   React.useEffect(() => {
     if (data && selectedChannel) {
-      console.log('data', data);
       const stream = data.find((stream) => stream.username === selectedChannel);
       setStreamInfo(stream);
     }
   }, [data, selectedChannel]);
 
   React.useEffect(() => {
-    console.log(selectedChannel);
-  }, [selectedChannel]);
+    if (props.ownedChannels.length > 0 && !selectedChannel) {
+      setSelectedChannel(props.ownedChannels[0].name);
+    }
+  }, [props.ownedChannels, selectedChannel]);
 
   return (
     <Dialog
@@ -88,7 +89,11 @@ export default function EditLivestreamDialog(props: Props) {
         >
           HOW TO STREAM (github gist link)
         </Link>
-        <ChannelSelect channelList={props.ownedChannels} onSelect={setSelectedChannel} />
+        <ChannelSelect
+          channelList={props.ownedChannels}
+          onSelect={setSelectedChannel}
+          value={selectedChannel}
+        />
         {streamInfo && data ? (
           <Form username={selectedChannel} streamInfo={streamInfo} />
         ) : (
@@ -143,7 +148,7 @@ function FormSkeleton() {
 export function ChannelSelect(props: SelectProps) {
   const { channelList } = props;
   return (
-    <Select onValueChange={props.onSelect}>
+    <Select onValueChange={props.onSelect} value={props.value}>
       <SelectTrigger className="w-[180px]">
         <SelectValue placeholder="Channel" />
       </SelectTrigger>
@@ -173,5 +178,6 @@ interface FormProps {
 }
 interface SelectProps {
   channelList: Channel[];
+  value?: string;
   onSelect: (value: string) => void;
 }
