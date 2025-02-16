@@ -15,7 +15,7 @@ export default function OnboardingClient() {
       <CardHeader className="space-y-1">
         <CardTitle>Welcome to hackclub.tv!</CardTitle>
         <CardDescription>
-          To get started, please enter the username for your main channel.
+          To get started, please enter the username of your personal channel channel.
         </CardDescription>
       </CardHeader>
       <CardContent>
