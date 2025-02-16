@@ -36,13 +36,16 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import useSWR, { Fetcher } from 'swr';
 import { fetcher } from '@/lib/services/swr';
 import { Skeleton } from '@/components/ui/skeleton';
+import Link from 'next/link';
 
 export default function EditLivestreamDialog(props: Props) {
   const [selectedChannel, setSelectedChannel] = React.useState('');
   const [streamInfo, setStreamInfo] = React.useState<StreamInfo>();
 
-  // Fix the useSWR implementation
-  const { data, error } = useSWR(selectedChannel ? '/api/stream/info?owned=true' : null, fetcher as Fetcher<StreamInfo[]>);
+  const { data, error } = useSWR(
+    selectedChannel ? '/api/stream/info?owned=true' : null,
+    fetcher as Fetcher<StreamInfo[]>
+  );
 
   React.useEffect(() => {
     if (error) {
@@ -52,24 +55,25 @@ export default function EditLivestreamDialog(props: Props) {
 
   React.useEffect(() => {
     if (data && selectedChannel) {
-      console.log('data', data)
+      console.log('data', data);
       const stream = data.find((stream) => stream.username === selectedChannel);
       setStreamInfo(stream);
     }
   }, [data, selectedChannel]);
 
-  // debug consome log selectedChannel
   React.useEffect(() => {
     console.log(selectedChannel);
   }, [selectedChannel]);
 
   return (
-    <Dialog onOpenChange={op => {
-      if (op) {
-        setSelectedChannel('');
-        setStreamInfo(undefined);
-      }
-    }}>
+    <Dialog
+      onOpenChange={(op) => {
+        if (op) {
+          setSelectedChannel('');
+          setStreamInfo(undefined);
+        }
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="outline">Edit Livestream</Button>
       </DialogTrigger>
@@ -78,6 +82,12 @@ export default function EditLivestreamDialog(props: Props) {
           <DialogTitle>Edit livestream</DialogTitle>
           <DialogDescription>Regenerate a key or edit your stream metadata</DialogDescription>
         </DialogHeader>
+        <Link
+          href="https://gist.github.com/SrIzan10/ebd89ced6b21b016d4d389e6711a94e9"
+          target="_blank"
+        >
+          HOW TO STREAM (github gist link)
+        </Link>
         <ChannelSelect channelList={props.ownedChannels} onSelect={setSelectedChannel} />
         {streamInfo && data ? (
           <Form username={selectedChannel} streamInfo={streamInfo} />

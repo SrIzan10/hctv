@@ -15,10 +15,11 @@ export default function OnboardingClient() {
       <CardHeader className="space-y-1">
         <CardTitle>Welcome to hackclub.tv!</CardTitle>
         <CardDescription>
-          To get started, please enter the username of your personal channel channel.
+          To get started, please enter the username of your personal channel.
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <h1 className='text-red-500 animate-pulse animate-bounce'>REFRESH THE SITE AFTER SUBMITTING THE FORM!!</h1>
         <UniversalForm
           fields={[
             { name: 'userId', label: 'User ID', type: 'hidden', value: user?.id },

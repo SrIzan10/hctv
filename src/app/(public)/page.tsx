@@ -9,7 +9,7 @@ import { redirect } from 'next/navigation';
 
 export default async function Home() {
   const { user } = await validateRequest();
-  if (!user?.hasOnboarded) {
+  if (user && !user?.hasOnboarded) {
     redirect('/onboarding');
   }
   const streams = await prisma.streamInfo.findMany({
