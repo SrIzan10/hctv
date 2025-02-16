@@ -5,9 +5,13 @@ import prisma from '@/lib/db';
 import { Avatar, AvatarImage, AvatarFallback } from '@radix-ui/react-avatar';
 import Image from 'next/image';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
 export default async function Home() {
   const { user } = await validateRequest();
+  if (!user?.hasOnboarded) {
+    redirect('/onboarding');
+  }
   const streams = await prisma.streamInfo.findMany({
     where: {
       isLive: true,

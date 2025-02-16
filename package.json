@@ -6,7 +6,7 @@
     "dev": "docker compose --file dev/docker-compose.yml up -d && next dev --experimental-https --turbo",
     "setup": "docker compose --file dev/docker-compose.yml up -d && prisma migrate deploy",
     "build": "prisma generate && next build",
-    "start": "next start",
+    "start": "prisma migrate deploy && next start",
     "lint": "next lint",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev --name",

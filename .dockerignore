@@ -1,0 +1,33 @@
+# Ignore node_modules and build output
+node_modules
+.next
+out
+
+# Ignore logs and temporary files
+*.log
+*.tmp
+*.swp
+
+# Ignore local environment files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Ignore Docker files
+Dockerfile
+docker-compose.yml
+
+# Ignore git files
+.git
+.gitignore
+
+# Ignore editor directories and files
+.vscode
+.idea
+*.sublime-project
+*.sublime-workspace
+
+# Ignore other unnecessary files
+README.md
+dev/

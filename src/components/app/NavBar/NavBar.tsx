@@ -19,7 +19,7 @@ import { ThemeSwitcher } from '../ThemeSwitcher/ThemeSwitcher';
 import { Slack } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 
-export const links = [{ href: '/srizan', name: 'test stream' }];
+export const links = [{ href: '/', name: 'home (placeholder link)' }];
 
 function NavbarLinks() {
   return (
