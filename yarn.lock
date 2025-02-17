@@ -534,17 +534,10 @@
   resolved "https://registry.yarnpkg.com/@livekit/mutex/-/mutex-1.1.1.tgz#72492b611d55be8130ba2271b7a436d94b1bc6d4"
   integrity sha512-EsshAucklmpuUAfkABPxJNhzj9v2sG7JuzFDL4ML1oJQSV14sqrpTYnsaOudMAw9yOaW53NU3QQTlUQoRs4czw==
 
-"@livekit/protocol@1.30.0":
-  version "1.30.0"
-  resolved "https://registry.yarnpkg.com/@livekit/protocol/-/protocol-1.30.0.tgz#c79e98aca2a822f9bd217d016c6efd0f472f206f"
-  integrity sha512-SDI9ShVKj8N3oOSinr8inaxD3FXgmgoJlqN35uU/Yx1sdoDeQbzAuBFox7bYjM+VhnZ1V22ivIDjAsKr00H+XQ==
-  dependencies:
-    "@bufbuild/protobuf" "^1.10.0"
-
-"@livekit/protocol@^1.30.0":
-  version "1.31.0"
-  resolved "https://registry.yarnpkg.com/@livekit/protocol/-/protocol-1.31.0.tgz#a8344a46b9e914a846cd0a2218f28635e7768b05"
-  integrity sha512-3uoMY1JUqDuoFtAlgjHLKZ9KBfqDBbBRq1GwPKB1hMiH1RVyPOV5TG7XVE4wm/vdAgUKgawtX2anZPJBIi6QQA==
+"@livekit/protocol@1.33.0", "@livekit/protocol@^1.30.0":
+  version "1.33.0"
+  resolved "https://registry.yarnpkg.com/@livekit/protocol/-/protocol-1.33.0.tgz#b8dfcf82ca501e747533d519e51b5c80176bf03e"
+  integrity sha512-361mBlFgI3nvn8oSQIL38gDUBGbOSwsEOqPgX0c1Jwz75/sD/TTvPeAM4zAz6OrV5Q4vI4Ruswecnyv5SG4oig==
   dependencies:
     "@bufbuild/protobuf" "^1.10.0"
 
@@ -3275,13 +3268,13 @@ lines-and-columns@^1.1.6:
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.2.4.tgz#eca284f75d2965079309dc0ad9255abb2ebc1632"
   integrity sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==
 
-livekit-client@^2.8.0:
-  version "2.8.0"
-  resolved "https://registry.yarnpkg.com/livekit-client/-/livekit-client-2.8.0.tgz#76e0c39b0f1ec231a6747fa91c4631604e666c80"
-  integrity sha512-8/IXhacAFYdXMU1wFyc8/MSGCzHr02Hn9T5o3MX19TR03RHSaBKBF2xK8fQFINBmpcYkiMAnQL0P6K3nfcifQA==
+livekit-client@^2.9.1:
+  version "2.9.1"
+  resolved "https://registry.yarnpkg.com/livekit-client/-/livekit-client-2.9.1.tgz#7286d845dc3a063354a92caf5821d4e9d7584de0"
+  integrity sha512-MqBxnOmkOB88+n2Whq2pgXVwevfJ+yhERNf0tZf/7RG1ZpCWF+pk7/muRVzZeCxal4fwGOB3Z3MIT0KBJoT0RQ==
   dependencies:
     "@livekit/mutex" "1.1.1"
-    "@livekit/protocol" "1.30.0"
+    "@livekit/protocol" "1.33.0"
     events "^3.3.0"
     loglevel "^1.8.0"
     sdp-transform "^2.14.1"
