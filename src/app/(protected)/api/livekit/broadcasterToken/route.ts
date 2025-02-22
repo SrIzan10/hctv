@@ -1,10 +1,10 @@
 import { validateRequest } from '@/lib/auth';
 import prisma from '@/lib/db';
-import { ingressClient, roomService } from '@/lib/services/livekit';
 import { Track, VideoQuality } from 'livekit-client';
 import { IngressAudioEncodingPreset, IngressAudioOptions, IngressInput, IngressVideoEncodingPreset, IngressVideoOptions, TrackSource, VideoCodec } from 'livekit-server-sdk';
 
 export async function POST(request: Request) {
+  const { ingressClient, roomService } = await import('@/lib/services/livekit');
   try {
     const { user } = await validateRequest();
     if (!user) {
