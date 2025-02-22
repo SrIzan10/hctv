@@ -1,9 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack: (config) => {
-    config.externals.push('@node-rs/argon2');
-    return config;
-  },
   images: {
     remotePatterns: [
       {
@@ -13,7 +9,8 @@ const nextConfig = {
         hostname: 'secure.gravatar.com',
       }
     ]
-  }
+  },
+  transpilePackages: ['livekit-server-sdk']
 };
 
 export default nextConfig;
