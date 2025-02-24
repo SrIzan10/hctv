@@ -534,17 +534,10 @@
   resolved "https://registry.yarnpkg.com/@livekit/mutex/-/mutex-1.1.1.tgz#72492b611d55be8130ba2271b7a436d94b1bc6d4"
   integrity sha512-EsshAucklmpuUAfkABPxJNhzj9v2sG7JuzFDL4ML1oJQSV14sqrpTYnsaOudMAw9yOaW53NU3QQTlUQoRs4czw==
 
-"@livekit/protocol@1.30.0":
-  version "1.30.0"
-  resolved "https://registry.yarnpkg.com/@livekit/protocol/-/protocol-1.30.0.tgz#c79e98aca2a822f9bd217d016c6efd0f472f206f"
-  integrity sha512-SDI9ShVKj8N3oOSinr8inaxD3FXgmgoJlqN35uU/Yx1sdoDeQbzAuBFox7bYjM+VhnZ1V22ivIDjAsKr00H+XQ==
-  dependencies:
-    "@bufbuild/protobuf" "^1.10.0"
-
-"@livekit/protocol@^1.30.0":
-  version "1.31.0"
-  resolved "https://registry.yarnpkg.com/@livekit/protocol/-/protocol-1.31.0.tgz#a8344a46b9e914a846cd0a2218f28635e7768b05"
-  integrity sha512-3uoMY1JUqDuoFtAlgjHLKZ9KBfqDBbBRq1GwPKB1hMiH1RVyPOV5TG7XVE4wm/vdAgUKgawtX2anZPJBIi6QQA==
+"@livekit/protocol@1.33.0", "@livekit/protocol@^1.30.0":
+  version "1.33.0"
+  resolved "https://registry.yarnpkg.com/@livekit/protocol/-/protocol-1.33.0.tgz#b8dfcf82ca501e747533d519e51b5c80176bf03e"
+  integrity sha512-361mBlFgI3nvn8oSQIL38gDUBGbOSwsEOqPgX0c1Jwz75/sD/TTvPeAM4zAz6OrV5Q4vI4Ruswecnyv5SG4oig==
   dependencies:
     "@bufbuild/protobuf" "^1.10.0"
 
@@ -3275,20 +3268,20 @@ lines-and-columns@^1.1.6:
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.2.4.tgz#eca284f75d2965079309dc0ad9255abb2ebc1632"
   integrity sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==
 
-livekit-client@^2.8.0:
-  version "2.8.0"
-  resolved "https://registry.yarnpkg.com/livekit-client/-/livekit-client-2.8.0.tgz#76e0c39b0f1ec231a6747fa91c4631604e666c80"
-  integrity sha512-8/IXhacAFYdXMU1wFyc8/MSGCzHr02Hn9T5o3MX19TR03RHSaBKBF2xK8fQFINBmpcYkiMAnQL0P6K3nfcifQA==
+livekit-client@^2.9.4:
+  version "2.9.4"
+  resolved "https://registry.yarnpkg.com/livekit-client/-/livekit-client-2.9.4.tgz#41df699188c9c77387ed6b5bb6a282cb37bb7037"
+  integrity sha512-BwFHocyNrthIHUAHY3/mch7lCQAjY7bSGedLT7iHJBWc+YYZ7EIU4+JAVJd6R2Mho1iBVqUaNuwzfg7RVksNSw==
   dependencies:
     "@livekit/mutex" "1.1.1"
-    "@livekit/protocol" "1.30.0"
+    "@livekit/protocol" "1.33.0"
     events "^3.3.0"
-    loglevel "^1.8.0"
-    sdp-transform "^2.14.1"
+    loglevel "^1.9.2"
+    sdp-transform "^2.15.0"
     ts-debounce "^4.0.0"
     tslib "2.8.1"
     typed-emitter "^2.1.0"
-    webrtc-adapter "^9.0.0"
+    webrtc-adapter "^9.0.1"
 
 livekit-server-sdk@^2.9.7:
   version "2.9.7"
@@ -3350,7 +3343,7 @@ loglevel@1.9.1:
   resolved "https://registry.yarnpkg.com/loglevel/-/loglevel-1.9.1.tgz#d63976ac9bcd03c7c873116d41c2a85bafff1be7"
   integrity sha512-hP3I3kCrDIMuRwAwHltphhDM1r8i55H33GgqjXbrisuJhF4kRhW1dNuxsRklp4bXl8DSdLaNLuiL4A/LWRfxvg==
 
-loglevel@^1.8.0:
+loglevel@^1.9.2:
   version "1.9.2"
   resolved "https://registry.yarnpkg.com/loglevel/-/loglevel-1.9.2.tgz#c2e028d6c757720107df4e64508530db6621ba08"
   integrity sha512-HgMmCqIJSAKqo68l0rS2AanEWfkxaZ5wNiEFb5ggm08lDs9Xl2KxBlX3PTcaD2chBM1gXAYf491/M2Rv8Jwayg==
@@ -4124,7 +4117,7 @@ scheduler@^0.25.0:
   resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.25.0.tgz#336cd9768e8cceebf52d3c80e3dcf5de23e7e015"
   integrity sha512-xFVuu11jh+xcO7JOAGJNOXld8/TcEHK/4CituBUeUb5hqxJLj9YuemAEuvm9gQ/+pgXYfbQuqAkiYu+u7YEsNA==
 
-sdp-transform@^2.14.1:
+sdp-transform@^2.15.0:
   version "2.15.0"
   resolved "https://registry.yarnpkg.com/sdp-transform/-/sdp-transform-2.15.0.tgz#79d37a2481916f36a0534e07b32ceaa87f71df42"
   integrity sha512-KrOH82c/W+GYQ0LHqtr3caRpM3ITglq3ljGUIb8LTki7ByacJZ9z+piSGiwZDsRyhQbYBOBJgr2k6X4BZXi3Kw==
@@ -4812,7 +4805,7 @@ web-streams-polyfill@^3.0.3:
   resolved "https://registry.yarnpkg.com/web-streams-polyfill/-/web-streams-polyfill-3.3.3.tgz#2073b91a2fdb1fbfbd401e7de0ac9f8214cecb4b"
   integrity sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw==
 
-webrtc-adapter@^9.0.0:
+webrtc-adapter@^9.0.1:
   version "9.0.1"
   resolved "https://registry.yarnpkg.com/webrtc-adapter/-/webrtc-adapter-9.0.1.tgz#d4efa22ca9604cb2c8cdb9e492815ba37acfa0b2"
   integrity sha512-1AQO+d4ElfVSXyzNVTOewgGT/tAomwwztX/6e3totvyyzXPvXIIuUUjAmyZGbKBKbZOXauuJooZm3g6IuFuiNQ==
