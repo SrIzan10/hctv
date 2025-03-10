@@ -4,13 +4,27 @@ import { Button } from '@/components/ui/button';
 import { fetcher } from '@/lib/services/swr';
 import { Heart, HeartCrack } from 'lucide-react';
 import { useHover } from '@uidotdev/usehooks';
-import useSWR from 'swr/mutation';
+import useSWR from 'swr';
+import mutatedUseSWR from 'swr/mutation';
 import React from 'react';
 
 export default function FollowButton(props: Props) {
   const [ref, isHovering] = useHover();
-  const [following, setFollowing] = React.useState(props.isFollowing);
-  const { trigger, data, isMutating } = useSWR(
+  // const [following, setFollowing] = React.useState(props.isFollowing);
+  // make a get request to check if the user is following the channel and set it as the initial state. use swr to make the request
+  const { data: followingData, isLoading: isLoadingFollowing } = useSWR(
+    `/api/stream/follow?username=${props.channel}`, 
+    async (url) => fetcher(url)
+  );
+  const [following, setFollowing] = React.useState(false);
+
+  React.useEffect(() => {
+    if (followingData) {
+      setFollowing(followingData.following);
+    }
+  }, [followingData]);
+
+  const { trigger, data, isMutating } = mutatedUseSWR(
     `/api/stream/follow?username=${props.channel}`,
     async (url) => fetcher(url, { method: 'POST' })
   );
@@ -25,7 +39,7 @@ export default function FollowButton(props: Props) {
     <Button
       size={'icon'}
       onClick={() => trigger()}
-      disabled={isMutating}
+      disabled={isMutating || isLoadingFollowing}
       ref={ref}
       variant={following ? 'destructive' : 'default'}
     >
@@ -36,5 +50,4 @@ export default function FollowButton(props: Props) {
 
 interface Props {
   channel: string;
-  isFollowing: boolean;
 }

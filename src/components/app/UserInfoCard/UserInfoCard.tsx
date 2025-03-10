@@ -1,7 +1,7 @@
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import type { StreamInfo, User } from '@prisma/client';
 import FollowButton from './follow';
+import FollowCountText from './followCount';
 
 export default function UserInfoCard(props: Props) {
   return (
@@ -14,9 +14,10 @@ export default function UserInfoCard(props: Props) {
           <div>
             <h1 className="text-2xl font-bold">{props.streamInfo.title}</h1>
             <p>{props.streamInfo.username}</p>
+            <FollowCountText channel={props.streamInfo.username} />
           </div>
         </div>
-        <FollowButton channel={props.streamInfo.username} isFollowing />
+        <FollowButton channel={props.streamInfo.username} />
       </div>
       <p className="mb-4">markdown description here</p>
       {/* <div className="flex items-center space-x-4 text-gray-400">
