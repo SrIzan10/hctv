@@ -126,3 +126,61 @@ h1 {
 h2 {
   @apply scroll-m-20 pb-2 text-3xl font-semibold tracking-tight first:mt-0;
 }
+
+media-controller {
+  --media-primary-color: #ffffff;
+  --media-secondary-color: hsla(var(--background), 0.85);
+  --media-control-hover-background: hsla(var(--accent), 0.85);
+  --media-control-background: hsla(var(--secondary), 0.85);
+  --media-loading-icon-color: #ffffff;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
+}
+
+media-control-bar {
+  background-color: hsla(var(--background), 0.8);
+  backdrop-filter: blur(8px);
+  width: 100%;
+  box-sizing: border-box;
+  justify-content: space-between;
+}
+
+media-time-range {
+  --media-range-track-height: 6px;
+  --media-range-thumb-height: 14px;
+  --media-range-thumb-width: 14px;
+  --media-range-thumb-border-radius: 50%;
+  --media-range-bar-color: #ffffff;
+  --media-range-thumb-background: #ffffff;
+  --media-preview-background: hsla(var(--card), 0.9);
+  --media-preview-border-radius: var(--radius);
+}
+
+media-time-display {
+  --media-text-color: #ffffff; 
+}
+
+media-controller::part(centered-layer) {
+  background-color: hsla(var(--background), 0.2);
+  transition: opacity 0.3s ease;
+}
+
+media-controller:not([mediapaused])[userinactive]::part(centered-layer) {
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+
+media-loading-indicator {
+  --media-loading-icon-width: 48px;
+  --media-loading-icon-height: 48px;
+  --media-loading-icon-color: #ffffff;
+}
+
+media-play-button:hover,
+media-mute-button:hover,
+media-fullscreen-button:hover,
+media-seek-backward-button:hover,
+media-seek-forward-button:hover {
+  --media-control-hover-background: rgba(255, 255, 255, 0.2);
+}
