@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "docker compose --file dev/docker-compose.yml up -d && next dev --experimental-https --turbo",
+    "dev": "docker compose --file dev/docker-compose.yml up -d && next dev --turbo",
+    "donly": "docker compose --file dev/docker-compose.yml up",
     "setup": "docker compose --file dev/docker-compose.yml up -d && prisma migrate deploy",
     "build": "prisma generate && next build",
     "start": "prisma migrate deploy && next start",

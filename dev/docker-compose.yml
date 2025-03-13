@@ -9,3 +9,32 @@ services:
       - ./psql:/var/lib/postgresql/data
     ports:
       - 5555:5432
+  nginx-rtmp:
+    # ports:
+    #   - 1935:1935
+    #   - 8888:8888
+    network_mode: host
+    environment:
+      UID: 1000
+      GID: 1000
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./html:/var/www/html
+      - /dev/shm:/dev/shm
+    image: tiangolo/nginx-rtmp
+    entrypoint:
+        - /bin/sh
+        - -c
+        - |
+          usermod -u $${UID} www-data
+          groupmod -g $${GID} www-data
+
+          mkdir -p /usr/local/nginx/proxy_temp /usr/local/nginx/client_body_temp
+          chown -R www-data:www-data /usr/local/nginx
+          
+          chown -R www-data:www-data /var/www/html
+
+          mkdir -p /dev/shm/hls
+          chown -R www-data:www-data /dev/shm/hls
+          
+          nginx -g 'daemon off;'

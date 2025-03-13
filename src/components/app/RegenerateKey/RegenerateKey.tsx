@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import useSWR from 'swr/mutation';
 
 export default function RegenerateKey(props: Props) {
-  const { error, isMutating, trigger } = useSWR('/api/livekit/broadcasterToken', async (url) =>
+  const { error, isMutating, trigger } = useSWR('/api/rtmp/streamKey', async (url) =>
     defaultFetcher(url, { body: JSON.stringify({ channel: props.channel }), method: 'POST' })
   );
 
