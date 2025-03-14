@@ -13,7 +13,7 @@ export default function LiveStream(props: Props) {
         <StreamPlayer />
         <UserInfoCard streamInfo={props.streamInfo} />
       </div>
-      {/*<ChatPanel />*/}
+      <ChatPanel />
     </div>
   );
 }
