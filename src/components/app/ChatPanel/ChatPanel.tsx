@@ -25,7 +25,7 @@ export default function ChatPanel() {
   const socketRef = useRef<WebSocket | null>(null);
   
   useEffect(() => {
-    const socket = new WebSocket(`/api/stream/chat/${username}`);
+    const socket = new WebSocket(`ws://${window.location.host}/api/stream/chat/${username}`);
     socketRef.current = socket;
     
     socket.onopen = () => {
