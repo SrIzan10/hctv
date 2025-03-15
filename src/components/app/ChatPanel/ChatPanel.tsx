@@ -17,7 +17,7 @@ export default function ChatPanel() {
     const socket = new WebSocket(
       `ws${window.location.protocol === 'https:' ? 's' : ''}://${
         window.location.host
-      }/api/stream/chat`
+      }/api/stream/chat/${username}`
     );
     socketRef.current = socket;
 
@@ -62,7 +62,7 @@ export default function ChatPanel() {
       const socket = new WebSocket(
         `ws${window.location.protocol === 'https:' ? 's' : ''}://${
           window.location.host
-        }/api/stream/chat`
+        }/api/stream/chat/${username}`
       );
       socket.onopen = () => {
         socket.send(message);
