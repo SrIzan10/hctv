@@ -46,6 +46,7 @@ model Channel {
   managers  User[]   @relation("ChannelManagers")
   streamInfo StreamInfo[]
   followers Follow[] @relation("ChannelFollowers")
+  streamKey StreamKey?
   
   @@index([ownerId])
 }
@@ -89,4 +90,12 @@ model Follow {
   @@unique([userId, channelId])
   @@index([userId])
   @@index([channelId])
+}
+
+model StreamKey {
+  id        String   @id @default(cuid())
+  key       String   @unique
+
+  channelId String   @unique
+  channel   Channel  @relation(fields: [channelId], references: [id])
 }

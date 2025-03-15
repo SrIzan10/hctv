@@ -35,15 +35,17 @@ export default function FollowButton(props: Props) {
     }
   }, [data]);
 
+  const followingCn = 'text-destructive';
+  const notFollowingCn = 'text-white';
   return (
     <Button
       size={'icon'}
       onClick={() => trigger()}
       disabled={isMutating || isLoadingFollowing}
       ref={ref}
-      variant={following ? 'destructive' : 'default'}
+      variant='outlineMantle'
     >
-      {isHovering && following ? <HeartCrack /> : <Heart />}
+      {isHovering && following ? <HeartCrack className={followingCn} /> : <Heart className={following ? followingCn : notFollowingCn} />}
     </Button>
   );
 }

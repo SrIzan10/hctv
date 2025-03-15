@@ -4,40 +4,91 @@ import { useState, useRef, useEffect } from 'react';
 import { Send } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useChat } from '@livekit/components-react';
+
+interface User {
+  id: string;
+  username: string;
+  pfpUrl: string;
+}
+
+interface ChatMessage {
+  user: User;
+  message: string;
+}
 
 export default function ChatPanel() {
   const [message, setMessage] = useState('');
-  const chat = useChat();
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  // auto scroll to bottom when messages change
+  const socketRef = useRef<WebSocket | null>(null);
+  
+  useEffect(() => {
+    const socket = new WebSocket('ws://localhost:3000/api/stream/chat');
+    socketRef.current = socket;
+    
+    socket.onopen = () => {
+      console.log('WebSocket connected');
+    };
+    
+    socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        setChatMessages(prev => [...prev, data]);
+      } catch (e) {
+        console.log('Received message confirmation:', event.data);
+      }
+    };
+    
+    socket.onclose = () => {
+      console.log('WebSocket closed');
+    };
+    
+    return () => {
+      socket.close();
+    };
+  }, []);
+  
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [chat.chatMessages]);
+    if (chatMessages.length > 100) {
+      setChatMessages(prev => prev.slice(chatMessages.length - 100));
+    }
+  }, [chatMessages]);
+  
+  const sendMessage = () => {
+    if (!message.trim()) return;
+    
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      socketRef.current.send(message);
+      setMessage('');
+    } else {
+      const socket = new WebSocket('ws://localhost:3000/api/stream/chat');
+      socket.onopen = () => {
+        socket.send(message);
+        setMessage('');
+      };
+    }
+  };
 
   return (
     <div className="border-l flex flex-col w-[350px] min-w-[350px] h-full">
       <div ref={scrollRef} className="flex-1 p-4 overflow-y-auto flex flex-col">
         <div className="space-y-4 flex-1">
-          {chat.chatMessages.map((msg, i) => {
-            const splitName = msg.from?.name?.split('-');
-            const name = splitName?.slice(0, -1).join('-');
-            return (
-              // jank asf, but works (thanks claude)
-              <div key={i} className="flex space-x-2">
-                <div className="font-bold shrink-0">{name}</div>
-                <div
-                  lang="en"
-                  className="max-w-[calc(100%-4rem)] break-all whitespace-pre-wrap hyphens-auto"
-                >
-                  {msg.message}
-                </div>
+          {chatMessages.map((msg, i) => (
+            <div key={i} className="flex space-x-2">
+              <div className="flex items-center gap-2">
+                <div className="font-bold shrink-0">{msg.user.username}</div>
               </div>
-            );
-          })}
+              <div
+                lang="en"
+                className="max-w-[calc(100%-4rem)] break-all whitespace-pre-wrap hyphens-auto"
+              >
+                {msg.message}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
       <div className="p-4 border-t">
@@ -47,8 +98,7 @@ export default function ChatPanel() {
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
-                chat.send(message);
-                setMessage('');
+                sendMessage();
               }
             }}
             placeholder="Type a message"
@@ -57,10 +107,7 @@ export default function ChatPanel() {
           <Button
             size="icon"
             className="text-black transition-colors"
-            onClick={() => {
-              chat.send(message);
-              setMessage('');
-            }}
+            onClick={sendMessage}
           >
             <Send className="h-4 w-4" />
           </Button>

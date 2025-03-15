@@ -1,4 +1,3 @@
-'use server'
 import db from '@/lib/db';
 
 export async function resolveChannelNameId(channelName: string) {
@@ -13,4 +12,20 @@ export async function resolveChannelNameId(channelName: string) {
   }
 
   return channel.id;
+}
+
+export async function resolveUserPersonalChannel(userId: string) {
+  const channel = await db.channel.findFirst({
+    where: {
+      personalFor: {
+        id: userId,
+      },
+    },
+  });
+
+  if (!channel) {
+    return null;
+  }
+
+  return channel;
 }
