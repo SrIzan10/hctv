@@ -72,7 +72,7 @@ export default function ChatPanel() {
   };
 
   return (
-    <div className="border-l flex flex-col w-[350px] min-w-[350px] h-full">
+    <div className="md:border flex flex-col w-full min-w-[350px] h-full bg-mantle">
       <div ref={scrollRef} className="flex-1 p-4 overflow-y-auto flex flex-col">
         <div className="space-y-4 flex-1">
           {chatMessages.map((msg, i) => (

@@ -1,5 +1,6 @@
 import LandingPage from '@/components/app/LandingPage/LandingPage';
 import { Card, CardContent } from '@/components/ui/card';
+import ConfusedDino from '@/components/ui/confuseddino';
 import { validateRequest } from '@/lib/auth';
 import prisma from '@/lib/db';
 import { Avatar, AvatarImage, AvatarFallback } from '@radix-ui/react-avatar';
@@ -24,11 +25,17 @@ export default async function Home() {
     return <LandingPage />;
   }
   if (!streams.length) {
-    return <div>No streams found</div>;
+    return (
+      <div className="flex justify-center items-center text-center flex-col pt-4 gap-2">
+        <h2>No streams found!!</h2>
+        <p>...maybe start one?</p>
+        <ConfusedDino className='w-40 h-40' />
+      </div>
+    );
   }
 
   return (
-    <div className='p-4'>
+    <div className="p-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {streams.map((stream) => (
           <Link href={`/${stream.username}`} key={stream.id}>

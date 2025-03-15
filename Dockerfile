@@ -33,7 +33,7 @@ COPY --from=builder /app/prisma ./prisma
 # Install production dependencies only
 RUN apk add --no-cache openssl
 RUN yarn install --frozen-lockfile --production && \
-    yarn cache clean
+    yarn cache clean && yarn run prepare
 
 # Remove unnecessary files
 RUN rm -rf /app/.git \

@@ -5,7 +5,7 @@ import FollowCountText from './followCount';
 
 export default function UserInfoCard(props: Props) {
   return (
-    <div className="bg-mantle rounded-lg p-4">
+    <div className="bg-mantle p-4 border-b">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-4">
           <Avatar className="h-16 w-16">
