@@ -32,3 +32,4 @@ docker-compose.yml
 # Ignore other unnecessary files
 README.md
 dev/
+flv-module/

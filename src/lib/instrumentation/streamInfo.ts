@@ -45,54 +45,89 @@ export async function initializeStreamInfo(channelId?: string) {
 }
 
 export async function syncStream() {
-  const request = (
-    await (
-      await fetch(`${process.env.LIVE_SERVER_URL}/stat`, {
-        headers: {
-          Authorization: process.env.STAT_AUTH!,
-        },
-      })
-    ).json()
-  )['http-flv'] as HttpFlv;
-
-  const rooms = request.servers[0].applications.filter(app => app.name === 'channel-live')[0].live.streams;
-
-  // process each room
-  for (const room of rooms) {
-    const isLive = room.active;
-    const originalStreamInfo = await prisma.streamInfo.findUnique({
-      where: { username: room.name },
-    });
-
-    // upsert stream info
-    await prisma.streamInfo.upsert({
-      where: {
-        username: room.name,
-      },
-      create: {
-        username: room.name,
-        title: 'Untitled',
-        category: 'Uncategorized',
-        startedAt: new Date(),
-        thumbnail: 'https://picsum.photos/600/400',
-        viewers: 0,
-        channel: {
-          connect: { id: room.name },
-        },
-        isLive,
-        ownedBy: {
-          connect: { id: room.name },
-        },
-      },
-      update: {
-        isLive,
-        viewers: room.clients.filter(c => !c.publishing).length,
-        startedAt: !isLive
-          ? new Date(0)
-          : originalStreamInfo?.isLive
-          ? originalStreamInfo.startedAt
-          : new Date(),
+  try {
+    const response = await fetch(`${process.env.LIVE_SERVER_URL}/stat`, {
+      headers: {
+        Authorization: process.env.STAT_AUTH!,
       },
     });
+    
+    if (!response.ok) {
+      console.error(`Failed to fetch stream stats: ${response.status} ${response.statusText}`);
+      return;
+    }
+    
+    const data = await response.json();
+    const httpFlv = data['http-flv'] as HttpFlv;
+    
+    // Handle case where the RTMP server is not available or doesn't have the expected data structure
+    if (!httpFlv?.servers?.[0]?.applications) {
+      return;
+    }
+    
+    const channelLiveApp = httpFlv.servers[0].applications.find(app => app.name === 'channel-live');
+    const activeStreams = channelLiveApp?.live?.streams || [];
+    
+    // Get all streams that are currently marked as live in the database
+    const currentLiveStreams = await prisma.streamInfo.findMany({
+      where: { isLive: true },
+    });
+    
+    // Create a map of active streams from the RTMP server
+    const activeStreamMap = new Map();
+    for (const stream of activeStreams) {
+      activeStreamMap.set(stream.name, {
+        isLive: stream.active,
+        viewers: stream.clients.filter(c => !c.publishing).length,
+      });
+    }
+    
+    // Update all streams
+    for (const dbStream of currentLiveStreams) {
+      const streamStats = activeStreamMap.get(dbStream.username);
+      
+      if (!streamStats || !streamStats.isLive) {
+        // Stream is no longer active, mark it as offline
+        await prisma.streamInfo.update({
+          where: { username: dbStream.username },
+          data: {
+            isLive: false,
+            viewers: 0,
+            startedAt: new Date(0),
+          },
+        });
+      } else {
+        // Stream is still active, update viewers
+        await prisma.streamInfo.update({
+          where: { username: dbStream.username },
+          data: {
+            viewers: streamStats.viewers,
+          },
+        });
+      }
+    }
+    
+    // Process new streams that aren't in the database yet
+    for (const stream of activeStreams) {
+      if (stream.active) {
+        const existingStream = await prisma.streamInfo.findUnique({
+          where: { username: stream.name },
+        });
+        
+        if (existingStream && !existingStream.isLive) {
+          // Stream just went live
+          await prisma.streamInfo.update({
+            where: { username: stream.name },
+            data: {
+              isLive: true,
+              startedAt: new Date(),
+              viewers: stream.clients.filter(c => !c.publishing).length,
+            },
+          });
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error syncing stream status:", error);
   }
 }
