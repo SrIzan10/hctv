@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import StreamPlayer from '../StreamPlayer/StreamPlayer';
 import UserInfoCard from '../UserInfoCard/UserInfoCard';
 import ChatPanel from '../ChatPanel/ChatPanel';

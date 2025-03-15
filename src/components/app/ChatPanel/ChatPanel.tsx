@@ -22,7 +22,6 @@ export default function ChatPanel() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<WebSocket | null>(null);
   
-  // Setup WebSocket connection
   useEffect(() => {
     const socket = new WebSocket('ws://localhost:3000/api/stream/chat');
     socketRef.current = socket;
@@ -36,26 +35,19 @@ export default function ChatPanel() {
         const data = JSON.parse(event.data);
         setChatMessages(prev => [...prev, data]);
       } catch (e) {
-        // Handle plaintext responses (when sending messages)
         console.log('Received message confirmation:', event.data);
       }
-    };
-    
-    socket.onerror = (error) => {
-      console.error('WebSocket error:', error);
     };
     
     socket.onclose = () => {
       console.log('WebSocket closed');
     };
     
-    // Cleanup WebSocket on unmount
     return () => {
       socket.close();
     };
   }, []);
   
-  // Auto scroll to bottom when messages change
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -65,16 +57,13 @@ export default function ChatPanel() {
     }
   }, [chatMessages]);
   
-  // Function to send a message
   const sendMessage = () => {
     if (!message.trim()) return;
     
-    // Use existing socket connection if available, otherwise create a new one
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
       socketRef.current.send(message);
       setMessage('');
     } else {
-      // Fallback to creating a new connection
       const socket = new WebSocket('ws://localhost:3000/api/stream/chat');
       socket.onopen = () => {
         socket.send(message);

@@ -6,7 +6,6 @@ export async function SOCKET(
   request: import('http').IncomingMessage,
   server: import('ws').WebSocketServer
 ) {
-  console.log('A client connected');
   const cookies = parseCookieString(request.headers.cookie!);
   const { user } = await lucia.validateSession(cookies.auth_session);
   if (!user) {
@@ -48,10 +47,6 @@ export async function SOCKET(
         } */
       }
     });
-  });
-
-  client.on('close', () => {
-    console.log('A client disconnected');
   });
 }
 

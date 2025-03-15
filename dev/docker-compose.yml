@@ -17,24 +17,30 @@ services:
     environment:
       UID: 1000
       GID: 1000
+      API_AUTH: asdf
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx.conf:/etc/nginx/templates/nginx.conf.template
       - ./html:/var/www/html
-      - /dev/shm:/dev/shm
-    image: tiangolo/nginx-rtmp
+      - /dev/shm/hls:/dev/shm/hls
+    image: flv-module
     entrypoint:
         - /bin/sh
         - -c
         - |
-          usermod -u $${UID} www-data
-          groupmod -g $${GID} www-data
+          # Process the template file
+          mkdir -p /usr/local/nginx/conf
+          envsubst '$${API_AUTH}' < /etc/nginx/templates/nginx.conf.template > /usr/local/nginx/conf/nginx.conf
+          
+          echo "Setting UID to $${UID} and GID to $${GID}"
+          usermod -u $${UID} nginx || echo "failed to change uid"
+          groupmod -g $${GID} nginx || echo "failed to change gid"
 
           mkdir -p /usr/local/nginx/proxy_temp /usr/local/nginx/client_body_temp
-          chown -R www-data:www-data /usr/local/nginx
-          
-          chown -R www-data:www-data /var/www/html
+          chown -R nginx:nginx /usr/local/nginx
+          mkdir -p /var/www/html
+          chown -R nginx:nginx /var/www/html
 
-          mkdir -p /dev/shm/hls
-          chown -R www-data:www-data /dev/shm/hls
-          
-          nginx -g 'daemon off;'
+          echo "testing nginx config..."
+          /usr/local/nginx/sbin/nginx -t
+
+          /usr/local/nginx/sbin/nginx -g 'daemon off;'

@@ -1,11 +1,9 @@
 import prisma from '@/lib/db';
 import { NextRequest } from 'next/server';
-import { redirect } from 'next/navigation';
 
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
   const streamKey = formData.get('name')?.toString() || '';
-  console.log('streamKey:', streamKey);
 
   const key = await prisma.streamKey.findFirst({
     where: {

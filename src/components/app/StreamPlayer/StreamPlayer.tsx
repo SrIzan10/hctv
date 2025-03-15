@@ -24,6 +24,18 @@ export default function StreamPlayer() {
         slot="media"
         crossOrigin="anonymous"
         autoplay
+        config={{
+          lowLatencyMode: true,
+          liveSyncDurationCount: 2, // Use only 1 segment for sync
+          liveMaxLatencyDurationCount: 3, // Maximum latency allowed
+          liveDurationInfinity: true,
+          enableWorker: true,
+          backBufferLength: 0, // No back buffer
+          startLevel: -1, // Auto level selection
+          maxBufferLength: 4, // Maximum buffer length in seconds
+          maxMaxBufferLength: 6,
+          debug: false,
+        }}
       />
       <MediaLoadingIndicator slot="centered-chrome" noAutohide />
       <MediaControlBar className='w-full px-2'>
