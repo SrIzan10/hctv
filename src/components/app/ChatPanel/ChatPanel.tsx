@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Send } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useParams } from 'next/navigation';
 
 interface User {
   id: string;
@@ -17,13 +18,14 @@ interface ChatMessage {
 }
 
 export default function ChatPanel() {
+  const { username } = useParams();
   const [message, setMessage] = useState('');
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<WebSocket | null>(null);
   
   useEffect(() => {
-    const socket = new WebSocket('ws://localhost:3000/api/stream/chat');
+    const socket = new WebSocket(`/api/stream/chat/${username}`);
     socketRef.current = socket;
     
     socket.onopen = () => {
