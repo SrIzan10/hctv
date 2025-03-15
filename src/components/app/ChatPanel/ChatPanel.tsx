@@ -6,67 +6,64 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useParams } from 'next/navigation';
 
-interface User {
-  id: string;
-  username: string;
-  pfpUrl: string;
-}
-
-interface ChatMessage {
-  user: User;
-  message: string;
-}
-
 export default function ChatPanel() {
   const { username } = useParams();
   const [message, setMessage] = useState('');
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<WebSocket | null>(null);
-  
+
   useEffect(() => {
-    const socket = new WebSocket(`ws://${window.location.host}/api/stream/chat/${username}`);
+    const socket = new WebSocket(
+      `ws${window.location.protocol === 'https:' ? 's' : ''}://${
+        window.location.host
+      }/api/stream/chat`
+    );
     socketRef.current = socket;
-    
+
     socket.onopen = () => {
       console.log('WebSocket connected');
     };
-    
+
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        setChatMessages(prev => [...prev, data]);
+        setChatMessages((prev) => [...prev, data]);
       } catch (e) {
         console.log('Received message confirmation:', event.data);
       }
     };
-    
+
     socket.onclose = () => {
       console.log('WebSocket closed');
     };
-    
+
     return () => {
       socket.close();
     };
   }, []);
-  
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
     if (chatMessages.length > 100) {
-      setChatMessages(prev => prev.slice(chatMessages.length - 100));
+      setChatMessages((prev) => prev.slice(chatMessages.length - 100));
     }
   }, [chatMessages]);
-  
+
   const sendMessage = () => {
     if (!message.trim()) return;
-    
+
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
       socketRef.current.send(message);
       setMessage('');
     } else {
-      const socket = new WebSocket('ws://localhost:3000/api/stream/chat');
+      const socket = new WebSocket(
+        `ws${window.location.protocol === 'https:' ? 's' : ''}://${
+          window.location.host
+        }/api/stream/chat`
+      );
       socket.onopen = () => {
         socket.send(message);
         setMessage('');
@@ -106,15 +103,22 @@ export default function ChatPanel() {
             placeholder="Type a message"
             className="flex-1 bg-transparent focus-visible:ring-offset-0"
           />
-          <Button
-            size="icon"
-            className="text-black transition-colors"
-            onClick={sendMessage}
-          >
+          <Button size="icon" className="text-black transition-colors" onClick={sendMessage}>
             <Send className="h-4 w-4" />
           </Button>
         </div>
       </div>
     </div>
   );
+}
+
+interface User {
+  id: string;
+  username: string;
+  pfpUrl: string;
+}
+
+interface ChatMessage {
+  user: User;
+  message: string;
 }
