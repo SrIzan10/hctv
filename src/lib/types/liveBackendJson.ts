@@ -1,24 +1,48 @@
-export interface RtmpStat {
-  nginxt_version: string;
-  compiler: string;
-  built: string;
-  pid: number;
-  uptime: number;
-  naccepted: number;
-  bw_in: number;
-  bw_out: number;
-  clients: number;
-  applications: Application[];
+/**
+ * Types for nginx-http-flv module statistics
+ */
+
+// Client information
+interface Client {
+  id: number;
+  address: string;
+  time: number;
+  flashver: string;
+  swfurl?: string;
+  dropped: number;
+  avsync: number;
+  timestamp: number;
+  publishing: boolean;
+  active: boolean;
 }
 
-interface Application {
-  name: string;
-  live: LiveStream[];
-  hls: HlsStream[];
-  dash: DashStream[];
+// Video metadata
+interface VideoMeta {
+  width: number;
+  height: number;
+  frame_rate: number;
+  codec: string;
+  profile: string;
+  compat: number;
+  level: number;
 }
 
-interface LiveStream {
+// Audio metadata
+interface AudioMeta {
+  codec: string;
+  profile: string;
+  channels: number;
+  sample_rate: number;
+}
+
+// Stream metadata
+interface StreamMeta {
+  video: VideoMeta;
+  audio: AudioMeta;
+}
+
+// Stream information
+interface Stream {
   name: string;
   time: number;
   bw_in: number;
@@ -28,53 +52,66 @@ interface LiveStream {
   bw_audio: number;
   bw_video: number;
   clients: Client[];
-}
-
-interface HlsStream {
-  name: string;
-  bw_in: number;
-  bytes_in: number;
-  bw_out: number;
-  bytes_out: number;
-}
-
-interface DashStream {
-  name: string;
-  bw_in: number;
-  bytes_in: number;
-  bw_out: number;
-  bytes_out: number;
-}
-
-interface Client {
-  id: string;
-  address: string;
-  time: number;
-  flashver: string;
-  dropped: number;
-  avsync: number;
-  timestamp: number;
+  records: any[]; // Empty array in the provided example
+  meta: StreamMeta;
+  nclients: number;
   publishing: boolean;
   active: boolean;
-  audio: AudioStream;
-  video: VideoStream;
 }
 
-interface AudioStream {
-  codec: string;
-  profile: string;
-  level: string;
-  bw: number;
-  channels: number;
-  sample_rate: number;
+// Live application section
+interface Live {
+  streams: Stream[];
+  nclients: number;
 }
 
-interface VideoStream {
-  codec: string;
-  profile: string;
-  level: string;
-  bw: number;
-  width: number;
-  height: number;
-  frame_rate: number;
+// Recorder configuration
+interface Recorder {
+  id: string;
+  flags: string[];
+  unique: boolean;
+  append: boolean;
+  lock_file: boolean;
+  notify: boolean;
+  path: string;
+  max_size: number;
+  max_frames: number;
+  interval: number;
+  suffix: string;
+}
+
+// Recorders section
+interface Recorders {
+  count: number;
+  lists: Recorder[];
+}
+
+// Application information
+interface Application {
+  name: string;
+  live: Live;
+  recorders: Recorders;
+}
+
+// Server information
+interface Server {
+  port: number;
+  server_index: number;
+  applications: Application[];
+}
+
+// Root HTTP-FLV structure
+export interface HttpFlv {
+  nginx_version: string;
+  nginx_http_flv_version: string;
+  compiler: string;
+  built: string;
+  pid: number;
+  uptime: number;
+  naccepted: number;
+  bw_in: number;
+  bytes_in: number;
+  bw_out: number;
+  bytes_out: number;
+  servers: Server[];
 }

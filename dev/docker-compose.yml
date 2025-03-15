@@ -17,7 +17,7 @@ services:
     environment:
       UID: 1000
       GID: 1000
-      API_AUTH: asdf
+      API_AUTH: skibiditoilet
     volumes:
       - ./nginx.conf:/etc/nginx/templates/nginx.conf.template
       - ./html:/var/www/html

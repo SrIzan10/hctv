@@ -97,7 +97,7 @@ function StreamerItem({ streamer }: { streamer: StreamInfoResponse[0] }) {
         <div className="flex-1">
           <p className="font-medium truncate">{streamer.username}</p>
           <p className="text-sm truncate">{streamer.category}</p>
-          {streamer.isLive && (
+          {false && streamer.isLive && (
             <p className="text-sm">
               {streamer.viewers} viewer{streamer.viewers === 1 ? '' : 's'}
             </p>

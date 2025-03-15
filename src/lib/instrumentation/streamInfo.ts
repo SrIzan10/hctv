@@ -1,5 +1,5 @@
 import prisma from '@/lib/db';
-import { roomService } from '@/lib/services/livekit';
+import { HttpFlv } from '../types/liveBackendJson';
 
 export default async function runner() {
   // if there are no users it explodes so yeah
@@ -45,13 +45,21 @@ export async function initializeStreamInfo(channelId?: string) {
 }
 
 export async function syncStream() {
-  // get all active rooms
-  const rooms = await roomService.listRooms();
+  const request = (
+    await (
+      await fetch(`${process.env.LIVE_SERVER_URL}/stat`, {
+        headers: {
+          Authorization: process.env.STAT_AUTH!,
+        },
+      })
+    ).json()
+  )['http-flv'] as HttpFlv;
+
+  const rooms = request.servers[0].applications.filter(app => app.name === 'channel-live')[0].live.streams;
 
   // process each room
   for (const room of rooms) {
-    const isLive = room.numPublishers >= 1;
-
+    const isLive = room.active;
     const originalStreamInfo = await prisma.streamInfo.findUnique({
       where: { username: room.name },
     });
@@ -78,7 +86,7 @@ export async function syncStream() {
       },
       update: {
         isLive,
-        viewers: room.numParticipants - 1,
+        viewers: room.clients.filter(c => !c.publishing).length,
         startedAt: !isLive
           ? new Date(0)
           : originalStreamInfo?.isLive
