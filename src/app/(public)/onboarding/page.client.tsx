@@ -20,6 +20,7 @@ export default function OnboardingClient() {
       </CardHeader>
       <CardContent>
         <h1 className='text-red-500 animate-pulse animate-bounce'>REFRESH THE SITE AFTER SUBMITTING THE FORM!!</h1>
+        <p>join #hctv! you will get welcomed to the channel after submitting the form!</p>
         <UniversalForm
           fields={[
             { name: 'userId', label: 'User ID', type: 'hidden', value: user?.id },

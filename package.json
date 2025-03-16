@@ -12,7 +12,8 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev --name",
     "ui:add": "shadcn add",
-    "prepare": "next-ws patch"
+    "prepare": "next-ws patch",
+    "act": "act --secret-file .env.ci"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
