@@ -25,6 +25,17 @@ export async function SOCKET(
   const username = url.pathname.split('/').at(-1);
   client.targetUsername = username!;
 
+  await prisma.streamInfo.update({
+    where: {
+      username,
+    },
+    data: {
+      viewers: {
+        increment: 1,
+      },
+    },
+  });
+
   client.on('message', (message) => {
     const msg = message.toString();
     server.clients.forEach((c) => {
@@ -56,36 +67,25 @@ export async function SOCKET(
     });
   });
 
-  await prisma.streamInfo.update({
-    where: {
-      username,
-    },
-    data: {
-      viewers: {
-        increment: 1,
-      },
-    },
-  });
-
   client.on('close', async () => {
     console.log('client disconnected');
-    const { viewers } = (await prisma.streamInfo.findUnique({
+    const streamInfo = await prisma.streamInfo.findUnique({
       where: {
         username,
       },
       select: {
         viewers: true,
       },
-    }))!;
+    });
+
+    if (!streamInfo) return;
+
     await prisma.streamInfo.update({
       where: {
         username,
       },
       data: {
-        viewers: {
-          decrement: viewers > 0 ? 1 : 0,
-          set: viewers === 0 ? 0 : undefined,
-        },
+        viewers: streamInfo.viewers === 0 ? { set: 0 } : { decrement: 1 },
       },
     });
   });
