@@ -90,6 +90,7 @@ export async function onboard(prev: any, formData: FormData) {
   await initializeStreamInfo(createdChannel.id);
 
   await fetch(process.env.WELCOME_WORKFLOW_URL!, {
+    method: 'POST',
     body: JSON.stringify({
       username: zod.data.username,
     }),
