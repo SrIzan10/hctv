@@ -1,4 +1,5 @@
 import { lucia } from '@/lib/auth';
+import prisma from '@/lib/db';
 import { resolveUserPersonalChannel } from '@/lib/db/resolve';
 import type { WebSocket } from 'ws';
 
@@ -52,6 +53,40 @@ export async function SOCKET(
           }
         } */
       }
+    });
+  });
+
+  await prisma.streamInfo.update({
+    where: {
+      username,
+    },
+    data: {
+      viewers: {
+        increment: 1,
+      },
+    },
+  });
+
+  client.on('close', async () => {
+    console.log('client disconnected');
+    const { viewers } = (await prisma.streamInfo.findUnique({
+      where: {
+        username,
+      },
+      select: {
+        viewers: true,
+      },
+    }))!;
+    await prisma.streamInfo.update({
+      where: {
+        username,
+      },
+      data: {
+        viewers: {
+          decrement: viewers > 0 ? 1 : 0,
+          set: viewers === 0 ? 0 : undefined,
+        },
+      },
     });
   });
 }

@@ -22,11 +22,6 @@ export default function Sidebar({ ...props }: React.ComponentProps<typeof UISide
   const { stream, isLoading } = useStreams();
   const [followedExpanded, setFollowedExpanded] = React.useState(true);
 
-  // console log stream every time it changes
-  React.useEffect(() => {
-    console.log('stream info', stream);
-  }, [stream]);
-
   if (isLoading) return <SidebarSkeleton />;
 
   const liveStreamers = stream?.filter((s) => s.isLive) || [];
@@ -97,7 +92,7 @@ function StreamerItem({ streamer }: { streamer: StreamInfoResponse[0] }) {
         <div className="flex-1">
           <p className="font-medium truncate">{streamer.username}</p>
           <p className="text-sm truncate">{streamer.category}</p>
-          {false && streamer.isLive && (
+          {streamer.isLive && (
             <p className="text-sm">
               {streamer.viewers} viewer{streamer.viewers === 1 ? '' : 's'}
             </p>

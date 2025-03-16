@@ -60,7 +60,6 @@ export async function syncStream() {
     const data = await response.json();
     const httpFlv = data['http-flv'] as HttpFlv;
     
-    // Handle case where the RTMP server is not available or doesn't have the expected data structure
     if (!httpFlv?.servers?.[0]?.applications) {
       return;
     }
@@ -68,12 +67,10 @@ export async function syncStream() {
     const channelLiveApp = httpFlv.servers[0].applications.find(app => app.name === 'channel-live');
     const activeStreams = channelLiveApp?.live?.streams || [];
     
-    // Get all streams that are currently marked as live in the database
     const currentLiveStreams = await prisma.streamInfo.findMany({
       where: { isLive: true },
     });
-    
-    // Create a map of active streams from the RTMP server
+
     const activeStreamMap = new Map();
     for (const stream of activeStreams) {
       activeStreamMap.set(stream.name, {
@@ -82,12 +79,10 @@ export async function syncStream() {
       });
     }
     
-    // Update all streams
     for (const dbStream of currentLiveStreams) {
       const streamStats = activeStreamMap.get(dbStream.username);
       
       if (!streamStats || !streamStats.isLive) {
-        // Stream is no longer active, mark it as offline
         await prisma.streamInfo.update({
           where: { username: dbStream.username },
           data: {
@@ -96,18 +91,9 @@ export async function syncStream() {
             startedAt: new Date(0),
           },
         });
-      } else {
-        // Stream is still active, update viewers
-        await prisma.streamInfo.update({
-          where: { username: dbStream.username },
-          data: {
-            viewers: streamStats.viewers,
-          },
-        });
       }
     }
     
-    // Process new streams that aren't in the database yet
     for (const stream of activeStreams) {
       if (stream.active) {
         const existingStream = await prisma.streamInfo.findUnique({
@@ -115,13 +101,11 @@ export async function syncStream() {
         });
         
         if (existingStream && !existingStream.isLive) {
-          // Stream just went live
           await prisma.streamInfo.update({
             where: { username: stream.name },
             data: {
               isLive: true,
               startedAt: new Date(),
-              viewers: stream.clients.filter(c => !c.publishing).length,
             },
           });
         }

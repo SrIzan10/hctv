@@ -11,6 +11,7 @@ export async function GET(request: Request): Promise<Response> {
 	const state = url.searchParams.get("state");
 	const storedState = cookies.get("slack_oauth_state")?.value ?? null;
 	if (!code || !state || !storedState || state !== storedState) {
+    console.log('invalid state stuff');
 		return new Response(null, {
 			status: 400
 		});
