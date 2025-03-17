@@ -1,3 +1,4 @@
+const LIVE_SERVER_URL = process.env.NODE_ENV === 'production' ? 'https://backend.hctv.srizan.dev' : 'http://localhost:8888'
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -11,7 +12,7 @@ const nextConfig = {
     ]
   },
   env: {
-    LIVE_SERVER_URL: process.env.NODE_ENV === 'production' ? 'https://backend.hctv.srizan.dev' : 'http://localhost:8888',
+    LIVE_SERVER_URL,
   },
   reactStrictMode: false,
 };

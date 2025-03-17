@@ -20,7 +20,7 @@ export default function StreamPlayer() {
   return (
     <MediaController className='w-full aspect-video'>
       <HlsVideo
-        src={`${process.env.LIVE_SERVER_URL}/hls/${username}.m3u8`}
+        src={`/api/rtmp/hls/${username}.m3u8`}
         slot="media"
         crossOrigin="anonymous"
         autoplay
