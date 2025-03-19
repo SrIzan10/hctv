@@ -19,7 +19,6 @@ export default function OnboardingClient() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <h1 className='text-red-500 animate-pulse animate-bounce'>REFRESH THE SITE AFTER SUBMITTING THE FORM!!</h1>
         <p>join #hctv! you will get welcomed to the channel after submitting the form!</p>
         <UniversalForm
           fields={[
@@ -29,8 +28,7 @@ export default function OnboardingClient() {
           schemaName="onboard"
           action={onboard}
           onActionComplete={() => {
-            router.refresh();
-            redirect('/');
+            window.location.href = '/';
           }}
         />
       </CardContent>
