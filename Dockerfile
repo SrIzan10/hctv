@@ -1,22 +1,21 @@
-# Stage 1: Building the code
-FROM node:lts-alpine AS builder
+FROM oven/bun:alpine AS builder
 
 WORKDIR /app
 
 # Copy package files
-COPY package.json yarn.lock ./
+COPY package.json bun.lockb ./
 
 # Install dependencies
-RUN yarn install --frozen-lockfile
+RUN bun install
 
 # Copy app files
 COPY . .
 
 # Build app
-RUN yarn build
+RUN bun run build
 
 # Stage 2: Production
-FROM node:lts-alpine AS runner
+FROM oven/bun:alpine AS runner
 
 WORKDIR /app
 
@@ -25,15 +24,15 @@ ENV NODE_ENV=production
 # Copy necessary files
 COPY --from=builder /app/next.config.mjs ./
 COPY --from=builder /app/package.json ./
-COPY --from=builder /app/yarn.lock ./
+COPY --from=builder /app/bun.lockb ./
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules ./node_modules
 
 # Install production dependencies only
 RUN apk add --no-cache openssl
-RUN yarn install --frozen-lockfile --production && \
-    yarn cache clean && yarn run prepare
+RUN bun pm cache rm && bun run prepare
 
 # Remove unnecessary files
 RUN rm -rf /app/.git \
@@ -42,4 +41,4 @@ RUN rm -rf /app/.git \
 
 EXPOSE 3000
 
-CMD ["yarn", "start"]
+CMD ["bun", "start"]
