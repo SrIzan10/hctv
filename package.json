@@ -1,10 +1,11 @@
 {
-  "name": "hclive",
+  "name": "hctv",
   "module": "index.ts",
   "type": "module",
   "private": true,
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
     "build": "turbo run build",
