@@ -2,7 +2,7 @@
 
 import { createContext, useContext, ReactNode } from 'react'
 import useSWR from 'swr'
-import { Channel, StreamInfo } from '@prisma/client'
+import type { Channel, StreamInfo } from '@hctv/db'
 import { fetcher } from '../services/swr'
 
 const StreamContext = createContext<{

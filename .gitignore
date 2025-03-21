@@ -40,3 +40,4 @@ certificates
 dev/psql
 
 .turbo
+packages/db/generated/client

@@ -1,6 +1,9 @@
 {
   "name": "@hctv/db",
-  "version": "1.0.0",
+  "version": "0.0.0",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "dependencies": {
     "@prisma/client": "^6.5.0",
     "prisma": "^6.5.0"

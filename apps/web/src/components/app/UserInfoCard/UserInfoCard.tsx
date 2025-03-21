@@ -1,5 +1,5 @@
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
-import type { StreamInfo, User } from '@prisma/client';
+import type { StreamInfo, User } from '@hctv/db';
 import FollowButton from './follow';
 import FollowCountText from './followCount';
 import ViewerCount from './viewerCount';

@@ -1,5 +1,5 @@
 import { lucia } from '@/lib/auth';
-import prisma from '@/lib/db';
+import prisma from '@hctv/db';
 import { resolveUserPersonalChannel } from '@/lib/db/resolve';
 import type { WebSocket } from 'ws';
 

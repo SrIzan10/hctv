@@ -2,13 +2,26 @@
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^db:generate", "^build"],
+      "outputs": [".next/**", "!.next/cache/**"]
+    },
+    "setup": {
+      "dependsOn": ["^dd", "^db:generate", "^build"],
+      "outputs": [".next/**", "!.next/cache/**"]
+    },
+    "start": {
+      "dependsOn": ["^dd", "^db:generate", "^build"],
       "outputs": [".next/**", "!.next/cache/**"]
     },
     "check-types": {
       "dependsOn": ["^check-types"]
     },
     "dev": {
+      "dependsOn": ["^dd", "db:generate"],
+      "persistent": true,
+      "cache": false
+    },
+    "dd": {
       "persistent": true,
       "cache": false
     },

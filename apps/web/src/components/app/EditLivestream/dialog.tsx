@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { StreamInfo } from '@prisma/client';
+import { StreamInfo } from '@hctv/db';
 import { UniversalForm } from '../UniversalForm/UniversalForm';
 import { editStreamInfo } from '@/lib/form/actions';
 import RegenerateKey from '../RegenerateKey/RegenerateKey';
@@ -31,7 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { Channel } from '@prisma/client';
+import type { Channel } from '@hctv/db';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import useSWR, { Fetcher } from 'swr';
 import { fetcher } from '@/lib/services/swr';

@@ -1,4 +1,4 @@
-import prisma from '@/lib/db';
+import prisma from '@hctv/db';
 import { NextRequest } from 'next/server';
 
 export async function POST(request: NextRequest) {

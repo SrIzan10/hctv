@@ -1,6 +1,6 @@
 import { PrismaAdapter } from '@lucia-auth/adapter-prisma';
 import { Lucia } from 'lucia';
-import prisma from '../db';
+import prisma from '@hctv/db';
 import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { Slack } from 'arctic';
