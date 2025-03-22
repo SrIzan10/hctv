@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import Navbar from '@/components/app/NavBar/NavBar';
 import { SessionProvider } from '@/lib/providers/SessionProvider';
-import { validateRequest } from '@/lib/auth';
+import { validateRequest } from '@/lib/auth/validate';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/lib/providers/ThemeProvider';
 import { SidebarProvider } from '@/components/ui/sidebar';

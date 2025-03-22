@@ -1,4 +1,4 @@
-import { validateRequest } from "@/lib/auth";
+import { validateRequest } from '@/lib/auth/validate';
 import fsP from 'fs/promises';
 import fs from 'fs'; 
 

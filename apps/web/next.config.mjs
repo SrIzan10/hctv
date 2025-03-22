@@ -25,6 +25,14 @@ const nextConfig = {
   reactStrictMode: false,
   output: 'standalone',
   outputFileTracingRoot: path.join(__dirname, '../../'),
+  async rewrites() {
+    return [
+      {
+        source: '/api/chat/:path*',
+        destination: `http://localhost:8000/:path*`,
+      },
+    ];
+  }
 };
 
 export default nextConfig;

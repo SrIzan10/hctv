@@ -1,0 +1,12 @@
+{
+  "name": "@hctv/auth",
+  "version": "0.0.0",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@hctv/db": "*",
+    "@lucia-auth/adapter-prisma": "^4.0.1",
+    "arctic": "^3.1.1"
+  }
+}

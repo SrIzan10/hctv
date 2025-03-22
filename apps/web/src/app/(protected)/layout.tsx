@@ -1,4 +1,4 @@
-import { validateRequest } from '@/lib/auth';
+import { validateRequest } from '@/lib/auth/validate';
 import { redirect, RedirectType } from 'next/navigation';
 
 export default async function Layout({ children }: { children: React.ReactNode }) {

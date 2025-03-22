@@ -22,7 +22,7 @@
       "cache": false
     },
     "dd": {
-      "persistent": true,
+      "persistent": false,
       "cache": false
     },
     "db:generate": {

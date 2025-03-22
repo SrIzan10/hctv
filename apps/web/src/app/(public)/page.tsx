@@ -1,7 +1,7 @@
 import LandingPage from '@/components/app/LandingPage/LandingPage';
 import { Card, CardContent } from '@/components/ui/card';
 import ConfusedDino from '@/components/ui/confuseddino';
-import { validateRequest } from '@/lib/auth';
+import { validateRequest } from '@/lib/auth/validate';
 import prisma from '@hctv/db';
 import { Avatar, AvatarImage, AvatarFallback } from '@radix-ui/react-avatar';
 import Image from 'next/image';

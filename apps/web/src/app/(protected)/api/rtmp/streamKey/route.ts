@@ -1,4 +1,4 @@
-import { validateRequest } from "@/lib/auth";
+import { validateRequest } from '@/lib/auth/validate';
 import prisma from '@hctv/db';
 import { NextRequest } from "next/server";
 

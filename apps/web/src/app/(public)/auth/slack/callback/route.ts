@@ -1,4 +1,4 @@
-import { slack, lucia } from '@/lib/auth';
+import { slack, lucia } from '@hctv/auth';
 import { cookies as nextCookies } from 'next/headers';
 import { decodeIdToken, OAuth2RequestError } from 'arctic';
 import { generateIdFromEntropySize } from 'lucia';

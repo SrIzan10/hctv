@@ -1,4 +1,4 @@
-import { lucia } from '@/lib/auth';
+import { lucia } from '@hctv/auth';
 import prisma from '@hctv/db';
 import { resolveUserPersonalChannel } from '@/lib/db/resolve';
 import type { WebSocket } from 'ws';

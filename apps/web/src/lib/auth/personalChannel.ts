@@ -1,4 +1,4 @@
-import { validateRequest } from ".";
+import { validateRequest } from '@/lib/auth/validate';
 import prisma from '@hctv/db';
 
 export async function getPersonalChannel(id?: string) {

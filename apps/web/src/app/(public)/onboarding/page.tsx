@@ -1,4 +1,4 @@
-import { validateRequest } from "@/lib/auth";
+import { validateRequest } from '@/lib/auth/validate';
 import { redirect } from "next/navigation";
 import OnboardingClient from "./page.client";
 

@@ -1,5 +1,5 @@
 import { generateState } from "arctic";
-import { slack } from "@/lib/auth";
+import { slack } from '@hctv/auth';
 import { cookies } from "next/headers";
 
 export async function GET(): Promise<Response> {

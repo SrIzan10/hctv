@@ -14,6 +14,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@hctv/auth": "*",
     "@hctv/db": "*",
     "@hookform/resolvers": "^3.9.1",
     "@livekit/components-react": "^2.7.0",
