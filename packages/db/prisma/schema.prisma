@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  slack_id      String
+  pfpUrl        String
+  hasOnboarded  Boolean   @default(false)
+
+  personalChannel    Channel?  @relation("PersonalChannel", fields: [personalChannelId], references: [id])
+  personalChannelId  String?   @unique
+
+  ownedChannels     Channel[] @relation("ChannelOwner")
+  managedChannels   Channel[] @relation("ChannelManagers")
+  sessions          Session[]
+  streams           StreamInfo[]
+  followers         Follow[]  @relation("UserFollows")
+
+  @@index([personalChannelId])
+}
+
+model Channel {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  pfpUrl    String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  personalFor User? @relation("PersonalChannel")
+
+  owner     User     @relation("ChannelOwner", fields: [ownerId], references: [id])
+  ownerId   String
+  managers  User[]   @relation("ChannelManagers")
+  streamInfo StreamInfo[]
+  followers Follow[] @relation("ChannelFollowers")
+  streamKey StreamKey?
+  
+  @@index([ownerId])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  expiresAt DateTime
+  user      User     @relation(references: [id], fields: [userId], onDelete: Cascade)
+}
+
+model StreamInfo {
+  id        String @id @default(cuid())
+  username  String @unique
+  title     String
+  thumbnail String
+  viewers   Int
+  category  String
+  startedAt DateTime
+  isLive    Boolean
+  
+  channelId String
+  channel   Channel @relation(fields: [channelId], references: [id])
+
+  ownedBy   User   @relation(fields: [userId], references: [id])
+  userId    String
+
+  // TODO: index on username
+}
+
+model Follow {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  
+  user      User     @relation("UserFollows", fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  
+  channel   Channel  @relation("ChannelFollowers", fields: [channelId], references: [id], onDelete: Cascade)
+  channelId String
+
+  @@unique([userId, channelId])
+  @@index([userId])
+  @@index([channelId])
+}
+
+model StreamKey {
+  id        String   @id @default(cuid())
+  key       String   @unique
+
+  channelId String   @unique
+  channel   Channel  @relation(fields: [channelId], references: [id])
+}
