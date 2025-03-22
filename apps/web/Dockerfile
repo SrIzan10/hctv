@@ -1,5 +1,5 @@
 FROM node:lts-alpine AS base
- 
+
 FROM base AS builder
 RUN apk update
 RUN apk add --no-cache libc6-compat
@@ -23,10 +23,9 @@ WORKDIR /app
 # First install the dependencies (as they change less often)
 COPY --from=builder /app/out/json/ .
 RUN yarn install --frozen-lockfile
- 
-# Build the project
+
 COPY --from=builder /app/out/full/ .
-RUN yarn turbo run build
+RUN --mount=type=secret,id=TURBO_TOKEN --mount=type=secret,id=TURBO_TEAM TURBO_TOKEN=$(cat /run/secrets/TURBO_TOKEN) TURBO_TEAM=$(cat /run/secrets/TURBO_TEAM) yarn turbo run build
  
 FROM base AS runner
 WORKDIR /app

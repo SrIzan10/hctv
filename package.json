@@ -8,10 +8,11 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "turbo run build",
+    "build": "dotenvx run -f .env.docker -- turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "docker:web": "docker build -t srizan10/hclive -f apps/web/Dockerfile ."
+    "docker:web": "dotenvx run -f .env.docker -- docker buildx build --platform linux/amd64 -f apps/web/Dockerfile . --build-arg TURBO_TEAM=\"ducktors\" --secret id=TURBO_TOKEN,env=TURBO_TOKEN --secret id=TURBO_TEAM,env=TURBO_TEAM --no-cache",
+    "denv:install": "curl -fsS https://dotenvx.sh | sudo sh"
   },
   "devDependencies": {
     "turbo": "^2.4.4"
