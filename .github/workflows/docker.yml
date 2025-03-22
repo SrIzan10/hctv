@@ -9,9 +9,6 @@ jobs:
   frontend:
     name: Push frontend to Docker Hub
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./apps/web
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
@@ -36,7 +33,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./Dockerfile
+          file: ./apps/web/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
