@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { validateRequest } from '@/lib/auth/validate';
-import prisma from '@hctv/db';
+import { prisma } from '@hctv/db';
 import zodVerify from '../zodVerify';
 import { onboardSchema, streamInfoEditSchema } from './zod';
 import { initializeStreamInfo } from '../instrumentation/streamInfo';

@@ -1,5 +1,5 @@
 import { validateRequest } from '@/lib/auth/validate';
-import prisma from '@hctv/db';
+import { prisma } from '@hctv/db';
 import EditLivestreamDialog from './dialog';
 
 export default async function EditLivestream() {

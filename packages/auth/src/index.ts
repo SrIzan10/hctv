@@ -1,6 +1,6 @@
 import { PrismaAdapter } from '@lucia-auth/adapter-prisma';
 import { Lucia } from 'lucia';
-import prisma from '@hctv/db';
+import { prisma } from '@hctv/db';
 import { Slack } from 'arctic';
 
 const adapter = new PrismaAdapter(prisma.session, prisma.user);

@@ -6,6 +6,7 @@
     "dev": "tsx watch src/index.ts"
   },
   "dependencies": {
+    "@hctv/auth": "*",
     "@hctv/db": "*",
     "@hono/node-server": "^1.14.0",
     "@hono/node-ws": "^1.1.0",

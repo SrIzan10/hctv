@@ -1,7 +1,8 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { lucia, validateRequest } from '.';
+import { lucia } from '@hctv/auth';
+import { validateRequest } from '@/lib/auth/validate';
 import { redirect } from 'next/navigation';
 
 export async function logout() {

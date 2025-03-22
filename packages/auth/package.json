@@ -4,6 +4,7 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "type": "module",
   "dependencies": {
     "@hctv/db": "*",
     "@lucia-auth/adapter-prisma": "^4.0.1",

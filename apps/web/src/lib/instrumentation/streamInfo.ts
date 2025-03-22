@@ -1,4 +1,4 @@
-import prisma from '@hctv/db';
+import { prisma } from '@hctv/db';
 import { HttpFlv } from '../types/liveBackendJson';
 
 export default async function runner() {

@@ -1,5 +1,5 @@
 import { validateRequest } from '@/lib/auth/validate';
-import prisma from '@hctv/db';
+import { prisma } from '@hctv/db';
 import type { NextRequest } from 'next/server';
 
 export async function GET(request: NextRequest) {

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dd": "docker compose --file ../../dev/docker-compose.yml up -d",
-    "dev": "next dev",
+    "dev": "next dev --turbo",
     "donly": "docker compose --file ../../dev/docker-compose.yml up",
     "build": "next build",
     "start": "next start",
