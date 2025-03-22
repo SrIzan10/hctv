@@ -15,7 +15,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@hctv/db": "workspace:*",
+    "@hctv/db": "*",
     "@hookform/resolvers": "^3.9.1",
     "@livekit/components-react": "^2.7.0",
     "@lucia-auth/adapter-prisma": "^4.0.1",

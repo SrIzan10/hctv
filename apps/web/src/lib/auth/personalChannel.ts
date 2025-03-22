@@ -1,5 +1,5 @@
 import { validateRequest } from ".";
-import prisma from "../db";
+import prisma from '@hctv/db';
 
 export async function getPersonalChannel(id?: string) {
   const { user } = await validateRequest();

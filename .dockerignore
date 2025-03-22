@@ -1,0 +1,41 @@
+# Version control
+.git
+.gitignore
+ 
+# Dependencies
+**/node_modules
+.pnpm-store
+ 
+# Build outputs
+**/dist
+**/.next
+**/build
+**/out
+ 
+# Development files
+**/.env*
+!**/.env.example
+**/.vscode
+**/.idea
+**/coverage
+**/.turbo
+**/.cache
+ 
+# System files
+.DS_Store
+**/Thumbs.db
+ 
+# Logs
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
+ 
+# Test files
+**/__tests__
+**/*.test.*
+**/*.spec.*
+
+packages/db/generated
+dev/
+flv-module/
