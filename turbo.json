@@ -3,7 +3,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^db:generate", "prepare"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "setup": {
       "dependsOn": ["^dd", "^db:generate", "^build"],

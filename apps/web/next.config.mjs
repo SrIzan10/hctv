@@ -29,7 +29,7 @@ const nextConfig = {
     return [
       {
         source: '/api/stream/chat/:path*',
-        destination: `http://localhost:8000/:path*`,
+        destination: `http://${process.env.NODE_ENV === 'production' ? 'chat' : 'localhost'}:8000/:path*`,
       },
     ];
   }

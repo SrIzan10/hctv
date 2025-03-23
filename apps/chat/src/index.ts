@@ -16,6 +16,10 @@ app.get('/', async (c) => {
   return c.text(threed);
 });
 
+app.get('/up', async (c) => {
+  return c.text('it works');
+});
+
 app.get(
   '/ws/:username',
   upgradeWebSocket((c) => ({

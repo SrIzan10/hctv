@@ -5,6 +5,7 @@ import type { IncomingMessage } from 'http';
 import type { Server } from 'node:http';
 import type { Http2SecureServer, Http2Server } from 'node:http2';
 import type { Duplex } from 'node:stream';
+import type { Buffer } from 'node:buffer';
 import type { Channel, User } from '@hctv/db';
 
 /**
@@ -214,7 +215,7 @@ export declare class WSContext<T = unknown> {
   protocol: string | null;
   close(code?: number, reason?: string): void;
 }
-export type WSMessageReceive = string | Blob | ArrayBufferLike;
+export type WSMessageReceive = string | Blob | ArrayBufferLike | Buffer;
 export declare const createWSMessageEvent: (
   source: WSMessageReceive
 ) => MessageEvent<WSMessageReceive>;
