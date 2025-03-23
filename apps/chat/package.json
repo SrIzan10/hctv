@@ -8,6 +8,7 @@
   "dependencies": {
     "@hctv/auth": "*",
     "@hctv/db": "*",
+    "@hctv/hono-ws": "*",
     "@hono/node-server": "^1.14.0",
     "@hono/node-ws": "^1.1.0",
     "@oslojs/encoding": "^1.1.0",

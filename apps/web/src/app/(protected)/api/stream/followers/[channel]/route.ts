@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@hctv/db';
+import { prisma } from '@hctv/db';
 import { resolveChannelNameId } from '@/lib/db/resolve';
 
 export async function GET(
@@ -15,7 +15,7 @@ export async function GET(
 
     const channelId = await resolveChannelNameId(channel);
 
-    const count = await db.follow.count({
+    const count = await prisma.follow.count({
       where: {
         channelId,
       },

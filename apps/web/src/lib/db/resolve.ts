@@ -1,7 +1,7 @@
-import db from '@hctv/db';
+import { prisma } from '@hctv/db';
 
 export async function resolveChannelNameId(channelName: string) {
-  const channel = await db.channel.findUnique({
+  const channel = await prisma.channel.findUnique({
     where: {
       name: channelName,
     },
@@ -15,7 +15,7 @@ export async function resolveChannelNameId(channelName: string) {
 }
 
 export async function resolveUserPersonalChannel(userId: string) {
-  const channel = await db.channel.findFirst({
+  const channel = await prisma.channel.findFirst({
     where: {
       personalFor: {
         id: userId,
