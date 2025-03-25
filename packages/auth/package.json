@@ -2,12 +2,23 @@
   "name": "@hctv/auth",
   "version": "0.0.0",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
   },
   "type": "module",
+  "scripts": {
+    "build": "tsc --build"
+  },
   "dependencies": {
     "@hctv/db": "*",
     "@lucia-auth/adapter-prisma": "^4.0.1",
-    "arctic": "^3.1.1"
+    "arctic": "^3.1.1",
+    "lucia": "^3.2.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.2"
   }
 }

@@ -11,7 +11,8 @@
     "build": "dotenvx run -f .env.docker -- turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "docker:web": "dotenvx run -f .env.docker -- docker buildx build --platform linux/amd64 -f apps/web/Dockerfile . --build-arg TURBO_TEAM=\"ducktors\" --secret id=TURBO_TOKEN,env=TURBO_TOKEN --secret id=TURBO_TEAM,env=TURBO_TEAM --no-cache",
+    "docker:web": "dotenvx run -f .env.docker -- docker buildx build --platform linux/amd64 -f apps/web/Dockerfile . --secret id=TURBO_TOKEN,env=TURBO_TOKEN --secret id=TURBO_TEAM,env=TURBO_TEAM --no-cache",
+    "docker:chat": "dotenvx run -f .env.docker -- docker buildx build --platform linux/amd64 -f apps/chat/Dockerfile . --secret id=TURBO_TOKEN,env=TURBO_TOKEN --secret id=TURBO_TEAM,env=TURBO_TEAM --no-cache",
     "act": "act --secret-file .env.ci"
   },
   "devDependencies": {

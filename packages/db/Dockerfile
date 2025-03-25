@@ -30,7 +30,7 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 prisma
 USER prisma
  
-COPY --from=installer --chown=prisma:nodejs /app/packages/db ./packages/db
+COPY --from=installer --chown=prisma:nodejs /app/packages ./packages
 COPY --from=installer --chown=prisma:nodejs /app/node_modules ./node_modules
 COPY --from=installer --chown=prisma:nodejs /app/package.json ./package.json
 
