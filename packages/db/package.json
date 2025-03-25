@@ -3,8 +3,9 @@
   "version": "0.0.0",
   "exports": {
     ".": {
-      "types": "./src/index.d.ts",
-      "default": "./src/index.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     }
   },
   "type": "module",
