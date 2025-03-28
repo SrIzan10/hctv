@@ -28,6 +28,7 @@ export default function ChatPanel() {
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        if (data.type === 'ping' || data.type === 'pong' || !data.user) return;
         setChatMessages((prev) => [...prev, data]);
       } catch (e) {
         console.log('Received message confirmation:', event.data);
@@ -56,7 +57,7 @@ export default function ChatPanel() {
     if (!message.trim()) return;
 
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-      socketRef.current.send(message);
+      socketRef.current.send(JSON.stringify({ type: 'message', message }));
       setMessage('');
     } else {
       const socket = new WebSocket(
@@ -65,11 +66,20 @@ export default function ChatPanel() {
         }/api/stream/chat/ws/${username}`
       );
       socket.onopen = () => {
-        socket.send(message);
+        socket.send(JSON.stringify({ type: 'message', message }));
         setMessage('');
       };
     }
   };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+        socketRef.current.send(JSON.stringify({ type: 'ping' }));
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="md:border flex flex-col w-full min-w-[350px] h-full bg-mantle">

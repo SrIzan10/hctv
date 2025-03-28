@@ -88,22 +88,31 @@ app.get(
       });
     },
     onMessage(evt, ws) {
-      const msg = evt.data.toString();
-      ws.wss.clients.forEach((c) => {
-        const client = c as ModifiedWebSocket;
-        if (client.readyState === client.OPEN && client.targetUsername === ws.targetUsername) {
-          c.send(
-            JSON.stringify({
-              user: {
-                id: ws.user.id,
-                username: ws.personalChannel.name,
-                pfpUrl: ws.user.pfpUrl,
-              },
-              message: msg,
-            })
-          );
-        }
-      });
+      const msg = JSON.parse(evt.data.toString());
+      if (msg.type === 'ping') {
+        ws.send(
+          JSON.stringify({
+            type: 'pong',
+          })
+        );
+        return;
+      } else if (msg.type === 'message') {
+        ws.wss.clients.forEach((c) => {
+          const client = c as ModifiedWebSocket;
+          if (client.readyState === client.OPEN && client.targetUsername === ws.targetUsername) {
+            c.send(
+              JSON.stringify({
+                user: {
+                  id: ws.user.id,
+                  username: ws.personalChannel.name,
+                  pfpUrl: ws.user.pfpUrl,
+                },
+                message: msg.message,
+              })
+            );
+          }
+        });
+      }
     },
   }))
 );
