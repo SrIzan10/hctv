@@ -38,6 +38,7 @@ next-env.d.ts
 
 certificates
 dev/psql
+dev/redis
 
 .turbo
 packages/db/generated/client

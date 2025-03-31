@@ -10,6 +10,12 @@ services:
       - ./psql:/var/lib/postgresql/data
     ports:
       - 5555:5432
+  redis:
+    image: redis:7.4-alpine
+    volumes:
+      - ./redis:/data
+    ports:
+      - 6379:6379
   nginx-rtmp:
     # ports:
     #   - 1935:1935
