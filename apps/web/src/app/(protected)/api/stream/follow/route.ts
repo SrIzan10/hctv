@@ -1,5 +1,3 @@
-import { getPersonalChannel } from '@/lib/auth/personalChannel';
-import { resolveOwnedChannels } from '@/lib/auth/resolve';
 import { validateRequest } from '@/lib/auth/validate';
 import { prisma } from '@hctv/db';
 import { NextRequest } from 'next/server';
