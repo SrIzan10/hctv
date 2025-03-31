@@ -102,12 +102,10 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const jobId = await queue.add('notifier:sendMsg', {
+    await queue.add(`newFollow:${username}`, {
       text: `You started following \`${username}\`!\n_Stream notifications are enabled by default. If you want to disable them, you can do so in \`Profile > Notifications\`._`,
       channel: user.slack_id,
     });
-    
-    console.log(`Job sent with ID: ${jobId} for user ${user.id} following ${username}`);
   }
 
   return new Response(JSON.stringify({ following: !isFollowing }), { status: 200 });

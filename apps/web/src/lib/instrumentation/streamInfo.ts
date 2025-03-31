@@ -1,5 +1,6 @@
 import { prisma } from '@hctv/db';
 import { HttpFlv } from '../types/liveBackendJson';
+import { getNotificationQueue } from '../workers';
 
 export default async function runner() {
   // if there are no users it explodes so yeah
@@ -51,22 +52,24 @@ export async function syncStream() {
         Authorization: process.env.STAT_AUTH!,
       },
     });
-    
+
     if (!response.ok) {
       console.error(`Failed to fetch stream stats: ${response.status} ${response.statusText}`);
       return;
     }
-    
+
     const data = await response.json();
     const httpFlv = data['http-flv'] as HttpFlv;
-    
+
     if (!httpFlv?.servers?.[0]?.applications) {
       return;
     }
-    
-    const channelLiveApp = httpFlv.servers[0].applications.find(app => app.name === 'channel-live');
+
+    const channelLiveApp = httpFlv.servers[0].applications.find(
+      (app) => app.name === 'channel-live'
+    );
     const activeStreams = channelLiveApp?.live?.streams || [];
-    
+
     const currentLiveStreams = await prisma.streamInfo.findMany({
       where: { isLive: true },
     });
@@ -75,13 +78,13 @@ export async function syncStream() {
     for (const stream of activeStreams) {
       activeStreamMap.set(stream.name, {
         isLive: stream.active,
-        viewers: stream.clients.filter(c => !c.publishing).length,
+        viewers: stream.clients.filter((c) => !c.publishing).length,
       });
     }
-    
+
     for (const dbStream of currentLiveStreams) {
       const streamStats = activeStreamMap.get(dbStream.username);
-      
+
       if (!streamStats || !streamStats.isLive) {
         await prisma.streamInfo.update({
           where: { username: dbStream.username },
@@ -93,13 +96,13 @@ export async function syncStream() {
         });
       }
     }
-    
+
     for (const stream of activeStreams) {
       if (stream.active) {
         const existingStream = await prisma.streamInfo.findUnique({
           where: { username: stream.name },
         });
-        
+
         if (existingStream && !existingStream.isLive) {
           await prisma.streamInfo.update({
             where: { username: stream.name },
@@ -108,10 +111,28 @@ export async function syncStream() {
               startedAt: new Date(),
             },
           });
+
+          const subscribedFollowers = await prisma.follow.findMany({
+            where: {
+              channelId: existingStream.channelId,
+              notifyStream: true,
+            },
+            include: {
+              user: true,
+            },
+          });
+          
+          const queue = getNotificationQueue();
+          for (const follower of subscribedFollowers) {
+            queue.add(`streamStartDm:${follower.user.id}`, {
+              text: `${existingStream.username} is now *live*, streaming *${existingStream.title}*!\n<https://hctv.srizan.dev/${existingStream.username}|Go check them out>\n_Stream notifications are enabled for this user. If you want to disable them, you can do so in \`Profile > Notifications\`._`,
+              channel: follower.user.slack_id,
+            });
+          }
         }
       }
     }
   } catch (error) {
-    console.error("Error syncing stream status:", error);
+    console.error('Error syncing stream status:', error);
   }
 }

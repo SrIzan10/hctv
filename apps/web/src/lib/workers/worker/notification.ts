@@ -19,9 +19,6 @@ export async function registerNotificationWorker(): Promise<void> {
   console.log('Registering notification worker...');
   
   const worker = new Worker('notifications', async (job) => {
-    console.log('Processing job:', job.id);
-    console.log('Job data:', job.data);
-    
     try {
       await snClient.chat.postMessage(job.data);
       return { success: true };
