@@ -29,6 +29,7 @@
     "@radix-ui/react-separator": "^1.1.1",
     "@radix-ui/react-slot": "^1.1.1",
     "@radix-ui/react-tooltip": "^1.1.6",
+    "@slack/web-api": "^7.9.1",
     "@uidotdev/usehooks": "^2.4.1",
     "arctic": "^3.1.1",
     "cheerio": "^1.0.0",

@@ -1,3 +1,5 @@
+import { getPersonalChannel } from '@/lib/auth/personalChannel';
+import { resolveOwnedChannels } from '@/lib/auth/resolve';
 import { validateRequest } from '@/lib/auth/validate';
 import { prisma } from '@hctv/db';
 import { NextRequest } from 'next/server';
@@ -11,6 +13,17 @@ export async function GET(request: NextRequest) {
   }
   if (!username) {
     return new Response('Bad Request', { status: 400 });
+  }
+  const channelOwner = await prisma.channel.findFirst({
+    where: {
+      name: username,
+    }
+  })
+  if (!channelOwner) {
+    return new Response('Not Found', { status: 404 });
+  }
+  if (channelOwner.ownerId === user.id) {
+    return new Response('you are of course not able to follow yourself', { status: 418 });
   }
 
   const isFollowing =
@@ -37,6 +50,17 @@ export async function POST(request: NextRequest) {
   }
   if (!username) {
     return new Response('Bad Request', { status: 400 });
+  }
+  const channelOwner = await prisma.channel.findFirst({
+    where: {
+      name: username,
+    }
+  })
+  if (!channelOwner) {
+    return new Response('Not Found', { status: 404 });
+  }
+  if (channelOwner.ownerId === user.id) {
+    return new Response('you are of course not able to follow yourself', { status: 418 });
   }
 
   const isFollowing =
