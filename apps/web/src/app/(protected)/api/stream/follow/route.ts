@@ -1,4 +1,5 @@
 import { validateRequest } from '@/lib/auth/validate';
+import { getPgBoss } from '@/lib/workers';
 import { prisma } from '@hctv/db';
 import { NextRequest } from 'next/server';
 
@@ -41,6 +42,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const { user } = await validateRequest();
+  const boss = await getPgBoss();
   const searchParams = new URL(request.url).searchParams;
   const username = searchParams.get('username');
   if (!user) {
@@ -99,6 +101,13 @@ export async function POST(request: NextRequest) {
         },
       },
     });
+
+    const jobId = await boss.send('notifier:sendMsg', {
+      text: `You started following \`${username}\`!\n_Stream notifications are enabled by default. If you want to disable them, you can do so in \`Profile > Notifications\`._`,
+      channel: user.slack_id,
+    });
+    
+    console.log(`Job sent with ID: ${jobId} for user ${user.id} following ${username}`);
   }
 
   return new Response(JSON.stringify({ following: !isFollowing }), { status: 200 });

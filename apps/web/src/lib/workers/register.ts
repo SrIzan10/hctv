@@ -6,12 +6,8 @@ export async function registerWorkers() {
   
   await boss.work('notifier:sendMsg', async (job) => {
     console.log('Processing job:', job.id);
-    const { data } = job;
     
-    await snClient.chat.postMessage({
-      channel: data.channelId,
-      text: data.msg,
-    }).catch(e => {
+    await snClient.chat.postMessage(job.data).catch(e => {
       return { success: false, error: e.message };
     });
     return { success: true };

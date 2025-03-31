@@ -1,3 +1,4 @@
+import type { ChatPostMessageArguments } from '@slack/web-api';
 import PgBoss from 'pg-boss';
 
 export type JobName = 
@@ -5,10 +6,7 @@ export type JobName =
 
 export interface JobDefinitions {
   'notifier:sendMsg': {
-    payload: {
-      msg: string;
-      channelId: string;
-    };
+    payload: ChatPostMessageArguments;
     result: {
       success: boolean;
       error?: string;
@@ -39,7 +37,8 @@ export class TypedPgBoss {
     payload: PayloadFor<T>, 
     options?: PgBoss.SendOptions
   ): Promise<string | null> {
-    return options ? this.instance.send(name, payload, options) : this.instance.send(name, payload);
+    await this.instance.createQueue(name);
+    return this.instance.send(name, payload, options!);
   }
   
   async schedule<T extends JobName>(
@@ -56,8 +55,14 @@ export class TypedPgBoss {
     handler: (job: PgBoss.Job<PayloadFor<T>>) => Promise<ResultFor<T>> | void,
     options?: PgBoss.WorkOptions
   ): Promise<string> {
-    const wrappedHandler: PgBoss.WorkHandler<unknown> = async (job) => {
-      return await handler(job as unknown as PgBoss.Job<PayloadFor<T>>);
+    const wrappedHandler: PgBoss.WorkHandler<unknown> = async (job: PgBoss.Job<unknown> | PgBoss.Job<unknown>[]) => {
+      const singleJob = Array.isArray(job) ? job[0] : job;
+      const processedJob = {...singleJob};
+      if (Array.isArray(singleJob.data) && singleJob.data.length === 1) {
+        processedJob.data = singleJob.data[0];
+      }
+      
+      return await handler(processedJob as PgBoss.Job<PayloadFor<T>>);
     };
     
     return this.instance.work(name, options || {}, wrappedHandler);
@@ -68,24 +73,40 @@ export class TypedPgBoss {
   }
 }
 
-let pgBossInstance: TypedPgBoss | null = null;
+const globalForPgBoss = global as unknown as { pgBoss: TypedPgBoss | null };
 
+// Initialize if it doesn't exist yet
+if (!globalForPgBoss.pgBoss) {
+  globalForPgBoss.pgBoss = null;
+}
+
+// Get or create the singleton instance
 export async function getPgBoss(): Promise<TypedPgBoss> {
-  if (!pgBossInstance) {
+  if (!globalForPgBoss.pgBoss) {
     if (!process.env.DATABASE_URL) {
       throw new Error('DATABASE_URL environment variable is not set');
     }
-    pgBossInstance = new TypedPgBoss(process.env.DATABASE_URL);
-    await pgBossInstance.start();
-    console.log('PgBoss started successfully');
+    
+    console.log('Creating new PgBoss instance...');
+    const newBoss = new TypedPgBoss(process.env.DATABASE_URL);
+    
+    try {
+      await newBoss.start();
+      console.log('PgBoss started successfully');
+      globalForPgBoss.pgBoss = newBoss;
+    } catch (error) {
+      console.error('Failed to start PgBoss:', error);
+      throw error;
+    }
   }
-  return pgBossInstance;
+  
+  return globalForPgBoss.pgBoss;
 }
 
 export async function closePgBoss(): Promise<void> {
-  if (pgBossInstance) {
-    await pgBossInstance.getInstance().stop();
-    pgBossInstance = null;
+  if (globalForPgBoss.pgBoss) {
+    await globalForPgBoss.pgBoss.stop();
+    globalForPgBoss.pgBoss = null;
     console.log('PgBoss stopped successfully');
   }
 }
