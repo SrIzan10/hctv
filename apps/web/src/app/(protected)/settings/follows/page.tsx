@@ -3,7 +3,6 @@ import { prisma } from '@hctv/db';
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -56,7 +55,7 @@ export default async function Page() {
                     <AvatarImage src={channel.channel.pfpUrl} alt={channel.channel.name} />
                     <AvatarFallback>{channel.channel.name.charAt(0)}</AvatarFallback>
                   </Avatar>
-                  <Link href={`/channel/${channel.channel.name}`} className="hover:underline">
+                  <Link href={`/${channel.channel.name}`} className="hover:underline">
                     {channel.channel.name}
                   </Link>
                 </div>
