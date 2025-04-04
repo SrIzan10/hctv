@@ -10,6 +10,12 @@ services:
       - ./psql:/var/lib/postgresql/data
     ports:
       - 5555:5432
+  redis:
+    image: redis:7.4-alpine
+    volumes:
+      - ./redis:/data
+    ports:
+      - 6379:6379
   nginx-rtmp:
     # ports:
     #   - 1935:1935
@@ -25,23 +31,23 @@ services:
       - /dev/shm/hls:/dev/shm/hls
     image: flv-module
     entrypoint:
-        - /bin/sh
-        - -c
-        - |
-          # Process the template file
-          mkdir -p /usr/local/nginx/conf
-          envsubst '$${API_AUTH}' < /etc/nginx/templates/nginx.conf.template > /usr/local/nginx/conf/nginx.conf
-          
-          echo "Setting UID to $${UID} and GID to $${GID}"
-          usermod -u $${UID} nginx || echo "failed to change uid"
-          groupmod -g $${GID} nginx || echo "failed to change gid"
+      - /bin/sh
+      - -c
+      - |
+        # Process the template file
+        mkdir -p /usr/local/nginx/conf
+        envsubst '$${API_AUTH}' < /etc/nginx/templates/nginx.conf.template > /usr/local/nginx/conf/nginx.conf
 
-          mkdir -p /usr/local/nginx/proxy_temp /usr/local/nginx/client_body_temp
-          chown -R nginx:nginx /usr/local/nginx
-          mkdir -p /var/www/html
-          chown -R nginx:nginx /var/www/html
+        echo "Setting UID to $${UID} and GID to $${GID}"
+        usermod -u $${UID} nginx || echo "failed to change uid"
+        groupmod -g $${GID} nginx || echo "failed to change gid"
 
-          echo "testing nginx config..."
-          /usr/local/nginx/sbin/nginx -t
+        mkdir -p /usr/local/nginx/proxy_temp /usr/local/nginx/client_body_temp
+        chown -R nginx:nginx /usr/local/nginx
+        mkdir -p /var/www/html
+        chown -R nginx:nginx /var/www/html
 
-          /usr/local/nginx/sbin/nginx -g 'daemon off;'
+        echo "testing nginx config..."
+        /usr/local/nginx/sbin/nginx -t
+
+        /usr/local/nginx/sbin/nginx -g 'daemon off;'

@@ -1,4 +1,5 @@
 import { validateRequest } from '@/lib/auth/validate';
+import { getNotificationQueue } from '@/lib/workers';
 import { prisma } from '@hctv/db';
 import { NextRequest } from 'next/server';
 
@@ -11,6 +12,17 @@ export async function GET(request: NextRequest) {
   }
   if (!username) {
     return new Response('Bad Request', { status: 400 });
+  }
+  const channelOwner = await prisma.channel.findFirst({
+    where: {
+      name: username,
+    }
+  })
+  if (!channelOwner) {
+    return new Response('Not Found', { status: 404 });
+  }
+  if (channelOwner.ownerId === user.id) {
+    return new Response('you are of course not able to follow yourself', { status: 418 });
   }
 
   const isFollowing =
@@ -30,6 +42,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const { user } = await validateRequest();
+  const queue = getNotificationQueue();
   const searchParams = new URL(request.url).searchParams;
   const username = searchParams.get('username');
   if (!user) {
@@ -37,6 +50,17 @@ export async function POST(request: NextRequest) {
   }
   if (!username) {
     return new Response('Bad Request', { status: 400 });
+  }
+  const channelOwner = await prisma.channel.findFirst({
+    where: {
+      name: username,
+    }
+  })
+  if (!channelOwner) {
+    return new Response('Not Found', { status: 404 });
+  }
+  if (channelOwner.ownerId === user.id) {
+    return new Response('you are of course not able to follow yourself', { status: 418 });
   }
 
   const isFollowing =
@@ -76,6 +100,11 @@ export async function POST(request: NextRequest) {
           },
         },
       },
+    });
+
+    await queue.add(`newFollow:${username}`, {
+      text: `You started following \`${username}\`!\n_Stream notifications are enabled by default. If you want to disable them, you can do so in \`Profile > Notifications\`._`,
+      channel: user.slack_id,
     });
   }
 

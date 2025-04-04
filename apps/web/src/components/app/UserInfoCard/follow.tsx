@@ -10,24 +10,25 @@ import React from 'react';
 
 export default function FollowButton(props: Props) {
   const [ref, isHovering] = useHover();
-  // const [following, setFollowing] = React.useState(props.isFollowing);
-  // make a get request to check if the user is following the channel and set it as the initial state. use swr to make the request
+  const [bye, setBye] = React.useState(false);
   const { data: followingData, isLoading: isLoadingFollowing } = useSWR(
     `/api/stream/follow?username=${props.channel}`, 
     async (url) => fetcher(url)
   );
   const [following, setFollowing] = React.useState(false);
+  const { trigger, data, isMutating } = mutatedUseSWR(
+    `/api/stream/follow?username=${props.channel}`,
+    async (url) => fetcher(url, { method: 'POST' })
+  );
 
   React.useEffect(() => {
     if (followingData) {
       setFollowing(followingData.following);
     }
+    if (followingData === undefined) {
+      setBye(true);
+    }
   }, [followingData]);
-
-  const { trigger, data, isMutating } = mutatedUseSWR(
-    `/api/stream/follow?username=${props.channel}`,
-    async (url) => fetcher(url, { method: 'POST' })
-  );
 
   React.useEffect(() => {
     if (data) {
@@ -44,6 +45,7 @@ export default function FollowButton(props: Props) {
       disabled={isMutating || isLoadingFollowing}
       ref={ref}
       variant='outlineMantle'
+      className={bye ? 'hidden' : ''}
     >
       {isHovering && following ? <HeartCrack className={followingCn} /> : <Heart className={following ? followingCn : notFollowingCn} />}
     </Button>
