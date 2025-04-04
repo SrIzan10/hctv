@@ -133,7 +133,7 @@ export async function syncStream() {
 
           for (const follower of subscribedFollowers) {
             queue.add(`streamStartDm:${follower.user.id}`, {
-              text: `${existingStream.username} is now *live*, streaming *${existingStream.title}* (${existingStream.category})!\n<https://hctv.srizan.dev/${existingStream.username}|Go check them out>\n_Stream notifications are enabled for this user. If you want to disable them, you can do so in \`Profile > Notifications\`._`,
+              text: `${existingStream.username} is now *live*, streaming *${existingStream.title}* (${existingStream.category})!\n<https://hctv.srizan.dev/${existingStream.username}|Go check them out>\n_Stream notifications are enabled for this user. If you want to disable them, you can do so in \`Profile > Follows\`._`,
               channel: follower.user.slack_id,
               unfurl_links: true,
             });

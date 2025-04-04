@@ -28,3 +28,19 @@ export async function resolveOwnedChannels(id?: string) {
   ];
   return channels;
 }
+
+export async function resolveFollowedChannels(id?: string) {
+  const { user } = await validateRequest();
+  const db = await prisma.follow.findMany({
+    where: {
+      userId: id ?? user?.id,
+    },
+    include: {
+      channel: true,
+    },
+  });
+  if (!db) {
+    return null;
+  }
+  return db;
+}

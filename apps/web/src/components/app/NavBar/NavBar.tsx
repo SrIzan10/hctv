@@ -14,7 +14,6 @@ import {
 import { logout } from '@/lib/auth/actions';
 import { useSession } from '@/lib/providers/SessionProvider';
 import Link from 'next/link';
-import MobileNavbarLinks from '../MobileNavbarLinks/MobileNavbarLinks';
 import { ThemeSwitcher } from '../ThemeSwitcher/ThemeSwitcher';
 import { Slack } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -65,6 +64,12 @@ export default function Navbar(props: Props) {
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <Link href={`/settings/follows`}>
+                    <DropdownMenuItem className="cursor-pointer">Follows</DropdownMenuItem>
+                  </Link>
+                </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                   <DropdownMenuItem

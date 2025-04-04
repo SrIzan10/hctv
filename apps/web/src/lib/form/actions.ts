@@ -6,6 +6,7 @@ import { prisma } from '@hctv/db';
 import zodVerify from '../zodVerify';
 import { onboardSchema, streamInfoEditSchema } from './zod';
 import { initializeStreamInfo } from '../instrumentation/streamInfo';
+import { resolveFollowedChannels } from '../auth/resolve';
 
 export async function editStreamInfo(prev: any, formData: FormData) {
   const { user } = await validateRequest();
@@ -97,4 +98,27 @@ export async function onboard(prev: any, formData: FormData) {
   })
 
   return { success: true };
+}
+
+export async function notifyStreamToggle(channelName: string) {
+  const { user } = await validateRequest();
+  if (!user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const followed = await resolveFollowedChannels();
+  if (!followed) {
+    return { success: false, error: 'No followed channels' };
+  }
+  const channel = followed.find((f) => f.channel.name === channelName);
+  if (!channel) {
+    return { success: false, error: 'Channel not found' };
+  }
+
+  await prisma.follow.update({
+    where: { id: channel.id },
+    data: { notifyStream: !channel.notifyStream },
+  });
+
+  return { success: true, toggle: !channel.notifyStream };
 }
