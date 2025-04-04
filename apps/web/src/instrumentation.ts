@@ -7,6 +7,6 @@ export async function register() {
 
     await registerWorkers();
 
-    console.log('pgboss workers registered');
+    console.log('bullmq workers registered');
   }
 }
