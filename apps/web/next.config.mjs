@@ -18,6 +18,7 @@ const nextConfig = {
         hostname: 'secure.gravatar.com',
       },
     ],
+    minimumCacheTTL: 120,
   },
   env: {
     LIVE_SERVER_URL,
@@ -32,7 +33,7 @@ const nextConfig = {
         destination: `http://${process.env.NODE_ENV === 'production' ? 'chat' : 'localhost'}:8000/:path*`,
       },
     ];
-  }
+  },
 };
 
 export default nextConfig;

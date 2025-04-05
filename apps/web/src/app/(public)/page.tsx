@@ -43,7 +43,7 @@ export default async function Home() {
               <CardContent className="p-0">
                 <div className="relative">
                   <Image
-                    src={stream.channel.pfpUrl || '/placeholder.svg'}
+                    src={`/api/stream/thumb/${stream.channel.name}`}
                     width={512}
                     height={512}
                     alt={stream.title}
