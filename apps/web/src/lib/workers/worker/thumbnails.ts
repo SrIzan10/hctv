@@ -1,7 +1,9 @@
 import { Worker } from 'bullmq';
 import { getRedisConnection } from '@/lib/services/redis';
 import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
 import { existsSync } from 'node:fs';
+const pExec = promisify(exec);
 
 const globalForWorker = global as unknown as {
   thumbnailWorker: Worker | null;
@@ -26,10 +28,16 @@ export async function registerThumbnailWorker(): Promise<void> {
         // this is totally unnecessary, but i'll keep it for security purposes.
         const name = job.data.name.replace(/[^a-zA-Z0-9]/g, '_');
         const m3u8location = `/dev/shm/hls/${name}.m3u8`;
+        
         if (!existsSync(m3u8location)) return;
+        if (!existsSync('/dev/shm/hctv-thumb')) {
+          await pExec('mkdir -p /dev/shm/hctv-thumb');
+        }
+        // unnecessary for development, but maybe docker volumes mess with permissions in prod
+        await pExec('chown -R $USER /dev/shm/hctv-thumb');
 
         exec(
-          `/usr/bin/ffmpeg -i ${m3u8location} -vframes 1 -an -y -f image2 /home/srizan/Documents/Development/hclive/apps/web/src/lib/${name}.jpg`,
+          `/usr/bin/ffmpeg -i ${m3u8location} -vframes 1 -an -y -f image2 /dev/shm/hctv-thumb/${name}.webp`,
           (error) => {
             if (error) {
               console.error(`Error: ${error.message}`);
