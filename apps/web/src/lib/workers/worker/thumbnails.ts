@@ -19,8 +19,7 @@ export async function registerThumbnailWorker(): Promise<void> {
     return;
   }
 
-  console.log('Registering notification worker...');
-
+  console.log('Registering thumbnail worker...');
   const worker = new Worker(
     'thumbnails',
     async (job) => {
