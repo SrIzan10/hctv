@@ -33,7 +33,8 @@ export async function registerThumbnailWorker(): Promise<void> {
           await pExec('mkdir -p /dev/shm/hctv-thumb');
         }
         // unnecessary for development, but maybe docker volumes mess with permissions in prod
-        await pExec('chown -R $USER /dev/shm/hctv-thumb');
+        // also ik it's not the best practice to use 777, but it'll be fiiiiiine
+        await pExec('chown -R 777 /dev/shm/hctv-thumb');
 
         exec(
           `/usr/bin/ffmpeg -i ${m3u8location} -vframes 1 -an -y -f image2 /dev/shm/hctv-thumb/${name}.webp`,
