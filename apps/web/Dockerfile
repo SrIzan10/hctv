@@ -30,7 +30,7 @@ RUN --mount=type=secret,id=TURBO_TOKEN --mount=type=secret,id=TURBO_TEAM TURBO_T
 FROM base AS runner
 WORKDIR /app
 
-RUN RUN apk add --no-cache ffmpeg
+RUN apk add --no-cache ffmpeg
 
 # Don't run production as root
 RUN addgroup --system --gid 1001 nodejs
