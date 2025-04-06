@@ -22,13 +22,13 @@ export default function FollowButton(props: Props) {
   );
 
   React.useEffect(() => {
-    if (followingData) {
+    if (!isLoadingFollowing && followingData) {
       setFollowing(followingData.following);
     }
-    if (followingData === undefined) {
+    if (!isLoadingFollowing && followingData === undefined) {
       setBye(true);
     }
-  }, [followingData]);
+  }, [followingData, isLoadingFollowing]);
 
   React.useEffect(() => {
     if (data) {
