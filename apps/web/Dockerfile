@@ -17,7 +17,7 @@ RUN turbo prune @hctv/web --docker
 # Add lockfile and package.json's of isolated subworkspace
 FROM base AS installer
 RUN apk update
-RUN apk add --no-cache libc6-compat ffmpeg
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
  
 # First install the dependencies (as they change less often)
@@ -29,7 +29,9 @@ RUN --mount=type=secret,id=TURBO_TOKEN --mount=type=secret,id=TURBO_TEAM TURBO_T
  
 FROM base AS runner
 WORKDIR /app
- 
+
+RUN RUN apk add --no-cache ffmpeg
+
 # Don't run production as root
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
