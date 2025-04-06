@@ -18,6 +18,11 @@ export default async function zodVerify<T>(schema: ZodType<T>, data: FormData | 
   let obj: any = data;
   if (data instanceof FormData) {
     obj = Object.fromEntries(data.entries());
+    
+    for (const [key, value] of Object.entries(obj)) {
+      if (value === 'true') obj[key] = true;
+      if (value === 'false') obj[key] = false;
+    }
   }
 
   const zod = schema.safeParse(obj);

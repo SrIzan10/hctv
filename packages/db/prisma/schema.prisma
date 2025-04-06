@@ -76,6 +76,8 @@ model StreamInfo {
   ownedBy   User   @relation(fields: [userId], references: [id])
   userId    String
 
+  enableNotifications Boolean @default(true)
+
   // TODO: index on username
 }
 

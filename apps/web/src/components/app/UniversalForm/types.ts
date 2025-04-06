@@ -8,7 +8,7 @@ export type FormFieldConfig = {
   type?: HTMLInputTypeAttribute;
   placeholder?: string;
   description?: string;
-  value?: string;
+  value?: any;
   textArea?: boolean;
   textAreaRows?: number;
 };

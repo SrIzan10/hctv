@@ -106,20 +106,21 @@ export default function EditLivestreamDialog(props: Props) {
 
 function Form(props: FormProps) {
   return (
-    <UniversalForm
-      fields={[
-        { name: 'username', label: 'Username', value: props.username, type: 'hidden' },
-        { name: 'title', label: 'Title', type: 'text', value: props.streamInfo?.title },
-        { name: 'category', label: 'Category', type: 'text', value: props.streamInfo?.category },
-      ]}
-      schemaName="streamInfoEdit"
-      action={editStreamInfo}
-      submitButtonDivClassname="float-right"
-      submitText="Save"
-      otherSubmitButton={<RegenerateKey channel={props.username} />}
-      key={props.streamInfo?.id}
-    />
-  );
+      <UniversalForm
+        fields={[
+          { name: 'username', label: 'Username', value: props.username, type: 'hidden' },
+          { name: 'title', label: 'Title', type: 'text', value: props.streamInfo?.title },
+          { name: 'category', label: 'Category', type: 'text', value: props.streamInfo?.category },
+          { name: 'enableNotifications', label: 'Enable livestream notifications', type: 'hidden', value: props.streamInfo?.enableNotifications },
+        ]}
+        schemaName="streamInfoEdit"
+        action={editStreamInfo}
+        submitButtonDivClassname="float-right"
+        submitText="Save"
+        otherSubmitButton={<RegenerateKey channel={props.username} />}
+        key={props.streamInfo?.id}
+      />
+  )
 }
 function FormSkeleton() {
   return (

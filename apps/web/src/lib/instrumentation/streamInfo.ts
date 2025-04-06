@@ -130,13 +130,14 @@ export async function syncStream() {
             channel: process.env.NOTIFICATION_CHANNEL_ID!,
             unfurl_links: true,
           });
-
-          for (const follower of subscribedFollowers) {
-            queue.add(`streamStartDm:${follower.user.id}`, {
-              text: `${existingStream.username} is now *live*, streaming *${existingStream.title}* (${existingStream.category})!\n<https://hctv.srizan.dev/${existingStream.username}|Go check them out>\n_Stream notifications are enabled for this user. If you want to disable them, you can do so in \`Profile > Follows\`._`,
-              channel: follower.user.slack_id,
-              unfurl_links: true,
-            });
+          if (existingStream.enableNotifications) {
+            for (const follower of subscribedFollowers) {
+              queue.add(`streamStartDm:${follower.user.id}`, {
+                text: `${existingStream.username} is now *live*, streaming *${existingStream.title}* (${existingStream.category})!\n<https://hctv.srizan.dev/${existingStream.username}|Go check them out>\n_Stream notifications are enabled for this user. If you want to disable them, you can do so in \`Profile > Follows\`._`,
+                channel: follower.user.slack_id,
+                unfurl_links: true,
+              });
+            }
           }
         }
       }
