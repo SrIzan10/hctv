@@ -3,6 +3,7 @@ import { cookies as nextCookies } from 'next/headers';
 import { decodeIdToken, OAuth2RequestError } from 'arctic';
 import { generateIdFromEntropySize } from 'lucia';
 import { prisma } from '@hctv/db';
+import { getRedisConnection } from '@/lib/services/redis';
 
 export async function GET(request: Request): Promise<Response> {
   const cookies = await nextCookies();
@@ -36,6 +37,7 @@ export async function GET(request: Request): Promise<Response> {
     if (existingUser) {
       const session = await lucia.createSession(existingUser.id, {});
       const sessionCookie = lucia.createSessionCookie(session.id);
+      await getRedisConnection().set(`sessions:${session.id}`, '');
       cookies.set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
       return new Response(null, {
         status: 302,
@@ -58,6 +60,7 @@ export async function GET(request: Request): Promise<Response> {
 
     const session = await lucia.createSession(userId, {});
     const sessionCookie = lucia.createSessionCookie(session.id);
+    await getRedisConnection().set(`sessions:${session.id}`, '');
     cookies.set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
     return new Response(null, {
       status: 302,

@@ -1,11 +1,12 @@
-import { validateRequest } from '@/lib/auth/validate';
 import fsP from 'fs/promises';
 import fs from 'fs'; 
+import { getRedisConnection } from '@/lib/services/redis';
+import { cookies } from 'next/headers';
 
 export async function GET(request: Request, { params }: { params: Promise<{ path: string }> }) {
   const { path } = await params;
-  const { user } = await validateRequest();
-  if (!user) {
+  const c = await cookies();
+  if (!getRedisConnection().exists(`sessions:${c.get('auth_session')?.value}`)) {
     return new Response("Unauthorized", { status: 401 });
   }
   if (path.includes('..')) {

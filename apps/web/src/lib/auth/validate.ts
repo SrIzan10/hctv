@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { cache } from "react";
 import { lucia } from '@hctv/auth';
+import { getRedisConnection } from "../services/redis";
 
 export const validateRequest = cache(async () => {
   const sessionId = (await cookies()).get(lucia.sessionCookieName)?.value ?? null;
@@ -15,6 +16,7 @@ export const validateRequest = cache(async () => {
   try {
     if (session && session.fresh) {
       const sessionCookie = lucia.createSessionCookie(session.id);
+      await getRedisConnection().set(`sessions:${session.id}`, '');
       (await cookies()).set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
     }
     if (!session) {
