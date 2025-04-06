@@ -37,7 +37,7 @@ export async function registerThumbnailWorker(): Promise<void> {
         // await pExec('chown -R 777 /dev/shm/hctv-thumb');
 
         exec(
-          `/usr/bin/ffmpeg -i ${m3u8location} -vframes 1 -an -y -f image2 /dev/shm/hctv-thumb/${name}.webp`,
+          `ffmpeg -i ${m3u8location} -vframes 1 -an -y -f image2 /dev/shm/hctv-thumb/${name}.webp`,
           (error) => {
             if (error) {
               console.error(`Error: ${error.message}`);
