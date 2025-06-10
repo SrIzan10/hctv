@@ -4,11 +4,9 @@ import { UniversalForm } from '@/components/app/UniversalForm/UniversalForm';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { onboard } from '@/lib/form/actions';
 import { useSession } from '@/lib/providers/SessionProvider';
-import { redirect, useRouter } from 'next/navigation';
 
 export default function OnboardingClient() {
   const { user } = useSession();
-  const router = useRouter();
   
   return (
     <Card className="mx-auto max-w-sm border-0 shadow-none">

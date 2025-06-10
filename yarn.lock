@@ -1948,6 +1948,15 @@ arctic@^3.1.1:
     "@oslojs/encoding" "1.1.0"
     "@oslojs/jwt" "0.2.0"
 
+arctic@^3.7.0:
+  version "3.7.0"
+  resolved "https://registry.yarnpkg.com/arctic/-/arctic-3.7.0.tgz#3d2c601a2e8b03d2f63ce4a9c7546b91d5171c45"
+  integrity sha512-ZMQ+f6VazDgUJOd+qNV+H7GohNSYal1mVjm5kEaZfE2Ifb7Ss70w+Q7xpJC87qZDkMZIXYf0pTIYZA0OPasSbw==
+  dependencies:
+    "@oslojs/crypto" "1.0.1"
+    "@oslojs/encoding" "1.1.0"
+    "@oslojs/jwt" "0.2.0"
+
 arg@^5.0.2:
   version "5.0.2"
   resolved "https://registry.yarnpkg.com/arg/-/arg-5.0.2.tgz#c81433cc427c92c4dcf4865142dbca6f15acd59c"
