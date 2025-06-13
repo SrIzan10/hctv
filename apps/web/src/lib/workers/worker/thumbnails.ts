@@ -5,6 +5,8 @@ import { promisify } from 'node:util';
 import { existsSync } from 'node:fs';
 const pExec = promisify(exec);
 
+export const thumbDir = process.env.NODE_ENV === 'development' ? '/dev/shm/hctv-thumb' : '/app/thumbs';
+
 const globalForWorker = global as unknown as {
   thumbnailWorker: Worker | null;
 };
@@ -29,15 +31,15 @@ export async function registerThumbnailWorker(): Promise<void> {
         const m3u8location = `/dev/shm/hls/${name}.m3u8`;
         
         if (!existsSync(m3u8location)) return;
-        if (!existsSync('/dev/shm/hctv-thumb')) {
-          await pExec('mkdir -p /dev/shm/hctv-thumb');
+        if (!existsSync(thumbDir)) {
+          await pExec(`mkdir -p ${thumbDir}`);
         }
         // unnecessary for development, but maybe docker volumes mess with permissions in prod
         // also ik it's not the best practice to use 777, but it'll be fiiiiiine
         // await pExec('chown -R 777 /dev/shm/hctv-thumb');
 
         exec(
-          `ffmpeg -i ${m3u8location} -vframes 1 -an -y -f image2 /dev/shm/hctv-thumb/${name}.webp`,
+          `ffmpeg -i ${m3u8location} -vframes 1 -an -y -f image2 ${thumbDir}/${name}.webp`,
           (error) => {
             if (error) {
               console.error(`Error: ${error.message}`);
