@@ -17,9 +17,10 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
-    "build": "tsc --build"
+    "build": "prisma generate && tsc --build"
   },
   "devDependencies": {
+    "@types/node": "^24.0.1",
     "typescript": "^5.8.2"
   }
 }
