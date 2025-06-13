@@ -91,7 +91,7 @@ model Follow {
   channel   Channel  @relation("ChannelFollowers", fields: [channelId], references: [id], onDelete: Cascade)
   channelId String
   
-  notifyStream Boolean @default(true)
+  notifyStream Boolean @default(false)
 
   @@unique([userId, channelId])
   @@index([userId])

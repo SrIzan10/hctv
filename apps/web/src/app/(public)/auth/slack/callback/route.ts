@@ -53,7 +53,7 @@ export async function GET(request: Request): Promise<Response> {
       data: {
         id: userId,
         slack_id: slackUser.sub,
-        pfpUrl: slackUser.picture,
+        pfpUrl: `https://cachet.dunkirk.sh/users/${slackUser.sub}/r`,
         hasOnboarded: false,
       },
     });
