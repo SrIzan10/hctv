@@ -21,6 +21,7 @@ COPY --from=builder /app/out/json/ .
 RUN yarn install --frozen-lockfile
 
 COPY --from=builder /app/out/full/ .
+RUN yarn prisma generate
 RUN --mount=type=secret,id=TURBO_TOKEN --mount=type=secret,id=TURBO_TEAM TURBO_TOKEN=$(cat /run/secrets/TURBO_TOKEN) TURBO_TEAM=$(cat /run/secrets/TURBO_TEAM) yarn turbo run build --filter=@hctv/db
  
 FROM base AS runner
