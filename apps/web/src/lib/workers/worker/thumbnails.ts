@@ -5,8 +5,6 @@ import { promisify } from 'node:util';
 import { existsSync } from 'node:fs';
 const pExec = promisify(exec);
 
-export const thumbDir = process.env.NODE_ENV === 'development' ? '/dev/shm/hctv-thumb' : '/app/thumbs';
-
 const globalForWorker = global as unknown as {
   thumbnailWorker: Worker | null;
 };
@@ -29,6 +27,7 @@ export async function registerThumbnailWorker(): Promise<void> {
         // this is totally unnecessary, but i'll keep it for security purposes.
         const name = job.data.name.replace(/[^a-zA-Z0-9]/g, '_');
         const m3u8location = `/dev/shm/hls/${name}.m3u8`;
+        const thumbDir = '/dev/shm/hctv-thumb';
         
         if (!existsSync(m3u8location)) return;
         if (!existsSync(thumbDir)) {

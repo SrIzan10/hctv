@@ -1,7 +1,6 @@
 import { validateRequest } from '@/lib/auth/validate';
 import fsP from 'fs/promises';
 import fs from 'fs';
-import { thumbDir } from '@/lib/workers/worker/thumbnails';
 
 export async function GET(request: Request, { params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
@@ -13,7 +12,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ user
     return new Response("nuh uh", { status: 403 });
   }
 
-  const filePath = `${thumbDir}/${username}.webp`;
+  const filePath = `/dev/shm/hctv-thumb/${username}.webp`;
 
   if (!fs.existsSync(filePath)) {
     return new Response("Not Found", { status: 404 });
