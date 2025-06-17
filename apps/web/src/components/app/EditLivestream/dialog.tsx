@@ -13,17 +13,7 @@ import { UniversalForm } from '../UniversalForm/UniversalForm';
 import { editStreamInfo } from '@/lib/form/actions';
 import RegenerateKey from '../RegenerateKey/RegenerateKey';
 import * as React from 'react';
-import { Check, ChevronsUpDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Plus } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -37,10 +27,12 @@ import useSWR, { Fetcher } from 'swr';
 import { fetcher } from '@/lib/services/swr';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function EditLivestreamDialog(props: Props) {
   const [selectedChannel, setSelectedChannel] = React.useState('');
   const [streamInfo, setStreamInfo] = React.useState<StreamInfo>();
+  const router = useRouter();
 
   const { data, error } = useSWR(
     selectedChannel ? '/api/stream/info?owned=true' : null,
@@ -65,6 +57,14 @@ export default function EditLivestreamDialog(props: Props) {
       setSelectedChannel(props.ownedChannels[0].name);
     }
   }, [props.ownedChannels, selectedChannel]);
+
+  React.useEffect(() => {
+    if (selectedChannel === 'create') {
+      setSelectedChannel('');
+      router.push('/settings/channel/create');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedChannel]);
 
   return (
     <Dialog
@@ -106,21 +106,26 @@ export default function EditLivestreamDialog(props: Props) {
 
 function Form(props: FormProps) {
   return (
-      <UniversalForm
-        fields={[
-          { name: 'username', label: 'Username', value: props.username, type: 'hidden' },
-          { name: 'title', label: 'Title', type: 'text', value: props.streamInfo?.title },
-          { name: 'category', label: 'Category', type: 'text', value: props.streamInfo?.category },
-          { name: 'enableNotifications', label: 'Enable livestream notifications', type: 'hidden', value: props.streamInfo?.enableNotifications },
-        ]}
-        schemaName="streamInfoEdit"
-        action={editStreamInfo}
-        submitButtonDivClassname="float-right"
-        submitText="Save"
-        otherSubmitButton={<RegenerateKey channel={props.username} />}
-        key={props.streamInfo?.id}
-      />
-  )
+    <UniversalForm
+      fields={[
+        { name: 'username', label: 'Username', value: props.username, type: 'hidden' },
+        { name: 'title', label: 'Title', type: 'text', value: props.streamInfo?.title },
+        { name: 'category', label: 'Category', type: 'text', value: props.streamInfo?.category },
+        {
+          name: 'enableNotifications',
+          label: 'Enable livestream notifications',
+          type: 'hidden',
+          value: props.streamInfo?.enableNotifications,
+        },
+      ]}
+      schemaName="streamInfoEdit"
+      action={editStreamInfo}
+      submitButtonDivClassname="float-right"
+      submitText="Save"
+      otherSubmitButton={<RegenerateKey channel={props.username} />}
+      key={props.streamInfo?.id}
+    />
+  );
 }
 function FormSkeleton() {
   return (
@@ -165,6 +170,9 @@ export function ChannelSelect(props: SelectProps) {
             </div>
           </SelectItem>
         ))}
+        <SelectItem key="create" value="create" icon={<Plus className="h-4 w-4" />} className='h-11'>
+          Create Channel
+        </SelectItem>
       </SelectContent>
     </Select>
   );
