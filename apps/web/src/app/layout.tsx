@@ -11,6 +11,9 @@ import Sidebar from '@/components/app/Sidebar/Sidebar';
 import { cn } from '@/lib/utils';
 import EditLivestream from '@/components/app/EditLivestream/EditLivestream';
 import { StreamInfoProvider } from '@/lib/providers/StreamInfoProvider';
+import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
+import { extractRouterConfig } from 'uploadthing/server';
+import { ourFileRouter } from '@/lib/services/uploadthing/fileRouter';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -35,6 +38,9 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <NextSSRPlugin
+              routerConfig={extractRouterConfig(ourFileRouter)}
+            />
             <SidebarProvider>
               <StreamInfoProvider>
                 {/* this promise is ugly but i'm lazy to fix the type errors */}

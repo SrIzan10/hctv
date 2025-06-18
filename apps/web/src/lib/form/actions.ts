@@ -7,6 +7,7 @@ import zodVerify from '../zodVerify';
 import { createChannelSchema, onboardSchema, streamInfoEditSchema } from './zod';
 import { initializeStreamInfo } from '../instrumentation/streamInfo';
 import { resolveFollowedChannels } from '../auth/resolve';
+import { genIdenticonUpload } from '../utils/genIdenticonUpload';
 
 export async function editStreamInfo(prev: any, formData: FormData) {
   const { user } = await validateRequest();
@@ -143,11 +144,12 @@ export async function createChannel(prev: any, formData: FormData) {
     return { success: false, error: 'Channel name already exists' };
   }
 
+  const identicon = await genIdenticonUpload(zod.data.name, 'pfp');
   const createdChannel = await prisma.channel.create({
     data: {
       name: zod.data.name,
       ownerId: user.id,
-      pfpUrl: user.pfpUrl,
+      pfpUrl: identicon,
     }
   });
 

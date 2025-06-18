@@ -5,7 +5,7 @@ export default async function Page({ params }: { params: Promise<{ username: str
   const { username } = await params;
   const streamInfo = await prisma.streamInfo.findUnique({
     where: { username },
-    include: { ownedBy: true },
+    include: { channel: true },
   });
   if (!streamInfo) {
     return <div>Stream not found</div>;
