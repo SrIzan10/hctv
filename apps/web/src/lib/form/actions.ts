@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { validateRequest } from '@/lib/auth/validate';
 import { prisma } from '@hctv/db';
 import zodVerify from '../zodVerify';
-import { onboardSchema, streamInfoEditSchema } from './zod';
+import { createChannelSchema, onboardSchema, streamInfoEditSchema } from './zod';
 import { initializeStreamInfo } from '../instrumentation/streamInfo';
 import { resolveFollowedChannels } from '../auth/resolve';
 
@@ -123,4 +123,35 @@ export async function notifyStreamToggle(channelName: string) {
   });
 
   return { success: true, toggle: !channel.notifyStream };
+}
+
+export async function createChannel(prev: any, formData: FormData) {
+  const { user } = await validateRequest();
+  if (!user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const zod = await zodVerify(createChannelSchema, formData);
+  if (!zod.success) {
+    return zod;
+  }
+
+  const channelExists = await prisma.channel.findFirst({
+    where: { name: zod.data.name },
+  });
+  if (channelExists) {
+    return { success: false, error: 'Channel name already exists' };
+  }
+
+  const createdChannel = await prisma.channel.create({
+    data: {
+      name: zod.data.name,
+      ownerId: user.id,
+      pfpUrl: user.pfpUrl,
+    }
+  });
+
+  await initializeStreamInfo(createdChannel.id);
+
+  return { success: true };
 }

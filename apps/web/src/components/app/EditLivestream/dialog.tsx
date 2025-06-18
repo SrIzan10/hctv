@@ -61,7 +61,9 @@ export default function EditLivestreamDialog(props: Props) {
   React.useEffect(() => {
     if (selectedChannel === 'create') {
       setSelectedChannel('');
-      router.push('/settings/channel/create');
+      // using window location href as a really janky way to just close the dialog
+      // TODO: use a proper dialog close method
+      window.location.href = '/settings/channel/create';
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedChannel]);

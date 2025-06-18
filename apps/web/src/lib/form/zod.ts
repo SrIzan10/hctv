@@ -15,3 +15,7 @@ export const onboardSchema = z.object({
   userId: z.string().min(1),
   username: username,
 });
+
+export const createChannelSchema = z.object({
+  name: username,
+});
