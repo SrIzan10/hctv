@@ -19,3 +19,9 @@ export const onboardSchema = z.object({
 export const createChannelSchema = z.object({
   name: username,
 });
+
+export const updateChannelSettingsSchema = z.object({
+  channelId: z.string().min(1),
+  name: username.optional(),
+  pfpUrl: z.string().url().optional(),
+});

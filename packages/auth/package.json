@@ -10,7 +10,8 @@
   },
   "type": "module",
   "scripts": {
-    "build": "tsc --build"
+    "build": "tsc --build",
+    "dev": "tsc --watch --preserveWatchOutput"
   },
   "dependencies": {
     "@hctv/db": "*",

@@ -44,3 +44,46 @@ export async function resolveFollowedChannels(id?: string) {
   }
   return db;
 }
+
+export async function resolvePersonalChannel(id?: string) {
+  const { user } = await validateRequest();
+  const db = await prisma.user.findUnique({
+    where: {
+      id: id ?? user?.id,
+    },
+    select: {
+      personalChannel: true,
+    },
+  });
+  if (!db) {
+    return null;
+  }
+  return db.personalChannel;
+}
+
+export async function resolveUserFromPersonalChannelName(channelName: string) {
+  const db = await prisma.channel.findUnique({
+    where: {
+      name: channelName,
+    },
+    select: {
+      personalFor: true,
+    },
+  });
+  if (!db) {
+    return null;
+  }
+  return db.personalFor;
+}
+
+export async function resolveStreamInfo(channelId: string) {
+  const db = await prisma.streamInfo.findFirst({
+    where: {
+      channelId,
+    },
+  });
+  if (!db) {
+    return null;
+  }
+  return db;
+}

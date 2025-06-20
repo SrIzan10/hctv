@@ -4,9 +4,9 @@ import { revalidatePath } from 'next/cache';
 import { validateRequest } from '@/lib/auth/validate';
 import { prisma } from '@hctv/db';
 import zodVerify from '../zodVerify';
-import { createChannelSchema, onboardSchema, streamInfoEditSchema } from './zod';
+import { createChannelSchema, onboardSchema, streamInfoEditSchema, updateChannelSettingsSchema } from './zod';
 import { initializeStreamInfo } from '../instrumentation/streamInfo';
-import { resolveFollowedChannels } from '../auth/resolve';
+import { resolveFollowedChannels, resolveStreamInfo, resolveUserFromPersonalChannelName } from '../auth/resolve';
 import { genIdenticonUpload } from '../utils/genIdenticonUpload';
 
 export async function editStreamInfo(prev: any, formData: FormData) {
@@ -156,4 +156,197 @@ export async function createChannel(prev: any, formData: FormData) {
   await initializeStreamInfo(createdChannel.id);
 
   return { success: true };
+}
+
+export async function updateChannelSettings(prev: any, formData: FormData) {
+  const { user } = await validateRequest();
+  if (!user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const zod = await zodVerify(updateChannelSettingsSchema, formData);
+  if (!zod.success) {
+    return zod;
+  }
+
+  const channel = await prisma.channel.findUnique({
+    where: { id: zod.data.channelId },
+    include: {
+      owner: true,
+      managers: true,
+    },
+  });
+
+  if (!channel) {
+    return { success: false, error: 'Channel not found' };
+  }
+
+  const isOwner = channel.ownerId === user.id;
+  const isManager = channel.managers.some(manager => manager.id === user.id);
+
+  if (!isOwner && !isManager) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  // Only owners can change certain settings
+  const updateData: any = {};
+  if (zod.data.name && isOwner) {
+    updateData.name = zod.data.name;
+  }
+  if (zod.data.pfpUrl) {
+    updateData.pfpUrl = zod.data.pfpUrl;
+  }
+
+  await prisma.channel.update({
+    where: { id: zod.data.channelId },
+    data: updateData,
+  });
+
+  revalidatePath(`/settings/channel/${channel.name}`);
+  return { success: true };
+}
+
+export async function addChannelManager(channelId: string, userChannel: string) {
+  const { user } = await validateRequest();
+  if (!user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const channel = await prisma.channel.findUnique({
+    where: { id: channelId, personalFor: null },
+    include: { owner: true, managers: true },
+  });
+
+  if (!channel) {
+    return { success: false, error: 'Channel not found OR is personal.' };
+  }
+
+  if (channel.ownerId !== user.id) {
+    return { success: false, error: 'Only channel owners can add managers' };
+  }
+
+  if (channel.ownerId === userChannel) {
+    return { success: false, error: 'Owner can\'t add themselves as managers' };
+  }
+
+  const userDb = await resolveUserFromPersonalChannelName(userChannel);
+  if (!userDb) {
+    return { success: false, error: 'User not found' };
+  }
+  if (channel.managers.some((m) => m.id === userDb.id)) {
+    return { success: false, error: 'User is already a manager' };
+  }
+
+  await prisma.channel.update({
+    where: { id: channelId },
+    data: {
+      managers: {
+        connect: { id: userDb.id },
+      },
+    },
+  });
+
+  revalidatePath(`/settings/channel/${channel.name}`);
+  return { success: true };
+}
+
+export async function removeChannelManager(channelId: string, userId: string) {
+  const { user } = await validateRequest();
+  if (!user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const channel = await prisma.channel.findUnique({
+    where: { id: channelId },
+    include: { owner: true },
+  });
+
+  if (!channel) {
+    return { success: false, error: 'Channel not found' };
+  }
+
+  if (channel.ownerId !== user.id) {
+    return { success: false, error: 'Only channel owners can remove managers' };
+  }
+
+  await prisma.channel.update({
+    where: { id: channelId },
+    data: {
+      managers: {
+        disconnect: { id: userId },
+      },
+    },
+  });
+
+  revalidatePath(`/settings/channel/${channel.name}`);
+  return { success: true };
+}
+
+export async function toggleGlobalChannelNotifs(channelId: string) {
+  const { user } = await validateRequest();
+  if (!user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const channel = await prisma.channel.findUnique({
+    where: { id: channelId },
+    include: { followers: true },
+  });
+
+  if (!channel) {
+    return { success: false, error: 'Channel not found' };
+  }
+
+  const streamInfo = await resolveStreamInfo(channelId);
+  if (!streamInfo) {
+    return { success: false, error: 'Stream info not found' };
+  }
+
+  await prisma.streamInfo.update({
+    where: {
+      id: streamInfo.id,
+    },
+    data: {
+      enableNotifications: !streamInfo.enableNotifications,
+    }
+  })
+
+  revalidatePath(`/settings/channel/${channel.name}`);
+
+  return { success: true, toggle: !streamInfo.enableNotifications };
+}
+
+export async function deleteChannel(channelId: string) {
+  return { success: false, error: 'disabled atm. dm @eth0 if you want to request a deletion.' }
+  /* const { user } = await validateRequest();
+  if (!user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const channel = await prisma.channel.findUnique({
+    where: { id: channelId },
+    include: { 
+      owner: true,
+      personalFor: true,
+    },
+  });
+
+  if (!channel) {
+    return { success: false, error: 'Channel not found' };
+  }
+
+  if (channel.ownerId !== user.id) {
+    return { success: false, error: 'Only channel owners can delete channels' };
+  }
+
+  // Prevent deletion of personal channels
+  if (channel.personalFor) {
+    return { success: false, error: 'Cannot delete personal channels' };
+  }
+
+  await prisma.channel.delete({
+    where: { id: channelId },
+  });
+
+  return { success: true }; */
 }
