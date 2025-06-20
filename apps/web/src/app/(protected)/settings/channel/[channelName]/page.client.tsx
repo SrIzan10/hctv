@@ -40,6 +40,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { UserCombobox } from '@/components/app/UserCombobox/UserCombobox';
+import { parseAsString, parseAsStringEnum, useQueryState } from 'nuqs';
 
 interface ChannelSettingsClientProps {
   channel: Channel & {
@@ -66,6 +67,7 @@ export default function ChannelSettingsClient({
   const [streamKey, setStreamKey] = useState(channel.streamKey?.key || '');
   const [keyVisible, setKeyVisible] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [selTab, setSelTab] = useQueryState('tabs', parseAsString.withDefault('general'));
 
   const copyStreamKey = async () => {
     if (streamKey) {
@@ -118,7 +120,7 @@ export default function ChannelSettingsClient({
         </div>
       </div>
 
-      <Tabs defaultValue="general" className="w-full">
+      <Tabs className="w-full" value={selTab} onValueChange={setSelTab}>
         <TabsList className={`grid w-full ${isPersonal ? 'grid-cols-3' : 'grid-cols-4'}`}>
           <TabsTrigger value="general" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />

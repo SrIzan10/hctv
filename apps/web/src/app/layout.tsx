@@ -14,6 +14,7 @@ import { StreamInfoProvider } from '@/lib/providers/StreamInfoProvider';
 import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
 import { extractRouterConfig } from 'uploadthing/server';
 import { ourFileRouter } from '@/lib/services/uploadthing/fileRouter';
+import { NuqsAdapter } from 'nuqs/adapters/next/app'
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -41,18 +42,20 @@ export default async function RootLayout({
             <NextSSRPlugin
               routerConfig={extractRouterConfig(ourFileRouter)}
             />
-            <SidebarProvider>
-              <StreamInfoProvider>
-                {/* this promise is ugly but i'm lazy to fix the type errors */}
-                <Navbar editLivestream={Promise.resolve(<EditLivestream />)} />
-                <div className="flex flex-1 pt-16">
-                  {/* pt-16 for navbar height */}
-                  <Sidebar className="pt-16" />
-                  <main className="flex-1 overflow-auto">{children}</main>
-                </div>
-                <Toaster />
-              </StreamInfoProvider>
-            </SidebarProvider>
+            <NuqsAdapter>
+              <SidebarProvider>
+                <StreamInfoProvider>
+                  {/* this promise is ugly but i'm lazy to fix the type errors */}
+                  <Navbar editLivestream={Promise.resolve(<EditLivestream />)} />
+                  <div className="flex flex-1 pt-16">
+                    {/* pt-16 for navbar height */}
+                    <Sidebar className="pt-16" />
+                    <main className="flex-1 overflow-auto">{children}</main>
+                  </div>
+                  <Toaster />
+                </StreamInfoProvider>
+              </SidebarProvider>
+            </NuqsAdapter>
           </ThemeProvider>
         </SessionProvider>
       </body>
