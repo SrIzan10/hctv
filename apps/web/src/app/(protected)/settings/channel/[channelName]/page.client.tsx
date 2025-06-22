@@ -40,7 +40,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { UserCombobox } from '@/components/app/UserCombobox/UserCombobox';
-import { parseAsString, parseAsStringEnum, useQueryState } from 'nuqs';
+import { parseAsString, useQueryState } from 'nuqs';
+import { Write } from '@/components/ui/channel-desc-fancy-area/write';
+import { Preview } from '@/components/ui/channel-desc-fancy-area/preview';
 
 interface ChannelSettingsClientProps {
   channel: Channel & {
@@ -68,6 +70,7 @@ export default function ChannelSettingsClient({
   const [keyVisible, setKeyVisible] = useState(false);
   const [copied, setCopied] = useState(false);
   const [selTab, setSelTab] = useQueryState('tabs', parseAsString.withDefault('general'));
+  const [textValue, setTextValue] = useState(channel.description);
 
   const copyStreamKey = async () => {
     if (streamKey) {
@@ -97,7 +100,6 @@ export default function ChannelSettingsClient({
       toast.error('Failed to regenerate stream key');
     }
   };
-  console.log(isPersonal)
 
   return (
     <div className="container max-w-4xl mx-auto py-6 px-4">
@@ -160,6 +162,34 @@ export default function ChannelSettingsClient({
                     label: 'Profile Picture URL',
                     type: 'url',
                     value: channel.pfpUrl,
+                  },
+                  {
+                    name: 'description',
+                    label: 'Channel Description',
+                    value: channel.description,
+                    component: ({ field }) => (
+                      <div>
+                        <input type="hidden" {...field} />
+                        <Tabs defaultValue="write" className="w-full">
+                          <TabsList>
+                            <TabsTrigger value="write">Write</TabsTrigger>
+                            <TabsTrigger value="preview">Preview</TabsTrigger>
+                          </TabsList>
+                          <TabsContent value="write">
+                            <Write 
+                              textValue={field.value || ''} 
+                              setTextValue={(value) => {
+                                field.onChange(value);
+                                setTextValue(value);
+                              }} 
+                            />
+                          </TabsContent>
+                          <TabsContent value="preview">
+                            <Preview textValue={field.value || ''} className='h-[159.5px]' />
+                          </TabsContent>
+                        </Tabs>
+                      </div>
+                    ),
                   },
                 ]}
                 schemaName="updateChannelSettings"

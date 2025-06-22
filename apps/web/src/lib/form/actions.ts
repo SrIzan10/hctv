@@ -196,6 +196,9 @@ export async function updateChannelSettings(prev: any, formData: FormData) {
   if (zod.data.pfpUrl) {
     updateData.pfpUrl = zod.data.pfpUrl;
   }
+  if (zod.data.description !== undefined) {
+    updateData.description = zod.data.description;
+  }
 
   await prisma.channel.update({
     where: { id: zod.data.channelId },

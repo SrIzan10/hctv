@@ -82,7 +82,9 @@ export function UniversalForm<T extends z.ZodType>({
               <FormItem>
                 {field.type !== 'hidden' && <FormLabel>{field.label}</FormLabel>}
                 <FormControl>
-                  {field.textArea ? (
+                  {field.component ? (
+                    field.component({ field: formField, ...field.componentProps })
+                  ) : field.textArea ? (
                     <Textarea
                       placeholder={field.placeholder}
                       {...formField}

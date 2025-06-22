@@ -24,4 +24,5 @@ export const updateChannelSettingsSchema = z.object({
   channelId: z.string().min(1),
   name: username.optional(),
   pfpUrl: z.string().url().optional(),
+  description: z.string().optional(),
 });

@@ -17,9 +17,10 @@ import {
 import { StreamInfoResponse, useStreams } from '@/lib/providers/StreamInfoProvider';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAllChannels } from '@/lib/hooks/useUserList';
 
 export default function Sidebar({ ...props }: React.ComponentProps<typeof UISidebar>) {
-  const { stream, isLoading } = useStreams();
+  const { channels: stream, isLoading } = useAllChannels(5000);
   const [followedExpanded, setFollowedExpanded] = React.useState(true);
 
   if (isLoading) return <SidebarSkeleton />;
