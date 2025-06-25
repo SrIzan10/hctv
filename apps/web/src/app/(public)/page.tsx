@@ -27,7 +27,7 @@ export default async function Home() {
   if (!streams.length) {
     return (
       <div className="flex justify-center items-center text-center flex-col pt-4 gap-2">
-        <h2>No streams found!!</h2>
+        <h2>No streams found!</h2>
         <p>...maybe start one?</p>
         <ConfusedDino className='w-40 h-40' />
       </div>
