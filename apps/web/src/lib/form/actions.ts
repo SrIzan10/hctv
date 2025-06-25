@@ -163,10 +163,14 @@ export async function updateChannelSettings(prev: any, formData: FormData) {
   if (!user) {
     return { success: false, error: 'Unauthorized' };
   }
-
+  
   const zod = await zodVerify(updateChannelSettingsSchema, formData);
+  const urlRegex = /(?:http[s]?:\/\/.)?(?:www\.)?[-a-zA-Z0-9@%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)/gm;
   if (!zod.success) {
     return zod;
+  }
+  if (zod.data.pfpUrl && !urlRegex.test(zod.data.pfpUrl)) {
+    return { success: false, error: 'Invalid URL for profile picture' };
   }
 
   const channel = await prisma.channel.findUnique({
@@ -188,21 +192,17 @@ export async function updateChannelSettings(prev: any, formData: FormData) {
     return { success: false, error: 'Unauthorized' };
   }
 
-  // Only owners can change certain settings
-  const updateData: any = {};
-  if (zod.data.name && isOwner) {
-    updateData.name = zod.data.name;
-  }
-  if (zod.data.pfpUrl) {
-    updateData.pfpUrl = zod.data.pfpUrl;
-  }
-  if (zod.data.description !== undefined) {
-    updateData.description = zod.data.description;
+  if (zod.data.pfpUrl === '') {
+    const identicon = await genIdenticonUpload(channel.name, 'pfp');
+    zod.data.pfpUrl = identicon;
   }
 
   await prisma.channel.update({
     where: { id: zod.data.channelId },
-    data: updateData,
+    data: {
+      description: zod.data.description || undefined,
+      pfpUrl: zod.data.pfpUrl,
+    },
   });
 
   revalidatePath(`/settings/channel/${channel.name}`);

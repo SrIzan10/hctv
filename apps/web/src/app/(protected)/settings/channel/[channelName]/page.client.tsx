@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +43,7 @@ import { UserCombobox } from '@/components/app/UserCombobox/UserCombobox';
 import { parseAsString, useQueryState } from 'nuqs';
 import { Write } from '@/components/ui/channel-desc-fancy-area/write';
 import { Preview } from '@/components/ui/channel-desc-fancy-area/preview';
+import { UploadButton } from '@/lib/uploadthing';
 
 interface ChannelSettingsClientProps {
   channel: Channel & {
@@ -70,7 +71,8 @@ export default function ChannelSettingsClient({
   const [keyVisible, setKeyVisible] = useState(false);
   const [copied, setCopied] = useState(false);
   const [selTab, setSelTab] = useQueryState('tabs', parseAsString.withDefault('general'));
-  const [textValue, setTextValue] = useState(channel.description);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const copyStreamKey = async () => {
     if (streamKey) {
@@ -111,7 +113,7 @@ export default function ChannelSettingsClient({
           </Avatar>
           <div>
             <h1 className="text-3xl font-bold">{channel.name}</h1>
-            <p className="text-muted-foreground">Channel Settings</p>
+            <p className="text-mantle-foreground">Channel Settings</p>
             <div className="flex items-center gap-2 mt-2">
               <Badge variant="secondary">
                 {channel.followers.length} follower{channel.followers.length !== 1 ? 's' : ''}
@@ -156,12 +158,88 @@ export default function ChannelSettingsClient({
               <UniversalForm
                 fields={[
                   { name: 'channelId', type: 'hidden', value: channel.id, label: 'Channel ID' },
-                  { name: 'name', label: 'Channel Name', type: 'text', value: channel.name },
                   {
                     name: 'pfpUrl',
-                    label: 'Profile Picture URL',
+                    label: 'Profile Picture',
                     type: 'url',
                     value: channel.pfpUrl,
+                    component: ({ field }) => {
+                      return (
+                        <div className="space-y-4">
+                          <input type="hidden" {...field} />
+                          
+                          {field.value && (
+                            <div className="flex items-center space-x-4">
+                              <Avatar className="h-16 w-16">
+                                <AvatarImage src={field.value} alt="Current profile picture" />
+                                <AvatarFallback>{channel.name[0]?.toUpperCase()}</AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1">
+                                <p className="text-sm font-medium">Current profile picture</p>
+                                <p className="text-xs text-muted-foreground">Click &quot;Upload new image&quot; to replace</p>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  field.onChange('');
+                                  setUploadError(null);
+                                }}
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                          )}
+                          
+                          <div>
+                            <UploadButton
+                              endpoint="pfpUpload"
+                              className="mt-2 ut-button:bg-mantle ut-button:text-mantle-foreground ut-allowed-content:text-muted-foreground/70"
+                              content={{
+                                button: field.value ? "Upload new image" : "Upload profile picture",
+                                allowedContent: "Image (1MB max)"
+                              }}
+                              onUploadBegin={() => {
+                                setIsUploading(true);
+                                setUploadError(null);
+                              }}
+                              onClientUploadComplete={(res) => {
+                                setIsUploading(false);
+                                if (res && res[0]) {
+                                  field.onChange(res[0].ufsUrl);
+                                  toast.success('Profile picture uploaded successfully!');
+                                }
+                              }}
+                              onUploadError={(error) => {
+                                setIsUploading(false);
+                                setUploadError(error.message);
+                                toast.error(`Upload failed: ${error.message}`);
+                              }}
+                              disabled={isUploading}
+                            />
+                            
+                            {isUploading && (
+                              <p className="mt-2 text-sm text-primary">
+                                Uploading...
+                              </p>
+                            )}
+                            
+                            {uploadError && (
+                              <p className="mt-2 text-sm text-red-600">
+                                {uploadError}
+                              </p>
+                            )}
+                            
+                            {!field.value && !isUploading && !uploadError && (
+                              <p className="mt-2 text-sm text-muted-foreground">
+                                Upload a profile picture for your channel.
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    },
                   },
                   {
                     name: 'description',
@@ -176,16 +254,15 @@ export default function ChannelSettingsClient({
                             <TabsTrigger value="preview">Preview</TabsTrigger>
                           </TabsList>
                           <TabsContent value="write">
-                            <Write 
-                              textValue={field.value || ''} 
+                            <Write
+                              textValue={field.value || ''}
                               setTextValue={(value) => {
                                 field.onChange(value);
-                                setTextValue(value);
-                              }} 
+                              }}
                             />
                           </TabsContent>
                           <TabsContent value="preview">
-                            <Preview textValue={field.value || ''} className='h-[159.5px]' />
+                            <Preview textValue={field.value || ''} className="h-[159.5px]" />
                           </TabsContent>
                         </Tabs>
                       </div>
@@ -249,7 +326,7 @@ export default function ChannelSettingsClient({
               <div className="space-y-4">
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Stream Key</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
+                  <p className="text-sm text-mantle-foreground mb-4">
                     Use this key to start streaming to your channel. Keep it secure!
                   </p>
                   <div className="flex items-center gap-2">
@@ -258,7 +335,7 @@ export default function ChannelSettingsClient({
                         type={keyVisible ? 'text' : 'password'}
                         value={streamKey}
                         readOnly
-                        className="w-full px-3 py-2 border rounded-md bg-muted font-mono text-sm"
+                        className="w-full px-3 py-2 border rounded-md bg-mantle font-mono text-sm"
                       />
                     </div>
                     <Button variant="outline" size="sm" onClick={() => setKeyVisible(!keyVisible)}>
@@ -322,7 +399,7 @@ export default function ChannelSettingsClient({
                     ))}
                   </div>
                 ) : (
-                  <p className="text-muted-foreground">No stream information available.</p>
+                  <p className="text-mantle-foreground">No stream information available.</p>
                 )}
               </div>
             </CardContent>
@@ -345,10 +422,7 @@ export default function ChannelSettingsClient({
                     {isOwner && (
                       <AddManagerDialog
                         channelId={channel.id}
-                        existingManagers={[
-                          ...channel.managers.map((m) => m.id),
-                          channel.owner.id,
-                        ]}
+                        existingManagers={[...channel.managers.map((m) => m.id), channel.owner.id]}
                       />
                     )}
                   </div>
@@ -365,7 +439,7 @@ export default function ChannelSettingsClient({
                         </Avatar>
                         <div>
                           <p className="font-medium">{channel.ownerPersonalChannel?.name}</p>
-                          <p className="text-sm text-muted-foreground">Channel Owner</p>
+                          <p className="text-sm text-mantle-foreground">Channel Owner</p>
                         </div>
                       </div>
                       <Badge variant="default">
@@ -391,7 +465,7 @@ export default function ChannelSettingsClient({
                             </Avatar>
                             <div>
                               <p className="font-medium">{personalChannel?.name}</p>
-                              <p className="text-sm text-muted-foreground">Manager</p>
+                              <p className="text-sm text-mantle-foreground">Manager</p>
                             </div>
                           </div>
                           {isOwner && (
@@ -412,7 +486,7 @@ export default function ChannelSettingsClient({
                     })}
 
                     {channel.managers.length === 0 && (
-                      <p className="text-muted-foreground text-center py-8">
+                      <p className="text-mantle-foreground text-center py-8">
                         No managers added yet.
                       </p>
                     )}
@@ -436,7 +510,7 @@ export default function ChannelSettingsClient({
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-medium">Stream Notifications</h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-mantle-foreground">
                       Send notifications to followers when you go live
                     </p>
                   </div>
@@ -446,9 +520,11 @@ export default function ChannelSettingsClient({
                       toast.promise(toggleGlobalChannelNotifs(channel.id), {
                         loading: 'Updating notifications...',
                         success(data) {
-                          return `${data.toggle ? 'Enabled' : 'Disabled'} global notifications for this channel.`
+                          return `${
+                            data.toggle ? 'Enabled' : 'Disabled'
+                          } global notifications for this channel.`;
                         },
-                      })
+                      });
                     }}
                   />
                 </div>
@@ -470,7 +546,10 @@ export default function ChannelSettingsClient({
                           <div className="flex items-center gap-2">
                             <Avatar className="h-8 w-8">
                               <AvatarFallback>{personalChannel?.name}</AvatarFallback>
-                              <AvatarImage src={personalChannel?.pfpUrl} alt={personalChannel?.name} />
+                              <AvatarImage
+                                src={personalChannel?.pfpUrl}
+                                alt={personalChannel?.name}
+                              />
                             </Avatar>
                             <span className="text-sm">{personalChannel?.name}</span>
                           </div>
@@ -481,7 +560,7 @@ export default function ChannelSettingsClient({
                       );
                     })}
                     {channel.followers.length === 0 && (
-                      <p className="text-muted-foreground text-center py-4">No followers yet.</p>
+                      <p className="text-mantle-foreground text-center py-4">No followers yet.</p>
                     )}
                   </div>
                 </div>
