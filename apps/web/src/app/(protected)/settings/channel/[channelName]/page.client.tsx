@@ -397,9 +397,9 @@ export default function ChannelSettingsClient({
                 <h3 className="text-lg font-semibold">Stream Information</h3>
                 {channel.streamInfo.length > 0 ? (
                   <div className="space-y-4">
-                    {channel.streamInfo.map((stream) => (
+                    {channel.streamInfo.map((stream, index) => (
                       <UniversalForm
-                        key={stream.id}
+                        key={`${stream.id}-${stream.username}-${index}`}
                         fields={[
                           {
                             name: 'username',
