@@ -73,7 +73,7 @@ export default function ChannelSettingsClient({
   const [streamKey, setStreamKey] = useState(channel.streamKey?.key || '');
   const [keyVisible, setKeyVisible] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [selTab, setSelTab] = useQueryState('tabs', parseAsString.withDefault('general'));
+  const [selTab, setSelTab] = useQueryState('tab', parseAsString.withDefault('general'));
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const channelList = useOwnedChannels();
@@ -134,9 +134,9 @@ export default function ChannelSettingsClient({
             value={channel.name}
             onSelect={(value) => {
               if (value === 'create') {
-                router.push('/create');
+                router.push(`/create`);
               } else {
-                router.push(`/settings/channel/${value}`);
+                router.push(`/settings/channel/${value}?tab=${selTab}`);
               }
             }}
           />
