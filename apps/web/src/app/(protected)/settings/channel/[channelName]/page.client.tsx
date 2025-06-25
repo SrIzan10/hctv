@@ -26,6 +26,7 @@ import {
   removeChannelManager,
   deleteChannel,
   toggleGlobalChannelNotifs,
+  editStreamInfo,
 } from '@/lib/form/actions';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
@@ -47,6 +48,7 @@ import { UploadButton } from '@/lib/uploadthing';
 import { useOwnedChannels } from '@/lib/hooks/useUserList';
 import { ChannelSelect } from '@/components/app/ChannelSelect/ChannelSelect';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface ChannelSettingsClientProps {
   channel: Channel & {
@@ -348,6 +350,18 @@ export default function ChannelSettingsClient({
                   <p className="text-sm text-mantle-foreground mb-4">
                     Use this key to start streaming to your channel. Keep it secure!
                   </p>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Need help getting started? Check out our{' '}
+                    <Link
+                      href="https://gist.github.com/SrIzan10/ebd89ced6b21b016d4d389e6711a94e9" 
+                      className="text-primary hover:underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      streaming guide
+                    </Link>
+                    .
+                  </p>
                   <div className="flex items-center gap-2">
                     <div className="relative flex-1">
                       <input
@@ -407,7 +421,7 @@ export default function ChannelSettingsClient({
                           },
                         ]}
                         schemaName="streamInfoEdit"
-                        action={updateChannelSettings}
+                        action={editStreamInfo}
                         submitText="Update Stream Info"
                         onActionComplete={(result: any) => {
                           if (result?.success) {
