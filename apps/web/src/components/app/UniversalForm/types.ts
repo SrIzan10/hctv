@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { HTMLInputTypeAttribute } from 'react';
+import { ControllerRenderProps } from 'react-hook-form';
 import { schemaDb } from './UniversalForm';
 
 export type FormFieldConfig = {
@@ -11,6 +12,8 @@ export type FormFieldConfig = {
   value?: any;
   textArea?: boolean;
   textAreaRows?: number;
+  component?: (props: { field: ControllerRenderProps<any, any> } & any) => React.ReactNode;
+  componentProps?: Record<string, any>;
 };
 
 export type UniversalFormProps<T extends z.ZodType> = {

@@ -14,7 +14,8 @@
     "docker:web": "dotenvx run -f .env.docker -- docker buildx build --platform linux/amd64 -f apps/web/Dockerfile . --secret id=TURBO_TOKEN,env=TURBO_TOKEN --secret id=TURBO_TEAM,env=TURBO_TEAM --no-cache",
     "docker:chat": "dotenvx run -f .env.docker -- docker buildx build --platform linux/amd64 -f apps/chat/Dockerfile . --secret id=TURBO_TOKEN,env=TURBO_TOKEN --secret id=TURBO_TEAM,env=TURBO_TEAM --no-cache",
     "act": "act --secret-file .env.ci",
-    "db:migrate": "yarn workspace @hctv/db db:migrate"
+    "db:migrate": "yarn workspace @hctv/db db:migrate",
+    "ui:add": "yarn workspace @hctv/web ui:add"
   },
   "devDependencies": {
     "turbo": "^2.4.4"

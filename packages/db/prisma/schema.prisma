@@ -36,6 +36,7 @@ model User {
 model Channel {
   id        String   @id @default(cuid())
   name      String   @unique
+  description String @default("A hctv channel")
   pfpUrl    String
 
   createdAt DateTime @default(now())

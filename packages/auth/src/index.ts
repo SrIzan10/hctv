@@ -21,6 +21,7 @@ export const lucia = new Lucia(adapter, {
       slack_id: attributes.slack_id,
       pfpUrl: attributes.pfpUrl,
       hasOnboarded: attributes.hasOnboarded,
+      personalChannelId: attributes.personalChannelId,
     };
   },
 });
@@ -36,4 +37,5 @@ interface DatabaseUserAttributes {
   slack_id: string;
   pfpUrl: string;
   hasOnboarded: boolean;
+  personalChannelId: string | null;
 }

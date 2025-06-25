@@ -1,17 +1,16 @@
 import { validateRequest } from '@/lib/auth/validate';
-import { prisma } from '@hctv/db';
-import EditLivestreamDialog from './dialog';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default async function EditLivestream() {
   const { user } = await validateRequest();
   if (!user?.hasOnboarded) {
     return null;
   }
-  const ownedChannels = await prisma.channel.findMany({
-    where: {
-      OR: [{ ownerId: user.id }, { managers: { some: { id: user.id } } }],
-    },
-  });
 
-  return <EditLivestreamDialog ownedChannels={ownedChannels} />;
+  return (
+    <Link href={`/settings/channel?tab=stream`}>
+      <Button variant="outline">Edit Livestream</Button>
+    </Link>
+  );
 }

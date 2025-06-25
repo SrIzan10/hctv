@@ -116,10 +116,17 @@ jobs:
     runs-on: ubuntu-latest
     needs: [frontend, db, chat]
     steps:
-      - name: Emit a webhook to the server
-        env:
-          AUTH_HEADER: ${{ secrets.WHSERVER_TOKEN }}
-        run: |
-          curl -X POST \
-            -H "Authorization: $AUTH_HEADER" \
-            https://webhooks.srizan.dev/hooks/hctv
+      # source https://github.com/taciturnaxolotl/cachet/blob/main/.github/workflows/deploy.yaml
+      - name: Deploy with Docker
+        uses: appleboy/ssh-action@v1
+        with:
+          host: hackclub.app
+          username: srizan
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          script: |
+            cd ~/compose/hctv
+            docker compose pull
+            docker compose up -d --remove-orphans
+            # for some reason, without the restart, the rtmp container stops working
+            docker compose restart
