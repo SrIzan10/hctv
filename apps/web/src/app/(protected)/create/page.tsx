@@ -1,8 +1,13 @@
+'use client'
+
 import { UniversalForm } from "@/components/app/UniversalForm/UniversalForm";
 import { createChannel } from "@/lib/form/actions";
 import { Hash } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 function CreateChannelPage() {
+  const router = useRouter();
+
   return (
     <div className="min-h-screen bg-background">
       <div className="flex h-full w-full flex-col items-center justify-center px-4 py-12">
@@ -26,6 +31,13 @@ function CreateChannelPage() {
             ]}
             schemaName="createChannel"
             action={createChannel}
+            onActionComplete={(r) => {
+              // @ts-expect-error
+              const channelName = r?.channel;
+              if (channelName) {
+                router.push(`/${channelName}`);
+              }
+            }}
           />
         </div>
 

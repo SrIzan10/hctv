@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +44,9 @@ import { parseAsString, useQueryState } from 'nuqs';
 import { Write } from '@/components/ui/channel-desc-fancy-area/write';
 import { Preview } from '@/components/ui/channel-desc-fancy-area/preview';
 import { UploadButton } from '@/lib/uploadthing';
+import { useOwnedChannels } from '@/lib/hooks/useUserList';
+import { ChannelSelect } from '@/components/app/ChannelSelect/ChannelSelect';
+import { useRouter } from 'next/navigation';
 
 interface ChannelSettingsClientProps {
   channel: Channel & {
@@ -73,6 +76,8 @@ export default function ChannelSettingsClient({
   const [selTab, setSelTab] = useQueryState('tabs', parseAsString.withDefault('general'));
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const channelList = useOwnedChannels();
+  const router = useRouter();
 
   const copyStreamKey = async () => {
     if (streamKey) {
@@ -105,7 +110,7 @@ export default function ChannelSettingsClient({
 
   return (
     <div className="container max-w-4xl mx-auto py-6 px-4">
-      <div className="mb-6">
+      <div className="mb-6 flex">
         <div className="flex items-center gap-4 mb-4">
           <Avatar className="h-16 w-16">
             <AvatarImage src={channel.pfpUrl} alt={channel.name} />
@@ -121,6 +126,20 @@ export default function ChannelSettingsClient({
               {isOwner && <Badge variant="outline">Owner</Badge>}
             </div>
           </div>
+        </div>
+        <div className='flex-1' />
+        <div>
+          <ChannelSelect
+            channelList={channelList.channels.map(c => c.channel)}
+            value={channel.name}
+            onSelect={(value) => {
+              if (value === 'create') {
+                router.push('/create');
+              } else {
+                router.push(`/settings/channel/${value}`);
+              }
+            }}
+          />
         </div>
       </div>
 

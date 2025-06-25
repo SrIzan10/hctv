@@ -155,7 +155,7 @@ export async function createChannel(prev: any, formData: FormData) {
 
   await initializeStreamInfo(createdChannel.id);
 
-  return { success: true };
+  return { success: true, channel: createdChannel.name };
 }
 
 export async function updateChannelSettings(prev: any, formData: FormData) {

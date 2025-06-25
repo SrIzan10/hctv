@@ -63,7 +63,7 @@ export default function EditLivestreamDialog(props: Props) {
       setSelectedChannel('');
       // using window location href as a really janky way to just close the dialog
       // TODO: use a proper dialog close method
-      window.location.href = '/settings/channel/create';
+      window.location.href = '/create';
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedChannel]);
