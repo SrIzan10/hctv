@@ -40,7 +40,7 @@ export function UserCombobox(props: Props) {
   if (!props.users && error) return <div>Error loading users</div>;
   if (!props.users && isLoading) return <div>Loading...</div>;
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen} modal={props.modal}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -103,5 +103,6 @@ type Props = {
   users?: APIResponse;
   value?: string;
   filter?: string[];
+  modal?: boolean;
   onValueChange?: (value: string) => void;
 }

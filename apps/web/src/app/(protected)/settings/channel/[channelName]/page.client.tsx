@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -80,6 +80,18 @@ export default function ChannelSettingsClient({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const channelList = useOwnedChannels();
   const router = useRouter();
+
+  const handleStreamInfoActionComplete = useCallback((result: any) => {
+    if (result?.success) {
+      toast.success('Stream information updated');
+    }
+  }, []);
+
+  const handleChannelSettingsActionComplete = useCallback((result: any) => {
+    if (result?.success) {
+      toast.success('Channel settings updated successfully');
+    }
+  }, []);
 
   const copyStreamKey = async () => {
     if (streamKey) {
@@ -293,11 +305,7 @@ export default function ChannelSettingsClient({
                 schemaName="updateChannelSettings"
                 action={updateChannelSettings}
                 submitText="Save Changes"
-                onActionComplete={(result: any) => {
-                  if (result?.success) {
-                    toast.success('Channel settings updated successfully');
-                  }
-                }}
+                onActionComplete={handleChannelSettingsActionComplete}
               />
 
               {false && isOwner && (
@@ -399,7 +407,7 @@ export default function ChannelSettingsClient({
                   <div className="space-y-4">
                     {channel.streamInfo.map((stream, index) => (
                       <UniversalForm
-                        key={`${stream.id}-${stream.username}-${index}`}
+                        key={stream.id}
                         fields={[
                           {
                             name: 'username',
@@ -423,11 +431,7 @@ export default function ChannelSettingsClient({
                         schemaName="streamInfoEdit"
                         action={editStreamInfo}
                         submitText="Update Stream Info"
-                        onActionComplete={(result: any) => {
-                          if (result?.success) {
-                            toast.success('Stream information updated');
-                          }
-                        }}
+                        onActionComplete={handleStreamInfoActionComplete}
                       />
                     ))}
                   </div>
@@ -637,6 +641,7 @@ function AddManagerDialog({
           }}
           filter={existingManagers}
           value={channel}
+          modal
         />
         <DialogFooter>
           <Button
