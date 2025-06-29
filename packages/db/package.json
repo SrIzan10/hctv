@@ -17,7 +17,8 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
-    "build": "prisma generate && tsc --build"
+    "build": "prisma generate && tsc --build",
+    "dev": "tsc --watch --preserveWatchOutput"
   },
   "devDependencies": {
     "@types/node": "^24.0.1",

@@ -88,6 +88,17 @@ export default function Navbar(props: Props) {
                 <DropdownMenuGroup>
                   <ThemeSwitcher />
                 </DropdownMenuGroup>
+                <DropdownMenuGroup>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm px-2">
+                    v{process.env.version}-{process.env.NODE_ENV === 'development' ? 'dev' : 'prod'}, commit{' '}
+                    <Link
+                      href={`https://github.com/SrIzan10/hctv/commit/${process.env.commit}`}
+                      target="_blank"
+                    >
+                      {process.env.commit}
+                    </Link>
+                  </p>
+                </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (

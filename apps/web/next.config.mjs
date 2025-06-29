@@ -7,6 +7,13 @@ const LIVE_SERVER_URL =
   process.env.NODE_ENV === 'production'
     ? 'https://backend.hctv.srizan.dev'
     : 'http://localhost:8888';
+import { readFileSync } from 'node:fs';
+import { execSync } from 'node:child_process';
+
+const packageJson = JSON.parse(readFileSync('./package.json', 'utf8'));
+const { version } = packageJson;
+const commit = process.env.commit || execSync('git rev-parse --short HEAD')
+  .toString().trim();
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -22,6 +29,8 @@ const nextConfig = {
   },
   env: {
     LIVE_SERVER_URL,
+    commit,
+    version,
   },
   reactStrictMode: false,
   output: 'standalone',

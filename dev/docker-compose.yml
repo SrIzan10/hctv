@@ -1,7 +1,6 @@
 services:
   psql:
     image: postgres
-    user: 1000:1000
     environment:
       POSTGRES_USER: postgres
       # my condolences
@@ -29,7 +28,7 @@ services:
       - ./nginx.conf:/etc/nginx/templates/nginx.conf.template
       - ./html:/var/www/html
       - /dev/shm/hls:/dev/shm/hls
-    image: flv-module
+    image: srizan10/flv-module
     entrypoint:
       - /bin/sh
       - -c

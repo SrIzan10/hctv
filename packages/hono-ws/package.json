@@ -9,8 +9,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup ./src/index.ts --format esm,cjs --dts"
-  },
+    "build": "tsup ./src/index.ts --format esm,cjs --dts",
+    "dev": "tsup ./src/index.ts --format esm,cjs --dts --watch"
+ },
   "exports": {
     ".": {
       "types": "./dist/index.d.mts",

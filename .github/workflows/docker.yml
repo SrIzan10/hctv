@@ -29,6 +29,10 @@ jobs:
           images: srizan10/hclive
           tags: latest
 
+      - name: Set outputs
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
@@ -41,6 +45,8 @@ jobs:
           secrets: |
             TURBO_TOKEN=${{ secrets.TURBO_TOKEN }}
             TURBO_TEAM=${{ secrets.TURBO_TEAM }}
+          build-args: |
+            commit=${{ steps.vars.outputs.sha_short }}
   db:
     name: Push db to Docker Hub
     runs-on: ubuntu-latest
