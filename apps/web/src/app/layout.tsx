@@ -15,6 +15,7 @@ import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
 import { extractRouterConfig } from 'uploadthing/server';
 import { ourFileRouter } from '@/lib/services/uploadthing/fileRouter';
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
+import SonnerNewVersion from '@/components/app/SonnerNewVersion/SonnerNewVersion';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -39,6 +40,7 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <SonnerNewVersion />
             <NextSSRPlugin
               routerConfig={extractRouterConfig(ourFileRouter)}
             />
