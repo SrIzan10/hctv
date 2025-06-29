@@ -1,5 +1,7 @@
 import * as path from 'node:path';
 import { fileURLToPath } from 'url';
+import { readFileSync } from 'node:fs';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -7,13 +9,10 @@ const LIVE_SERVER_URL =
   process.env.NODE_ENV === 'production'
     ? 'https://backend.hctv.srizan.dev'
     : 'http://localhost:8888';
-import { readFileSync } from 'node:fs';
-import { execSync } from 'node:child_process';
 
 const packageJson = JSON.parse(readFileSync('./package.json', 'utf8'));
 const { version } = packageJson;
-const commit = process.env.commit || execSync('git rev-parse --short HEAD')
-  .toString().trim();
+const commit = process.env.commit || process.env.NEXT_PUBLIC_COMMIT || 'unknown';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
