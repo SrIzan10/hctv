@@ -18,8 +18,10 @@ RUN turbo prune @hctv/web --docker
 FROM base AS installer
 RUN apk update
 RUN apk add --no-cache libc6-compat
+ARG commit=0
+ENV commit=$commit
 WORKDIR /app
- 
+
 # First install the dependencies (as they change less often)
 COPY --from=builder /app/out/json/ .
 RUN yarn install --frozen-lockfile
