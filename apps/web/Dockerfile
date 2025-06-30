@@ -37,7 +37,7 @@ COPY --from=builder /app/out/full/ .
 RUN --mount=type=secret,id=TURBO_TOKEN --mount=type=secret,id=TURBO_TEAM \
     . /tmp/build_env && \
     export commit=$COMMIT_HASH && \
-    TURBO_TOKEN=$(cat /run/secrets/TURBO_TOKEN) TURBO_TEAM=$(cat /run/secrets/TURBO_TEAM) yarn turbo run build
+    TURBO_TOKEN=$(cat /run/secrets/TURBO_TOKEN) TURBO_TEAM=$(cat /run/secrets/TURBO_TEAM) yarn turbo run build --env-mode=loose
  
 FROM base AS runner
 WORKDIR /app
