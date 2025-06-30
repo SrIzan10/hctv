@@ -1,6 +1,7 @@
 import * as path from 'node:path';
 import { fileURLToPath } from 'url';
 import { readFileSync } from 'node:fs';
+import { execSync } from 'node:child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,7 +13,8 @@ const LIVE_SERVER_URL =
 
 const packageJson = JSON.parse(readFileSync('./package.json', 'utf8'));
 const { version } = packageJson;
-const commit = process.env.commit || process.env.NEXT_PUBLIC_COMMIT || 'unknown';
+const commit = process.env.commit || execSync('git rev-parse --short HEAD')
+  .toString().trim();
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
