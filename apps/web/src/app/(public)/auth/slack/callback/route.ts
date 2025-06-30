@@ -3,7 +3,7 @@ import { cookies as nextCookies } from 'next/headers';
 import { decodeIdToken, OAuth2RequestError } from 'arctic';
 import { generateIdFromEntropySize } from 'lucia';
 import { prisma } from '@hctv/db';
-import { getRedisConnection } from '@/lib/services/redis';
+import { getRedisConnection } from '@hctv/db';
 
 export async function GET(request: Request): Promise<Response> {
   const cookies = await nextCookies();

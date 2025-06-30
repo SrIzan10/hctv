@@ -96,7 +96,8 @@ app.get(
           })
         );
         return;
-      } else if (msg.type === 'message') {
+      }
+      if (msg.type === 'message') {
         ws.wss.clients.forEach((c) => {
           const client = c as ModifiedWebSocket;
           if (client.readyState === client.OPEN && client.targetUsername === ws.targetUsername) {
