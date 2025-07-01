@@ -3,7 +3,8 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**", "generated/client/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**", "generated/client/**"],
+      "env": ["commit", "NODE_ENV", "TURBO_TOKEN", "TURBO_TEAM"]
     },
     "setup": {
       "dependsOn": ["^dd", "^db:generate", "^build"],
