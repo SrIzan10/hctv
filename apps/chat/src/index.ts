@@ -5,8 +5,10 @@ import { readFile } from 'node:fs/promises';
 import { lucia } from '@hctv/auth';
 import { getCookie } from 'hono/cookie';
 import { getPersonalChannel } from './utils/personalChannel.js';
-import { prisma } from '@hctv/db';
+import { getRedisConnection, prisma } from '@hctv/db';
 
+const MESSAGE_HISTORY_SIZE = 15;
+const MESSAGE_TTL = 60 * 60 * 24;
 const threed = await readFile('./src/3d.txt', 'utf-8');
 
 const app = new Hono();
@@ -54,6 +56,19 @@ app.get(
         ws.raw.personalChannel = personalChannel;
       }
 
+      const redis = getRedisConnection();
+      const channelKey = `chat:history:${username}`;
+      const messages = await redis.zrange(channelKey, 0, MESSAGE_HISTORY_SIZE - 1);
+
+      if (messages.length > 0) {
+        ws.send(
+          JSON.stringify({
+            type: 'history',
+            messages: messages.map((msg) => JSON.parse(msg)),
+          })
+        );
+      }
+
       await prisma.streamInfo.update({
         where: {
           username,
@@ -98,19 +113,27 @@ app.get(
         return;
       }
       if (msg.type === 'message') {
+        const msgObj = {
+          user: {
+            id: ws.user.id,
+            username: ws.personalChannel.name,
+            pfpUrl: ws.user.pfpUrl,
+          },
+          message: msg.message,
+        };
+        const msgStr = JSON.stringify(msgObj);
+
+        const redis = getRedisConnection();
+        const channelKey = `chat:history:${ws.targetUsername}`;
+
+        redis.zadd(channelKey, Date.now(), msgStr);
+        redis.zremrangebyrank(channelKey, 0, -MESSAGE_HISTORY_SIZE - 1);
+        redis.expire(channelKey, MESSAGE_TTL);
+
         ws.wss.clients.forEach((c) => {
           const client = c as ModifiedWebSocket;
           if (client.readyState === client.OPEN && client.targetUsername === ws.targetUsername) {
-            c.send(
-              JSON.stringify({
-                user: {
-                  id: ws.user.id,
-                  username: ws.personalChannel.name,
-                  pfpUrl: ws.user.pfpUrl,
-                },
-                message: msg.message,
-              })
-            );
+            c.send(msgStr);
           }
         });
       }

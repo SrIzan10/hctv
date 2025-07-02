@@ -5,6 +5,7 @@ import { Send } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useParams } from 'next/navigation';
+import { Message } from './message';
 
 export default function ChatPanel() {
   const { username } = useParams();
@@ -28,7 +29,12 @@ export default function ChatPanel() {
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (data.type === 'ping' || data.type === 'pong' || !data.user) return;
+        if (data.type === 'ping' || data.type === 'pong') return;
+        if (data.type === 'history') {
+          const messages = data.messages as ChatMessage[];
+          setChatMessages((prev) => [...prev,  ...messages, { message: 'Welcome to the chat!', type: 'systemMsg' }]);
+          return;
+        }
         setChatMessages((prev) => [...prev, data]);
       } catch (e) {
         console.log('Received message confirmation:', event.data);
@@ -86,17 +92,7 @@ export default function ChatPanel() {
       <div ref={scrollRef} className="flex-1 p-4 overflow-y-auto flex flex-col">
         <div className="space-y-4 flex-1">
           {chatMessages.map((msg, i) => (
-            <div key={i} className="flex space-x-2">
-              <div className="flex items-center gap-2">
-                <div className="font-bold shrink-0">{msg.user.username}</div>
-              </div>
-              <div
-                lang="en"
-                className="max-w-[calc(100%-4rem)] break-all whitespace-pre-wrap hyphens-auto"
-              >
-                {msg.message}
-              </div>
-            </div>
+            <Message key={i} user={msg.user} message={msg.message} type={msg.type} />
           ))}
         </div>
       </div>
@@ -122,13 +118,14 @@ export default function ChatPanel() {
   );
 }
 
-interface User {
+export interface ChatMessage {
+  user?: User;
+  message: string;
+  type: 'message' | 'systemMsg';
+}
+
+export interface User {
   id: string;
   username: string;
   pfpUrl: string;
-}
-
-interface ChatMessage {
-  user: User;
-  message: string;
 }
