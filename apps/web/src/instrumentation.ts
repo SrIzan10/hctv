@@ -28,4 +28,9 @@ export async function register() {
     }
     console.log('cron stuff registered');
   }
+
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    const { emojisWriteRedis } = await import('@/lib/instrumentation/emojisWriteRedis');
+    await emojisWriteRedis();
+  }
 }

@@ -1,0 +1,4 @@
+max_width = 100
+tab_spaces = 2
+hard_tabs = false
+trailing_semicolon = true
