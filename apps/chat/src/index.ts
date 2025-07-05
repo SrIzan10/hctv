@@ -102,7 +102,8 @@ app.get(
         },
       });
     },
-    onMessage(evt, ws) {
+    async onMessage(evt, ws) {
+      const redis = getRedisConnection();
       const msg = JSON.parse(evt.data.toString());
       if (msg.type === 'ping') {
         ws.send(
@@ -121,21 +122,54 @@ app.get(
           },
           message: msg.message,
         };
+        
+        // Save to Redis without the type field to maintain compatibility
+        const redisObj = {
+          user: msgObj.user,  
+          message: msgObj.message,
+          type: 'message',
+        };
+        const redisStr = JSON.stringify(redisObj);
         const msgStr = JSON.stringify(msgObj);
 
-        const redis = getRedisConnection();
         const channelKey = `chat:history:${ws.targetUsername}`;
-
-        redis.zadd(channelKey, Date.now(), msgStr);
-        redis.zremrangebyrank(channelKey, 0, -MESSAGE_HISTORY_SIZE - 1);
-        redis.expire(channelKey, MESSAGE_TTL);
+        await redis.zadd(channelKey, Date.now(), redisStr);
+        await redis.zremrangebyrank(channelKey, 0, -MESSAGE_HISTORY_SIZE - 1);
+        await redis.expire(channelKey, MESSAGE_TTL);
 
         ws.wss.clients.forEach((c) => {
           const client = c as ModifiedWebSocket;
           if (client.readyState === client.OPEN && client.targetUsername === ws.targetUsername) {
+            console.log('Sending message to client:', msgStr);
             c.send(msgStr);
           }
         });
+      }
+      if (msg.type === 'emojiMsg') {
+        const emojis = msg.emojis as string[];
+        const emojiMap: Record<string, string> = {};
+
+        await Promise.all(
+          emojis.map(async (emoji) => {
+            let url = await redis.hget('emojis', emoji);
+            
+            if (!url) {
+              url = await redis.hget(`emojis:${emoji}`, 'url');
+            }
+            if (!url) {
+              url = await redis.hget(`emoji:${emoji}`, 'url');
+            }
+            
+            emojiMap[emoji] = url ?? '';
+          })
+        );
+
+        ws.send(
+          JSON.stringify({
+            type: 'emojiMsgResponse',
+            emojis: emojiMap,
+          })
+        );
       }
     },
   }))

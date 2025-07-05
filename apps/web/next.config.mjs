@@ -25,6 +25,9 @@ const nextConfig = {
       {
         hostname: 'secure.gravatar.com',
       },
+      {
+        hostname: 'emoji.slack-edge.com',
+      }
     ],
     minimumCacheTTL: 120,
   },

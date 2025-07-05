@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useParams } from 'next/navigation';
 import { Message } from './message';
+import { useMap } from '@uidotdev/usehooks';
 
 export default function ChatPanel() {
   const { username } = useParams();
@@ -13,8 +14,11 @@ export default function ChatPanel() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<WebSocket | null>(null);
+  const emojiMap = useMap() as Map<string, string>;
+  const [emojisToReq, setEmojisToReq] = useState<string[]>([]);
 
   useEffect(() => {
+    console.log('Initializing WebSocket connection for user:', username);
     const socket = new WebSocket(
       `ws${window.location.protocol === 'https:' ? 's' : ''}://${
         window.location.host
@@ -29,15 +33,31 @@ export default function ChatPanel() {
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (data.type === 'ping' || data.type === 'pong') return;
+        console.log('Received websocket message:', data);
+
         if (data.type === 'history') {
           const messages = data.messages as ChatMessage[];
-          setChatMessages((prev) => [...prev,  ...messages, { message: 'Welcome to the chat!', type: 'systemMsg' }]);
+          setChatMessages((prev) => [
+            ...prev,
+            ...messages,
+            { message: 'Welcome to the chat!', type: 'systemMsg' },
+          ]);
           return;
         }
-        setChatMessages((prev) => [...prev, data]);
+
+        if (data.type === 'message') {
+          console.log('Adding new chat message:', data);
+          setChatMessages((prev) => [...prev, data]);
+        }
+
+        // Handle plain message object (backwards compatibility)
+        if (!data.type && data.message && data.user) {
+          console.log('Adding legacy chat message format:', data);
+          setChatMessages((prev) => [...prev, { ...data, type: 'message' }]);
+        }
       } catch (e) {
-        console.log('Received message confirmation:', event.data);
+        console.error('Error processing message:', e);
+        console.log('Raw message data:', event.data);
       }
     };
 
@@ -48,7 +68,7 @@ export default function ChatPanel() {
     return () => {
       socket.close();
     };
-  }, []);
+  }, [username]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -82,17 +102,129 @@ export default function ChatPanel() {
     const interval = setInterval(() => {
       if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
         socketRef.current.send(JSON.stringify({ type: 'ping' }));
+        console.log('Sent ping to keep connection alive');
       }
     }, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  // emoji message collector
+  useEffect(() => {
+    if (chatMessages.length === 0) return;
+
+    const emojiPattern = /:[\w\-+]+:/g;
+    const newEmojis = chatMessages
+      .filter((msg) => msg.type === 'message')
+      .flatMap((msg) => {
+        if (!msg.message) return [];
+        // Ensure message is a string before matching
+        const message = String(msg.message);
+        const matches = [...message.matchAll(emojiPattern)].map((m) => m[0]);
+        return matches;
+      })
+      .filter((emoji) => {
+        // Only request emojis we don't already have
+        // Note: emoji has colons, but emojiMap keys don't have colons
+        const emojiName = emoji.replaceAll(':', '');
+        return !emojiMap.has(emojiName) && emojiName.length > 0;
+      });
+
+    if (newEmojis.length > 0) {
+      console.log(`Found ${newEmojis.length} new emojis to request: ${newEmojis.join(', ')}`);
+      setEmojisToReq((prev) => [...new Set([...prev, ...newEmojis])]);
+    }
+  }, [chatMessages, emojiMap]);
+
+  // emoji requester
+  useEffect(() => {
+    if (emojisToReq.length === 0) return;
+
+    console.log('Requesting emojis:', emojisToReq);
+
+    // Ensure websocket is connected
+    if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
+      const socket = new WebSocket(
+        `ws${window.location.protocol === 'https:' ? 's' : ''}://${
+          window.location.host
+        }/api/stream/chat/ws/${username}`
+      );
+
+      socket.onopen = () => {
+        socketRef.current = socket;
+        sendEmojiRequest();
+      };
+
+      return () => {
+        socket.close();
+      };
+    } else {
+      sendEmojiRequest();
+    }
+
+    function sendEmojiRequest() {
+      const handleEmojiResponse = (event: MessageEvent) => {
+        try {
+          const data = JSON.parse(event.data);
+
+          if (data.type === 'emojiMsgResponse') {
+            const emojis = data.emojis as Record<string, string>;
+
+            let validEmojiCount = 0;
+            Object.entries(emojis).forEach(([name, url]) => {
+              if (url) {
+                emojiMap.set(name, url);
+                validEmojiCount++;
+              } else {
+                console.log(`No URL found for emoji: ${name}`);
+              }
+            });
+
+            console.log(
+              `added ${validEmojiCount} valid emojis to map.`
+            );
+
+            if (validEmojiCount > 0) {
+              const sampleName = Object.entries(emojis).find(([_, url]) => url)?.[0];
+              if (sampleName) {
+              }
+            } else {
+              console.warn('No valid emoji URLs received');
+            }
+          }
+        } catch (e) {
+          console.error('error processing emoji response:', e);
+        }
+      };
+
+      socketRef.current?.addEventListener('message', handleEmojiResponse);
+
+      const emojiRequest = {
+        type: 'emojiMsg',
+        emojis: emojisToReq.map((e) => e.replaceAll(':', '')),
+      };
+
+      console.log('sending emoji request:', emojiRequest);
+      socketRef.current?.send(JSON.stringify(emojiRequest));
+
+      return () => {
+        socketRef.current?.removeEventListener('message', handleEmojiResponse);
+        setEmojisToReq([]);
+      };
+    }
+  }, [emojisToReq, emojiMap, username]);
 
   return (
     <div className="md:border flex flex-col w-[350px] max-w-[350px] h-full bg-mantle">
       <div ref={scrollRef} className="flex-1 p-4 overflow-y-auto flex flex-col">
         <div className="space-y-4 flex-1">
           {chatMessages.map((msg, i) => (
-            <Message key={i} user={msg.user} message={msg.message} type={msg.type} />
+            <Message
+              key={i}
+              user={msg.user}
+              message={msg.message}
+              type={msg.type}
+              emojiMap={emojiMap}
+            />
           ))}
         </div>
       </div>

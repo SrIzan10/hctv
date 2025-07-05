@@ -1,18 +1,78 @@
-import { cn } from "@/lib/utils";
-import { ChatMessage } from "./ChatPanel";
+import { User } from './ChatPanel';
+import React from 'react';
+import Image from 'next/image';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
-export function Message({ user, message, type }: ChatMessage) {
+export function Message({ user, message, type, emojiMap }: MessageProps) {
+  if (type === 'systemMsg') {
+    return (
+      <div className="flex items-center justify-center">
+        <span className="text-xs text-muted-foreground">{message}</span>
+      </div>
+    );
+  }
+
   return (
     <div className="flex">
       <div
         lang="en"
-        className={cn("max-w-full break-all whitespace-pre-wrap hyphens-auto", type === "systemMsg" ? "text-muted-foreground" : "")}
+        className="max-w-full break-all whitespace-pre-wrap hyphens-auto"
       >
         <p>
           <span className="font-bold mr-2">{user?.username}</span>
-          <span>{message}</span>
+          <EmojiRenderer text={message} emojiMap={emojiMap} />
         </p>
       </div>
     </div>
   );
+}
+
+export function EmojiRenderer({ text, emojiMap }: EmojiRendererProps) {
+  if (!text) return null;
+
+  const parts = text.split(/(:[\w\-+]+:)/g);
+
+  return (
+    <>
+      {parts.map((part, index) => {
+        if (part.match(/^:[\w\-+]+:$/)) {
+          const emojiName = part.replaceAll(':', '');
+          const emojiUrl = emojiMap.get(emojiName);
+
+          if (emojiUrl) {
+            return (
+              <Tooltip key={index} delayDuration={250}>
+                <TooltipTrigger>
+                  <span key={index} className="inline-block align-middle" style={{ height: '1.2em' }}>
+                    <Image src={emojiUrl} alt={part} width={20} height={20} className="inline-block" />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {part}
+                </TooltipContent>
+              </Tooltip>
+            );
+          }
+        }
+
+        return <span key={index}>{part}</span>;
+      })}
+    </>
+  );
+}
+
+interface MessageProps {
+  user?: User;
+  message: string;
+  type: 'message' | 'systemMsg';
+  emojiMap: Map<string, string>;
+}
+
+interface EmojiRendererProps {
+  text: string;
+  emojiMap: Map<string, string>;
 }
