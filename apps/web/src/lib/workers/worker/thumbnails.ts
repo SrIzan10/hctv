@@ -1,5 +1,5 @@
 import { Worker } from 'bullmq';
-import { getRedisConnection } from '@/lib/services/redis';
+import { getRedisConnection } from '@hctv/db';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import { existsSync } from 'node:fs';

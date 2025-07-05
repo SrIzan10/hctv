@@ -29,6 +29,22 @@ jobs:
           images: srizan10/hclive
           tags: latest
 
+      - name: Download latest emoji importer
+        run: |
+          RELEASE_URL=$(curl -s https://api.github.com/repos/srizan10/hclive/releases/latest | \
+            grep "browser_download_url.*slack-import-emojis-linux-x86_64" | \
+            cut -d '"' -f 4)
+          
+          curl -L -o slack-import-emojis $RELEASE_URL
+          chmod +x slack-import-emojis
+          
+          mkdir -p apps/web/src/lib/instrumentation/
+          
+          export SLACK_TOKEN=${{ secrets.SLACK_TOKEN }}
+          ./slack-import-emojis
+          
+          mv emojis.json apps/web/src/lib/instrumentation/
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:

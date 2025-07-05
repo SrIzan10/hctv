@@ -5,8 +5,10 @@ import { readFile } from 'node:fs/promises';
 import { lucia } from '@hctv/auth';
 import { getCookie } from 'hono/cookie';
 import { getPersonalChannel } from './utils/personalChannel.js';
-import { prisma } from '@hctv/db';
+import { getRedisConnection, prisma } from '@hctv/db';
 
+const MESSAGE_HISTORY_SIZE = 15;
+const MESSAGE_TTL = 60 * 60 * 24;
 const threed = await readFile('./src/3d.txt', 'utf-8');
 
 const app = new Hono();
@@ -54,6 +56,19 @@ app.get(
         ws.raw.personalChannel = personalChannel;
       }
 
+      const redis = getRedisConnection();
+      const channelKey = `chat:history:${username}`;
+      const messages = await redis.zrange(channelKey, 0, MESSAGE_HISTORY_SIZE - 1);
+
+      if (messages.length > 0) {
+        ws.send(
+          JSON.stringify({
+            type: 'history',
+            messages: messages.map((msg) => JSON.parse(msg)),
+          })
+        );
+      }
+
       await prisma.streamInfo.update({
         where: {
           username,
@@ -87,7 +102,8 @@ app.get(
         },
       });
     },
-    onMessage(evt, ws) {
+    async onMessage(evt, ws) {
+      const redis = getRedisConnection();
       const msg = JSON.parse(evt.data.toString());
       if (msg.type === 'ping') {
         ws.send(
@@ -96,22 +112,65 @@ app.get(
           })
         );
         return;
-      } else if (msg.type === 'message') {
+      }
+      if (msg.type === 'message') {
+        const message = (msg.message as string).trim();
+        const msgObj = {
+          user: {
+            id: ws.user.id,
+            username: ws.personalChannel.name,
+            pfpUrl: ws.user.pfpUrl,
+          },
+          message,
+        };
+        
+        // Save to Redis without the type field to maintain compatibility
+        const redisObj = {
+          user: msgObj.user,  
+          message: msgObj.message,
+          type: 'message',
+        };
+        const redisStr = JSON.stringify(redisObj);
+        const msgStr = JSON.stringify(msgObj);
+
+        const channelKey = `chat:history:${ws.targetUsername}`;
+        await redis.zadd(channelKey, Date.now(), redisStr);
+        await redis.zremrangebyrank(channelKey, 0, -MESSAGE_HISTORY_SIZE - 1);
+        await redis.expire(channelKey, MESSAGE_TTL);
+
         ws.wss.clients.forEach((c) => {
           const client = c as ModifiedWebSocket;
           if (client.readyState === client.OPEN && client.targetUsername === ws.targetUsername) {
-            c.send(
-              JSON.stringify({
-                user: {
-                  id: ws.user.id,
-                  username: ws.personalChannel.name,
-                  pfpUrl: ws.user.pfpUrl,
-                },
-                message: msg.message,
-              })
-            );
+            console.log('Sending message to client:', msgStr);
+            c.send(msgStr);
           }
         });
+      }
+      if (msg.type === 'emojiMsg') {
+        const emojis = msg.emojis as string[];
+        const emojiMap: Record<string, string> = {};
+
+        await Promise.all(
+          emojis.map(async (emoji) => {
+            let url = await redis.hget('emojis', emoji);
+            
+            if (!url) {
+              url = await redis.hget(`emojis:${emoji}`, 'url');
+            }
+            if (!url) {
+              url = await redis.hget(`emoji:${emoji}`, 'url');
+            }
+            
+            emojiMap[emoji] = url ?? '';
+          })
+        );
+
+        ws.send(
+          JSON.stringify({
+            type: 'emojiMsgResponse',
+            emojis: emojiMap,
+          })
+        );
       }
     },
   }))
