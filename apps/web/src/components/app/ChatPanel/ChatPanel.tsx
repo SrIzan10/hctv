@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Send } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useParams } from 'next/navigation';
 import { Message } from './message';
@@ -230,16 +230,18 @@ export default function ChatPanel() {
       </div>
       <div className="p-4 border-t">
         <div className="flex space-x-2">
-          <Input
+          <Textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
                 sendMessage();
               }
             }}
             placeholder="Type a message"
-            className="flex-1 bg-transparent focus-visible:ring-offset-0"
+            className="flex-1 bg-transparent focus-visible:ring-offset-0 min-h-[40px] max-h-[120px] resize-none py-2"
+            rows={1}
           />
           <Button size="icon" className="text-black transition-colors" onClick={sendMessage}>
             <Send className="h-4 w-4" />

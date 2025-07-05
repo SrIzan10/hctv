@@ -114,13 +114,14 @@ app.get(
         return;
       }
       if (msg.type === 'message') {
+        const message = (msg.message as string).trim();
         const msgObj = {
           user: {
             id: ws.user.id,
             username: ws.personalChannel.name,
             pfpUrl: ws.user.pfpUrl,
           },
-          message: msg.message,
+          message,
         };
         
         // Save to Redis without the type field to maintain compatibility
