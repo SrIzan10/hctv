@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useParams } from 'next/navigation';
 import { Message } from './message';
 import { useMap } from '@uidotdev/usehooks';
+import { EmojiSearch } from './EmojiSearch';
 
 export default function ChatPanel() {
   const { username } = useParams();
@@ -16,6 +17,8 @@ export default function ChatPanel() {
   const socketRef = useRef<WebSocket | null>(null);
   const emojiMap = useMap() as Map<string, string>;
   const [emojisToReq, setEmojisToReq] = useState<string[]>([]);
+  const [cursorPosition, setCursorPosition] = useState(0);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     console.log('Initializing WebSocket connection for user:', username);
@@ -213,6 +216,39 @@ export default function ChatPanel() {
     }
   }, [emojisToReq, emojiMap, username]);
 
+  const handleEmojiSelect = (emojiName: string) => {
+    if (!textareaRef.current) return;
+    
+    const textarea = textareaRef.current;
+    const beforeCursor = message.substring(0, cursorPosition);
+    const afterCursor = message.substring(cursorPosition);
+    
+    const match = beforeCursor.match(/:[\w\-+]*$/);
+    if (!match) return;
+    
+    const startPos = beforeCursor.lastIndexOf(match[0]);
+    const newBeforeCursor = beforeCursor.substring(0, startPos);
+    
+    const newMessage = `${newBeforeCursor}:${emojiName}: ${afterCursor}`;
+    setMessage(newMessage);
+    
+    // 3 for colons and space
+    const newCursorPos = newBeforeCursor.length + emojiName.length + 3;
+    
+    setTimeout(() => {
+      textarea.focus();
+      textarea.selectionStart = newCursorPos;
+      textarea.selectionEnd = newCursorPos;
+      setCursorPosition(newCursorPos);
+    }, 0);
+  };
+
+  const isEmojiSearchOpen = () => {
+    const beforeCursor = message.substring(0, cursorPosition);
+    const match = beforeCursor.match(/:[\w\-+]*$/);
+    return match !== null;
+  };
+
   return (
     <div className="md:border flex flex-col w-[350px] max-w-[350px] h-full bg-mantle">
       <div ref={scrollRef} className="flex-1 p-4 overflow-y-auto flex flex-col">
@@ -228,16 +264,26 @@ export default function ChatPanel() {
           ))}
         </div>
       </div>
-      <div className="p-4 border-t">
+      <div className="p-4 border-t relative">
         <div className="flex space-x-2">
           <Textarea
+            ref={textareaRef}
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={(e) => {
+              setMessage(e.target.value);
+              setCursorPosition(e.target.selectionStart || 0);
+            }}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
+              if (e.key === 'Enter' && !e.shiftKey && !isEmojiSearchOpen()) {
                 e.preventDefault();
                 sendMessage();
               }
+            }}
+            onKeyUp={(e) => {
+              setCursorPosition(e.currentTarget.selectionStart || 0);
+            }}
+            onClick={(e) => {
+              setCursorPosition(e.currentTarget.selectionStart || 0);
             }}
             placeholder="Type a message"
             className="flex-1 bg-transparent focus-visible:ring-offset-0 min-h-[40px] max-h-[120px] resize-none py-2"
@@ -247,6 +293,14 @@ export default function ChatPanel() {
             <Send className="h-4 w-4" />
           </Button>
         </div>
+        <EmojiSearch
+          message={message}
+          cursorPosition={cursorPosition}
+          onSelect={handleEmojiSelect}
+          socket={socketRef.current}
+          emojiMap={emojiMap}
+          textareaRef={textareaRef}
+        />
       </div>
     </div>
   );

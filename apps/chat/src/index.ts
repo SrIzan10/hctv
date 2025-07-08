@@ -6,10 +6,13 @@ import { lucia } from '@hctv/auth';
 import { getCookie } from 'hono/cookie';
 import { getPersonalChannel } from './utils/personalChannel.js';
 import { getRedisConnection, prisma } from '@hctv/db';
+import uFuzzy from '@leeoniya/ufuzzy';
 
+const redis = getRedisConnection();
 const MESSAGE_HISTORY_SIZE = 15;
 const MESSAGE_TTL = 60 * 60 * 24;
 const threed = await readFile('./src/3d.txt', 'utf-8');
+const uf = new uFuzzy();
 
 const app = new Hono();
 const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
@@ -103,7 +106,6 @@ app.get(
       });
     },
     async onMessage(evt, ws) {
-      const redis = getRedisConnection();
       const msg = JSON.parse(evt.data.toString());
       if (msg.type === 'ping') {
         ws.send(
@@ -141,7 +143,6 @@ app.get(
         ws.wss.clients.forEach((c) => {
           const client = c as ModifiedWebSocket;
           if (client.readyState === client.OPEN && client.targetUsername === ws.targetUsername) {
-            console.log('Sending message to client:', msgStr);
             c.send(msgStr);
           }
         });
@@ -171,6 +172,46 @@ app.get(
             emojis: emojiMap,
           })
         );
+      }
+      if (msg.type === 'emojiSearch') {
+        console.log('emoji search request:', msg);
+        const searchTerm = msg.searchTerm as string;
+
+        const emojis = await redis.hgetall('emojis');
+        const emojiKeys = Object.keys(emojis);
+        const idxs = uf.filter(emojiKeys, searchTerm);
+        console.log(`Emoji search for "${searchTerm}" found ${idxs?.length || 0} results.`);
+        
+        if (idxs && idxs.length > 0) {
+          const results: string[] = [];
+          
+          if (idxs.length <= 150) {
+            const info = uf.info(idxs, emojiKeys, searchTerm);
+            const order = uf.sort(info, emojiKeys, searchTerm);
+            for (let i = 0; i < order.length && i < 10; i++) {
+              results.push(emojiKeys[idxs[order[i]]]);
+            }
+          } else {
+            for (let i = 0; i < idxs.length && i < 10; i++) {
+              results.push(emojiKeys[idxs[i]]);
+            }
+          }
+          
+          ws.send(
+            JSON.stringify({
+              type: 'emojiSearchResponse',
+              results: results,
+            })
+          );
+          console.log(`Sending emoji search results: ${results.join(', ')}`);
+        } else {
+          ws.send(
+            JSON.stringify({
+              type: 'emojiSearchResponse',
+              results: [],
+            })
+          );
+        }
       }
     },
   }))
