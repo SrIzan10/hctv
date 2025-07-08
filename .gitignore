@@ -43,3 +43,6 @@ dev/redis
 .turbo
 packages/db/generated/client
 *dist
+
+slack-import-emojis/target
+**/*/emojis.json

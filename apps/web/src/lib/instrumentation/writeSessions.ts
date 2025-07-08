@@ -1,5 +1,5 @@
 import { prisma } from "@hctv/db";
-import { getRedisConnection } from "../services/redis";
+import { getRedisConnection } from "@hctv/db";
 
 export default async function writeSessions() {
   const sessions = await prisma.session.findMany();

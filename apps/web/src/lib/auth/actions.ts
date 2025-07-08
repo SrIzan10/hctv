@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { lucia } from '@hctv/auth';
 import { validateRequest } from '@/lib/auth/validate';
 import { redirect } from 'next/navigation';
-import { getRedisConnection } from '../services/redis';
+import { getRedisConnection } from '@hctv/db';
 
 export async function logout() {
   const { session } = await validateRequest();

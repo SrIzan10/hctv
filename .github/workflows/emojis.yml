@@ -1,0 +1,68 @@
+name: Slack Emoji Importer Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'slack-import-emojis/**'
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    name: Build and create release
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./slack-import-emojis
+        
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "./slack-import-emojis -> target"
+      
+      - name: Build release binary
+        run: cargo build --release
+
+      - name: Extract version from Cargo.toml
+        id: get_version
+        run: |
+          VERSION=$(grep '^version =' Cargo.toml | head -n 1 | cut -d '"' -f 2)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: emoji-importer-v${{ steps.get_version.outputs.version }}
+          release_name: Slack Emoji Importer v${{ steps.get_version.outputs.version }}
+          body: |
+            Slack Emoji Importer v${{ steps.get_version.outputs.version }}
+
+            Fetches emojis from the Slack workspace and exports them to JSON.
+
+            ## Usage
+            ```
+            export SLACK_TOKEN=xoxb-your-token
+            ./slack-import-emojis
+            ```
+          draft: false
+          prerelease: false
+          
+      - name: Upload Linux binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./slack-import-emojis/target/release/slack-import-emojis
+          asset_name: slack-import-emojis-linux-x86_64
+          asset_content_type: application/octet-stream
