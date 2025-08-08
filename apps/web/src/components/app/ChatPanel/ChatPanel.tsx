@@ -9,7 +9,7 @@ import { Message } from './message';
 import { useMap } from '@uidotdev/usehooks';
 import { EmojiSearch } from './EmojiSearch';
 
-export default function ChatPanel() {
+export default function ChatPanel(props: Props) {
   const { username } = useParams();
   const [message, setMessage] = useState('');
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -53,7 +53,6 @@ export default function ChatPanel() {
           setChatMessages((prev) => [...prev, data]);
         }
 
-        // Handle plain message object (backwards compatibility)
         if (!data.type && data.message && data.user) {
           console.log('Adding legacy chat message format:', data);
           setChatMessages((prev) => [...prev, { ...data, type: 'message' }]);
@@ -120,14 +119,11 @@ export default function ChatPanel() {
       .filter((msg) => msg.type === 'message')
       .flatMap((msg) => {
         if (!msg.message) return [];
-        // Ensure message is a string before matching
         const message = String(msg.message);
         const matches = [...message.matchAll(emojiPattern)].map((m) => m[0]);
         return matches;
       })
       .filter((emoji) => {
-        // Only request emojis we don't already have
-        // Note: emoji has colons, but emojiMap keys don't have colons
         const emojiName = emoji.replaceAll(':', '');
         return !emojiMap.has(emojiName) && emojiName.length > 0;
       });
@@ -182,9 +178,7 @@ export default function ChatPanel() {
               }
             });
 
-            console.log(
-              `added ${validEmojiCount} valid emojis to map.`
-            );
+            console.log(`added ${validEmojiCount} valid emojis to map.`);
 
             if (validEmojiCount > 0) {
               const sampleName = Object.entries(emojis).find(([_, url]) => url)?.[0];
@@ -218,23 +212,23 @@ export default function ChatPanel() {
 
   const handleEmojiSelect = (emojiName: string) => {
     if (!textareaRef.current) return;
-    
+
     const textarea = textareaRef.current;
     const beforeCursor = message.substring(0, cursorPosition);
     const afterCursor = message.substring(cursorPosition);
-    
+
     const match = beforeCursor.match(/:[\w\-+]*$/);
     if (!match) return;
-    
+
     const startPos = beforeCursor.lastIndexOf(match[0]);
     const newBeforeCursor = beforeCursor.substring(0, startPos);
-    
+
     const newMessage = `${newBeforeCursor}:${emojiName}: ${afterCursor}`;
     setMessage(newMessage);
-    
+
     // 3 for colons and space
     const newCursorPos = newBeforeCursor.length + emojiName.length + 3;
-    
+
     setTimeout(() => {
       textarea.focus();
       textarea.selectionStart = newCursorPos;
@@ -250,7 +244,7 @@ export default function ChatPanel() {
   };
 
   return (
-    <div className="md:border flex flex-col w-[350px] max-w-[350px] h-full bg-mantle">
+    <div className={`${props.isObsPanel ? '' : 'md:border bg-mantle'} flex flex-col w-[350px] max-w-[350px] h-full`}>
       <div ref={scrollRef} className="flex-1 p-4 overflow-y-auto flex flex-col">
         <div className="space-y-4 flex-1">
           {chatMessages.map((msg, i) => (
@@ -264,44 +258,46 @@ export default function ChatPanel() {
           ))}
         </div>
       </div>
-      <div className="p-4 border-t relative">
-        <div className="flex space-x-2">
-          <Textarea
-            ref={textareaRef}
-            value={message}
-            onChange={(e) => {
-              setMessage(e.target.value);
-              setCursorPosition(e.target.selectionStart || 0);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey && !isEmojiSearchOpen()) {
-                e.preventDefault();
-                sendMessage();
-              }
-            }}
-            onKeyUp={(e) => {
-              setCursorPosition(e.currentTarget.selectionStart || 0);
-            }}
-            onClick={(e) => {
-              setCursorPosition(e.currentTarget.selectionStart || 0);
-            }}
-            placeholder="Type a message"
-            className="flex-1 bg-transparent focus-visible:ring-offset-0 min-h-[40px] max-h-[120px] resize-none py-2"
-            rows={1}
+      {!props.isObsPanel && (
+        <div className="p-4 border-t relative">
+          <div className="flex space-x-2">
+            <Textarea
+              ref={textareaRef}
+              value={message}
+              onChange={(e) => {
+                setMessage(e.target.value);
+                setCursorPosition(e.target.selectionStart || 0);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey && !isEmojiSearchOpen()) {
+                  e.preventDefault();
+                  sendMessage();
+                }
+              }}
+              onKeyUp={(e) => {
+                setCursorPosition(e.currentTarget.selectionStart || 0);
+              }}
+              onClick={(e) => {
+                setCursorPosition(e.currentTarget.selectionStart || 0);
+              }}
+              placeholder="Type a message"
+              className="flex-1 bg-transparent focus-visible:ring-offset-0 min-h-[40px] max-h-[120px] resize-none py-2"
+              rows={1}
+            />
+            <Button size="icon" className="text-black transition-colors" onClick={sendMessage}>
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+          <EmojiSearch
+            message={message}
+            cursorPosition={cursorPosition}
+            onSelect={handleEmojiSelect}
+            socket={socketRef.current}
+            emojiMap={emojiMap}
+            textareaRef={textareaRef}
           />
-          <Button size="icon" className="text-black transition-colors" onClick={sendMessage}>
-            <Send className="h-4 w-4" />
-          </Button>
         </div>
-        <EmojiSearch
-          message={message}
-          cursorPosition={cursorPosition}
-          onSelect={handleEmojiSelect}
-          socket={socketRef.current}
-          emojiMap={emojiMap}
-          textareaRef={textareaRef}
-        />
-      </div>
+      )}
     </div>
   );
 }
@@ -316,4 +312,8 @@ export interface User {
   id: string;
   username: string;
   pfpUrl: string;
+}
+
+interface Props {
+  isObsPanel?: boolean;
 }
