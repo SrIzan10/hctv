@@ -1,5 +1,5 @@
 import { Queue, Worker } from 'bullmq';
-import { getRedisConnection } from '@/lib/services/redis';
+import { getRedisConnection } from '@hctv/db';
 
 const globalForNotifier = global as unknown as { 
   notificationQueue: Queue | null;
