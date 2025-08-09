@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { lucia } from '@hctv/auth';
 import { getCookie } from 'hono/cookie';
 import { getPersonalChannel } from './utils/personalChannel.js';
-import { getRedisConnection, prisma } from '@hctv/db';
+import { getRedisConnection, prisma, type User } from '@hctv/db';
 import uFuzzy from '@leeoniya/ufuzzy';
 
 const redis = getRedisConnection();
@@ -31,32 +31,53 @@ app.get(
     // https://hono.dev/helpers/websocket
     async onOpen(evt, ws) {
       const token = getCookie(c, 'auth_session');
-      if (!token) {
+      const grant = c.req.query('grant');
+      console.log({
+        token,
+        grant,
+      })
+      if (!token && !grant) {
+        console.log('closing a')
+        ws.close();
+        return;
+      }
+      // but if there is actually a token with no grant, we let it pass through
+      if (!token && grant === 'null') {
+        console.log('closing b')
         ws.close();
         return;
       }
 
-      const { user } = await lucia.validateSession(token);
-      if (!user) {
+      let user: User | null = null
+      const dbGrant = await prisma.channel.findFirst({
+        where: {
+          obsChatGrantToken: grant,
+        }
+      });
+      if (token) {
+        user = (await lucia.validateSession(token)).user;
+        const personalChannel = await getPersonalChannel(user!.id);
+        if (!personalChannel) {
+          ws.close();
+          return;
+        }
+        ws.personalChannel = personalChannel;
+      }
+      if (!user && !dbGrant) {
         ws.close();
         return;
       }
 
-      const personalChannel = await getPersonalChannel(user.id);
-      if (!personalChannel) {
-        ws.close();
-        return;
-      }
+      // ignoring user here which might be undefined so
 
       const { username } = c.req.param();
       ws.targetUsername = username;
       ws.user = user;
-      ws.personalChannel = personalChannel;
       if (ws.raw) {
         ws.raw.targetUsername = username;
         // @ts-ignore
         ws.raw.user = user;
-        ws.raw.personalChannel = personalChannel;
+        ws.raw.personalChannel = ws.personalChannel;
       }
 
       const redis = getRedisConnection();
@@ -71,20 +92,24 @@ app.get(
           })
         );
       }
-
-      await prisma.streamInfo.update({
-        where: {
-          username,
-        },
-        data: {
-          viewers: {
-            increment: 1,
+      if (token && grant === 'null') {
+        await prisma.streamInfo.update({
+          where: {
+            username,
           },
-        },
-      });
+          data: {
+            viewers: {
+              increment: 1,
+            },
+          },
+        });
+      }
     },
     async onClose(evt, ws) {
+      // if prematurely exiting due to authentication issues
       console.log('client disconnected');
+      if (!ws.targetUsername) return;
+
       const streamInfo = await prisma.streamInfo.findUnique({
         where: {
           username: ws.targetUsername,
@@ -116,6 +141,7 @@ app.get(
         return;
       }
       if (msg.type === 'message') {
+        if (!ws.personalChannel) return;
         const message = (msg.message as string).trim();
         const msgObj = {
           user: {

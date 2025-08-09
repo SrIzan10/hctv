@@ -8,9 +8,11 @@ import { useParams } from 'next/navigation';
 import { Message } from './message';
 import { useMap } from '@uidotdev/usehooks';
 import { EmojiSearch } from './EmojiSearch';
+import { useQueryState } from 'nuqs';
 
 export default function ChatPanel(props: Props) {
   const { username } = useParams();
+  const [grant, setGrant] = useQueryState('grant');
   const [message, setMessage] = useState('');
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -21,11 +23,14 @@ export default function ChatPanel(props: Props) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
+    console.log(grant)
+  }, [grant]);
+  useEffect(() => {
     console.log('Initializing WebSocket connection for user:', username);
     const socket = new WebSocket(
       `ws${window.location.protocol === 'https:' ? 's' : ''}://${
         window.location.host
-      }/api/stream/chat/ws/${username}`
+      }/api/stream/chat/ws/${username}?grant=${grant}`
     );
     socketRef.current = socket;
 
@@ -91,7 +96,7 @@ export default function ChatPanel(props: Props) {
       const socket = new WebSocket(
         `ws${window.location.protocol === 'https:' ? 's' : ''}://${
           window.location.host
-        }/api/stream/chat/ws/${username}`
+        }/api/stream/chat/ws/${username}?grant=${grant}`
       );
       socket.onopen = () => {
         socket.send(JSON.stringify({ type: 'message', message }));
@@ -145,7 +150,7 @@ export default function ChatPanel(props: Props) {
       const socket = new WebSocket(
         `ws${window.location.protocol === 'https:' ? 's' : ''}://${
           window.location.host
-        }/api/stream/chat/ws/${username}`
+        }/api/stream/chat/ws/${username}?grant=${grant}`
       );
 
       socket.onopen = () => {
@@ -244,7 +249,7 @@ export default function ChatPanel(props: Props) {
   };
 
   return (
-    <div className={`${props.isObsPanel ? '' : 'md:border bg-mantle'} flex flex-col w-[350px] max-w-[350px] h-full`}>
+    <div className={`${props.isObsPanel ? 'w-full text-white' : 'md:border bg-mantle w-[350px] max-w-[350px]'} flex flex-col h-full`}>
       <div ref={scrollRef} className="flex-1 p-4 overflow-y-auto flex flex-col">
         <div className="space-y-4 flex-1">
           {chatMessages.map((msg, i) => (

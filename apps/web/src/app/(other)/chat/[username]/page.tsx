@@ -1,5 +1,4 @@
 import ChatPanel from "@/components/app/ChatPanel/ChatPanel";
-import LiveStream from "@/components/app/Livestream/Livestream";
 import { prisma } from '@hctv/db';
 
 export default async function Page({ params }: { params: Promise<{ username: string }> }) {
@@ -12,6 +11,8 @@ export default async function Page({ params }: { params: Promise<{ username: str
     return <div>Stream not found</div>;
   }
   return (
-    <ChatPanel isObsPanel />
+    <div className="bg-green-500 h-screen">
+      <ChatPanel isObsPanel />
+    </div>
   );
 }
