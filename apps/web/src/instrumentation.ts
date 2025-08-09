@@ -33,4 +33,11 @@ export async function register() {
     const { emojisWriteRedis } = await import('@/lib/instrumentation/emojisWriteRedis');
     await emojisWriteRedis();
   }
+
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    const { viewerCountSync } = await import('@/lib/instrumentation/viewerCountSync');
+    setInterval(async () => {
+      await viewerCountSync();
+    }, 2000);
+  }
 }

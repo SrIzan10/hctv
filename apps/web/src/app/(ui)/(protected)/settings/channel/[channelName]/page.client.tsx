@@ -621,7 +621,7 @@ export default function ChannelSettingsClient({
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Chat overlay</h3>
                   <p className="text-sm text-mantle-foreground mb-4">
-                    Add a 300x600 browser source with this and enjoy!
+                    Add a 300x600 browser source with this and enjoy! 
                   </p>
                   <div className="flex items-center gap-2">
                     <div className="relative flex-1">

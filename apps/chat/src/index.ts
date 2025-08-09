@@ -7,6 +7,7 @@ import { getCookie } from 'hono/cookie';
 import { getPersonalChannel } from './utils/personalChannel.js';
 import { getRedisConnection, prisma, type User } from '@hctv/db';
 import uFuzzy from '@leeoniya/ufuzzy';
+import { randomString } from './utils/randomString.js';
 
 const redis = getRedisConnection();
 const MESSAGE_HISTORY_SIZE = 15;
@@ -68,8 +69,6 @@ app.get(
         return;
       }
 
-      // ignoring user here which might be undefined so
-
       const { username } = c.req.param();
       if (dbGrant && dbGrant?.name !== username) {
         ws.close();
@@ -77,6 +76,7 @@ app.get(
       }
       ws.targetUsername = username;
       ws.user = user;
+      ws.viewerId = randomString(10);
       if (ws.raw) {
         ws.raw.targetUsername = username;
         // @ts-ignore
@@ -96,18 +96,6 @@ app.get(
           })
         );
       }
-      if (token && grant === 'null') {
-        await prisma.streamInfo.update({
-          where: {
-            username,
-          },
-          data: {
-            viewers: {
-              increment: 1,
-            },
-          },
-        });
-      }
     },
     async onClose(evt, ws) {
       // if prematurely exiting due to authentication issues
@@ -125,18 +113,12 @@ app.get(
 
       if (!streamInfo) return;
 
-      await prisma.streamInfo.update({
-        where: {
-          username: ws.targetUsername,
-        },
-        data: {
-          viewers: streamInfo.viewers === 0 ? { set: 0 } : { decrement: 1 },
-        },
-      });
+      await redis.del(`viewer:${ws.targetUsername}:${ws.viewerId}`);
     },
     async onMessage(evt, ws) {
       const msg = JSON.parse(evt.data.toString());
       if (msg.type === 'ping') {
+        await redis.setex(`viewer:${ws.targetUsername}:${ws.viewerId}`, 30, '1');
         ws.send(
           JSON.stringify({
             type: 'pong',
