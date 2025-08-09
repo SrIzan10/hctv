@@ -11,7 +11,7 @@ export default async function Page({ params }: { params: Promise<{ username: str
     return <div>Stream not found</div>;
   }
   return (
-    <div className="bg-green-500 h-screen">
+    <div className="bg-transparent h-screen">
       <ChatPanel isObsPanel />
     </div>
   );

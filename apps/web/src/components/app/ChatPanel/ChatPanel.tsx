@@ -250,7 +250,7 @@ export default function ChatPanel(props: Props) {
 
   return (
     <div className={`${props.isObsPanel ? 'w-full text-white' : 'md:border bg-mantle w-[350px] max-w-[350px]'} flex flex-col h-full`}>
-      <div ref={scrollRef} className="flex-1 p-4 overflow-y-auto flex flex-col">
+      <div ref={scrollRef} className={`flex-1 p-4 ${props.isObsPanel ? 'scrollbar-hide' : ''} overflow-y-auto flex flex-col`}>
         <div className="space-y-4 flex-1">
           {chatMessages.map((msg, i) => (
             <Message

@@ -18,6 +18,7 @@ import {
   UserMinus,
   Copy,
   Check,
+  Wrench,
 } from 'lucide-react';
 import { UniversalForm } from '@/components/app/UniversalForm/UniversalForm';
 import {
@@ -158,7 +159,7 @@ export default function ChannelSettingsClient({
       </div>
 
       <Tabs className="w-full" value={selTab} onValueChange={setSelTab}>
-        <TabsList className={`grid w-full ${isPersonal ? 'grid-cols-3' : 'grid-cols-4'}`}>
+        <TabsList className={`grid w-full ${isPersonal ? 'grid-cols-4' : 'grid-cols-5'}`}>
           <TabsTrigger value="general" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             General
@@ -176,6 +177,10 @@ export default function ChannelSettingsClient({
           <TabsTrigger value="notifications" className="flex items-center gap-2">
             <Bell className="h-4 w-4" />
             Notifications
+          </TabsTrigger>
+          <TabsTrigger value="utilities" className="flex items-center gap-2">
+            <Wrench className='size-4' />
+            Utilities
           </TabsTrigger>
         </TabsList>
 
@@ -599,6 +604,37 @@ export default function ChannelSettingsClient({
                     {channel.followers.length === 0 && (
                       <p className="text-mantle-foreground text-center py-4">No followers yet.</p>
                     )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="utilities">
+          <Card>
+            <CardHeader>
+              <CardTitle>Utilities</CardTitle>
+              <CardDescription>OBS overlays, APIs... everything in one neat place!</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Chat overlay</h3>
+                  <p className="text-sm text-mantle-foreground mb-4">
+                    Add a 300x600 browser source with this and enjoy!
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type={keyVisible ? 'text' : 'password'}
+                        value={`https://hctv.srizan.dev/chat/${channel.name}?grant=${channel.obsChatGrantToken}`}
+                        readOnly
+                        className="w-full px-3 py-2 border rounded-md bg-mantle font-mono text-sm"
+                      />
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => setKeyVisible(!keyVisible)}>
+                      {keyVisible ? 'Hide' : 'Show'}
+                    </Button>
                   </div>
                 </div>
               </div>

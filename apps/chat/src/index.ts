@@ -71,6 +71,10 @@ app.get(
       // ignoring user here which might be undefined so
 
       const { username } = c.req.param();
+      if (dbGrant && dbGrant?.name !== username) {
+        ws.close();
+        return;
+      }
       ws.targetUsername = username;
       ws.user = user;
       if (ws.raw) {
