@@ -37,14 +37,13 @@ app.get(
         token,
         grant,
       })
+
+      // random checks that actually make sense if you read trust me bro
       if (!token && !grant) {
-        console.log('closing a')
         ws.close();
         return;
       }
-      // but if there is actually a token with no grant, we let it pass through
       if (!token && grant === 'null') {
-        console.log('closing b')
         ws.close();
         return;
       }
