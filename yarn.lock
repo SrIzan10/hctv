@@ -733,6 +733,11 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
+"@leeoniya/ufuzzy@^1.0.18":
+  version "1.0.18"
+  resolved "https://registry.yarnpkg.com/@leeoniya/ufuzzy/-/ufuzzy-1.0.18.tgz#98e38c1308208bd47524aa2c53da0fe33dbbdab8"
+  integrity sha512-5D54A86/VaPvJVf7UWJgy+UyhDtstUxq0iQd8UOZ2TG3NjV2oSoa9m4qW3VsotDD6dH2SNHDQwSPq+IAuudnag==
+
 "@livekit/components-core@0.12.1":
   version "0.12.1"
   resolved "https://registry.yarnpkg.com/@livekit/components-core/-/components-core-0.12.1.tgz#6663ab60b8b55b1bde9588821a8b609987536e66"
@@ -1670,23 +1675,23 @@
     "@radix-ui/react-roving-focus" "1.1.10"
     "@radix-ui/react-use-controllable-state" "1.2.2"
 
-"@radix-ui/react-tooltip@^1.1.6":
-  version "1.1.8"
-  resolved "https://registry.yarnpkg.com/@radix-ui/react-tooltip/-/react-tooltip-1.1.8.tgz#1aa2a575630fca2b2845b62f85056bb826bec456"
-  integrity sha512-YAA2cu48EkJZdAMHC0dqo9kialOcRStbtiY4nJPaht7Ptrhcvpo+eDChaM6BIs8kL6a8Z5l5poiqLnXcNduOkA==
+"@radix-ui/react-tooltip@^1.2.7":
+  version "1.2.7"
+  resolved "https://registry.yarnpkg.com/@radix-ui/react-tooltip/-/react-tooltip-1.2.7.tgz#23612ac7a5e8e1f6829e46d0e0ad94afe3976c72"
+  integrity sha512-Ap+fNYwKTYJ9pzqW+Xe2HtMRbQ/EeWkj2qykZ6SuEV4iS/o1bZI5ssJbk4D2r8XuDuOBVz/tIx2JObtuqU+5Zw==
   dependencies:
-    "@radix-ui/primitive" "1.1.1"
-    "@radix-ui/react-compose-refs" "1.1.1"
-    "@radix-ui/react-context" "1.1.1"
-    "@radix-ui/react-dismissable-layer" "1.1.5"
-    "@radix-ui/react-id" "1.1.0"
-    "@radix-ui/react-popper" "1.2.2"
-    "@radix-ui/react-portal" "1.1.4"
-    "@radix-ui/react-presence" "1.1.2"
-    "@radix-ui/react-primitive" "2.0.2"
-    "@radix-ui/react-slot" "1.1.2"
-    "@radix-ui/react-use-controllable-state" "1.1.0"
-    "@radix-ui/react-visually-hidden" "1.1.2"
+    "@radix-ui/primitive" "1.1.2"
+    "@radix-ui/react-compose-refs" "1.1.2"
+    "@radix-ui/react-context" "1.1.2"
+    "@radix-ui/react-dismissable-layer" "1.1.10"
+    "@radix-ui/react-id" "1.1.1"
+    "@radix-ui/react-popper" "1.2.7"
+    "@radix-ui/react-portal" "1.1.9"
+    "@radix-ui/react-presence" "1.1.4"
+    "@radix-ui/react-primitive" "2.1.3"
+    "@radix-ui/react-slot" "1.2.3"
+    "@radix-ui/react-use-controllable-state" "1.2.2"
+    "@radix-ui/react-visually-hidden" "1.2.3"
 
 "@radix-ui/react-use-callback-ref@1.0.1":
   version "1.0.1"
@@ -1813,6 +1818,13 @@
   integrity sha512-1SzA4ns2M1aRlvxErqhLHsBHoS5eI5UUcI2awAMgGUp4LoaoWOKYmvqDY2s/tltuPkh3Yk77YF/r3IRj+Amx4Q==
   dependencies:
     "@radix-ui/react-primitive" "2.0.2"
+
+"@radix-ui/react-visually-hidden@1.2.3":
+  version "1.2.3"
+  resolved "https://registry.yarnpkg.com/@radix-ui/react-visually-hidden/-/react-visually-hidden-1.2.3.tgz#a8c38c8607735dc9f05c32f87ab0f9c2b109efbf"
+  integrity sha512-pzJq12tEaaIhqjbzpCuv/OypJY/BPavOofm+dbab+MHLajy277+1lLm6JFcGgF5eskJ6mquGirhXY2GD/8u8Ug==
+  dependencies:
+    "@radix-ui/react-primitive" "2.1.3"
 
 "@radix-ui/rect@1.1.0":
   version "1.1.0"
@@ -4431,6 +4443,21 @@ ioredis@^5.4.1, ioredis@^5.6.0:
   version "5.6.0"
   resolved "https://registry.yarnpkg.com/ioredis/-/ioredis-5.6.0.tgz#faa2a27132f8a05c0ddfef400b01d1326df211a0"
   integrity sha512-tBZlIIWbndeWBWCXWZiqtOF/yxf6yZX3tAlTJ7nfo5jhd6dctNxF7QnYlZLZ1a0o0pDoen7CgZqO+zjNaFbJAg==
+  dependencies:
+    "@ioredis/commands" "^1.1.1"
+    cluster-key-slot "^1.1.0"
+    debug "^4.3.4"
+    denque "^2.1.0"
+    lodash.defaults "^4.2.0"
+    lodash.isarguments "^3.1.0"
+    redis-errors "^1.2.0"
+    redis-parser "^3.0.0"
+    standard-as-callback "^2.1.0"
+
+ioredis@^5.6.1:
+  version "5.6.1"
+  resolved "https://registry.yarnpkg.com/ioredis/-/ioredis-5.6.1.tgz#1ed7dc9131081e77342503425afceaf7357ae599"
+  integrity sha512-UxC0Yv1Y4WRJiGQxQkP0hfdL0/5/6YvdfOOClRgJ0qppSarkhneSa6UvkMkms0AkdGimSH3Ikqm+6mkMmX7vGA==
   dependencies:
     "@ioredis/commands" "^1.1.1"
     cluster-key-slot "^1.1.0"

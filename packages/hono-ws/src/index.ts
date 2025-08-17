@@ -248,6 +248,7 @@ interface ModifiedWSContext extends WSContext<ModifiedWebSocket> {
   targetUsername?: string;
   user?: any;
   personalChannel?: any;
+  viewerId?: string;
 }
 
 export interface ModifiedWebSocket extends WebSocket {

@@ -1,3 +1,5 @@
+# quick and dirty ai generated benchmark i created for hls streams
+
 #!/usr/bin/env python3
 import asyncio
 import aiohttp

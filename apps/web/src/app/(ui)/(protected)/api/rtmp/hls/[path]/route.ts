@@ -1,6 +1,6 @@
 import fsP from 'fs/promises';
 import fs from 'fs'; 
-import { getRedisConnection } from '@/lib/services/redis';
+import { getRedisConnection } from '@hctv/db';
 import { cookies } from 'next/headers';
 
 export async function GET(request: Request, { params }: { params: Promise<{ path: string }> }) {

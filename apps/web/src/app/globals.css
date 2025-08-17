@@ -119,6 +119,8 @@
   body {
     @apply bg-background text-foreground;
   }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 }
 h1 {
   @apply scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl;

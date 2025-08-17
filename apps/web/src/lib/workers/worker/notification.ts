@@ -1,5 +1,5 @@
 import { Worker } from 'bullmq';
-import { getRedisConnection } from '@/lib/services/redis';
+import { getRedisConnection } from '@hctv/db';
 import snClient from '@/lib/services/slackNotifier';
 
 const globalForWorker = global as unknown as { 
