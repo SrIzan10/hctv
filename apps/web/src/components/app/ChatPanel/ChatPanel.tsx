@@ -109,7 +109,6 @@ export default function ChatPanel(props: Props) {
     const interval = setInterval(() => {
       if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
         socketRef.current.send(JSON.stringify({ type: 'ping' }));
-        console.log('Sent ping to keep connection alive');
       }
     }, 5000);
     return () => clearInterval(interval);
