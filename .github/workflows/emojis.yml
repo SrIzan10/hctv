@@ -38,12 +38,10 @@ jobs:
       
       - name: Create GitHub Release
         id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
           tag_name: emoji-importer-v${{ steps.get_version.outputs.version }}
-          release_name: Slack Emoji Importer v${{ steps.get_version.outputs.version }}
+          name: Slack Emoji Importer v${{ steps.get_version.outputs.version }}
           body: |
             Slack Emoji Importer v${{ steps.get_version.outputs.version }}
 
@@ -54,8 +52,9 @@ jobs:
             export SLACK_TOKEN=xoxb-your-token
             ./slack-import-emojis
             ```
-          draft: false
-          prerelease: false
+              draft: false
+              prerelease: false
+              files: ./slack-import-emojis/target/release/slack-import-emojis
           
       - name: Upload Linux binary
         uses: actions/upload-release-asset@v1
