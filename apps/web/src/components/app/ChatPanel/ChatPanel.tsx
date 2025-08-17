@@ -23,9 +23,6 @@ export default function ChatPanel(props: Props) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
-    console.log(grant)
-  }, [grant]);
-  useEffect(() => {
     console.log('Initializing WebSocket connection for user:', username);
     const socket = new WebSocket(
       `ws${window.location.protocol === 'https:' ? 's' : ''}://${
