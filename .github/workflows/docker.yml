@@ -43,7 +43,8 @@ jobs:
           export SLACK_TOKEN=${{ secrets.SLACK_TOKEN }}
           ./slack-import-emojis-bin
 
-          mv emojis.json apps/web/src/lib/instrumentation/
+          cp emojis.json apps/web/src/lib/instrumentation/
+          cp emojis.json apps/web/
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6

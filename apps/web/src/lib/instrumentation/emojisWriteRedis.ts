@@ -29,7 +29,12 @@ function getPath() {
     // relative
     path.join(__dirname, 'emojis.json'),
     // standalone nextjs
-    path.join(process.cwd(), 'src/lib/instrumentation/emojis.json')
+    path.join(process.cwd(), 'src/lib/instrumentation/emojis.json'),
+    // docker build context
+    path.join(process.cwd(), 'emojis.json'),
+    // other alternatives
+    './emojis.json',
+    './src/lib/instrumentation/emojis.json',
   ];
   console.log('Writing emojis to Redis...');
 
