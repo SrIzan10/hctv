@@ -35,14 +35,14 @@ jobs:
             grep "browser_download_url.*slack-import-emojis-linux-x86_64" | \
             cut -d '"' -f 4)
           
-          curl -L -o slack-import-emojis $RELEASE_URL
-          chmod +x slack-import-emojis
+          curl -L -o slack-import-emojis-bin $RELEASE_URL
+          chmod +x slack-import-emojis-bin
           
           mkdir -p apps/web/src/lib/instrumentation/
           
           export SLACK_TOKEN=${{ secrets.SLACK_TOKEN }}
-          ./slack-import-emojis
-          
+          ./slack-import-emojis-bin
+
           mv emojis.json apps/web/src/lib/instrumentation/
 
       - name: Build and push Docker image
