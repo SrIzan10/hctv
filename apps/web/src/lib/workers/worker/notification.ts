@@ -28,7 +28,7 @@ export async function registerNotificationWorker(): Promise<void> {
       return { success: false, error: e.message };
     }
   }, {
-    connection: getRedisConnection(),
+    connection: getRedisConnection().options,
     concurrency: 1,
     limiter: {
       max: 45,

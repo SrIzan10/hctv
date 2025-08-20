@@ -55,7 +55,7 @@ export async function registerThumbnailWorker(): Promise<void> {
       }
     },
     {
-      connection: getRedisConnection(),
+      connection: getRedisConnection().options,
       concurrency: 3,
       limiter: {
         max: 50,
