@@ -17,7 +17,7 @@ if (!globalForNotifier.notificationQueue) {
 export function getNotificationQueue(): Queue {
   if (!globalForNotifier.notificationQueue) {
     globalForNotifier.notificationQueue = new Queue('notifications', {
-      connection: getRedisConnection(),
+      connection: getRedisConnection().options,
       defaultJobOptions: {
         attempts: 3,
         backoff: {
@@ -33,7 +33,7 @@ export function getNotificationQueue(): Queue {
 export function getThumbnailQueue(): Queue {
   if (!globalForNotifier.thumbnailQueue) {
     globalForNotifier.thumbnailQueue = new Queue('thumbnails', {
-      connection: getRedisConnection(),
+      connection: getRedisConnection().options,
       defaultJobOptions: {
         attempts: 3,
         backoff: {
