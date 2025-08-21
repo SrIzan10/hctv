@@ -26,15 +26,20 @@ export default function StreamPlayer() {
         autoplay
         config={{
           lowLatencyMode: true,
-          liveSyncDurationCount: 2, // Use only 1 segment for sync
-          liveMaxLatencyDurationCount: 3, // Maximum latency allowed
+          liveSyncDurationCount: 3,
+          liveMaxLatencyDurationCount: 6,
           liveDurationInfinity: true,
           enableWorker: true,
-          backBufferLength: 0, // No back buffer
-          startLevel: -1, // Auto level selection
-          maxBufferLength: 4, // Maximum buffer length in seconds
-          maxMaxBufferLength: 6,
-          debug: false,
+          backBufferLength: 5,
+          startLevel: -1,
+          maxBufferLength: 8,
+          maxMaxBufferLength: 12,
+          debug: process.env.NODE_ENV === 'development',
+          maxBufferSize: 60 * 1000 * 1000, // 60mb
+          maxBufferHole: 0.5,
+          highBufferWatchdogPeriod: 2,
+          nudgeOffset: 0.1,
+          nudgeMaxRetry: 3,
         }}
       />
       <MediaLoadingIndicator slot="centered-chrome" noAutohide />
