@@ -23,18 +23,28 @@ export async function emojisWriteRedis() {
 }
 
 function getPath() {
+  console.log('Current working directory:', process.cwd());
+  console.log('__dirname:', __dirname);
+  
+  // List files in current directory
+  try {
+    const files = require('fs').readdirSync(process.cwd());
+    console.log('Files in cwd:', files);
+  } catch (e) {
+    // @ts-ignore
+    console.log('Could not list files in cwd:', e.message);
+  }
+
   const possiblePaths = [
-    // original
-    'src/lib/instrumentation/emojis.json',
-    // relative
-    path.join(__dirname, 'emojis.json'),
-    // standalone nextjs
-    path.join(process.cwd(), 'src/lib/instrumentation/emojis.json'),
-    // docker build context
+    // Explicit Docker container path
+    '/app/emojis.json',
+    '/app/apps/web/emojis.json',
+    // Current paths
     path.join(process.cwd(), 'emojis.json'),
-    // other alternatives
+    path.join(process.cwd(), 'apps/web/emojis.json'),
+    // Fallbacks
     './emojis.json',
-    './src/lib/instrumentation/emojis.json',
+    'src/lib/instrumentation/emojis.json',
   ];
   console.log('Writing emojis to Redis...');
 
