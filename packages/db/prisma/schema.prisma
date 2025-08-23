@@ -81,7 +81,7 @@ model StreamInfo {
 
   enableNotifications Boolean @default(true)
 
-  // TODO: index on username
+  @@index([username])
 }
 
 model Follow {

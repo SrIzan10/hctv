@@ -16,7 +16,8 @@
     "act": "act --secret-file .env.ci",
     "db:migrate": "yarn workspace @hctv/db db:migrate",
     "ui:add": "yarn workspace @hctv/web ui:add",
-    "prisma": "yarn workspace @hctv/db prisma"
+    "prisma": "yarn workspace @hctv/db prisma",
+    "r:rtmp": "docker compose -f dev/docker-compose.yml restart nginx-rtmp -t 0"
   },
   "devDependencies": {
     "turbo": "^2.4.4"
