@@ -4,7 +4,7 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**", "generated/client/**"],
-      "env": ["commit", "NODE_ENV", "TURBO_TOKEN", "TURBO_TEAM"]
+      "env": ["commit", "NODE_ENV", "TURBO_TOKEN", "TURBO_TEAM", "SENTRY_AUTH_TOKEN"]
     },
     "setup": {
       "dependsOn": ["^dd", "^db:generate", "^build"],
