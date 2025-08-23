@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 
 const LIVE_SERVER_URL =
   process.env.NODE_ENV === 'production'
-    ? 'https://backend.hctv.srizan.dev'
+    ? 'http://nginx-rtmp:8888'
     : 'http://localhost:8888';
 
 const packageJson = JSON.parse(readFileSync('./package.json', 'utf8'));

@@ -19,12 +19,10 @@ export async function POST(request: NextRequest) {
       status: 403,
     });
   }
-
-  const headers = new Headers();
-  headers.append('Location', `rtmp://127.0.0.1/channel-live/${key.channel.name}`);
-  
-  return new Response(null, {
+  return new Response('', {
     status: 302,
-    headers: headers,
+    headers: {
+      'Location': key.channel.name,
+    },
   });
 }
