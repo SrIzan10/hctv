@@ -6,9 +6,16 @@ import { cookies } from 'next/headers';
 export async function GET(request: Request, { params }: { params: Promise<{ path: string }> }) {
   const { path } = await params;
   const c = await cookies();
-  if (!getRedisConnection().exists(`sessions:${c.get('auth_session')?.value}`)) {
+  
+  const sessionCookie = c.get('auth_session')?.value;
+  if (!sessionCookie) {
     return new Response("Unauthorized", { status: 401 });
   }
+  const sessionExists = await getRedisConnection().exists(`sessions:${sessionCookie}`);
+  if (sessionExists === 0) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
   if (path.includes('..')) {
     return new Response("nuh uh", { status: 403 });
   }
