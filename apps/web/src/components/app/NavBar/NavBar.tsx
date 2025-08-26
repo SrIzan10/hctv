@@ -18,20 +18,6 @@ import { ThemeSwitcher } from '../ThemeSwitcher/ThemeSwitcher';
 import { Slack } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 
-export const links = [{ href: '/', name: 'home (placeholder link)' }];
-
-function NavbarLinks() {
-  return (
-    <>
-      {links.map((link) => (
-        <Link key={link.href} href={link.href}>
-          <Button variant={'link'}>{link.name}</Button>
-        </Link>
-      ))}
-    </>
-  );
-}
-
 export default function Navbar(props: Props) {
   const { user } = useSession();
   return (
@@ -44,10 +30,6 @@ export default function Navbar(props: Props) {
             </Button>
           </Link>
           <SidebarTrigger />
-        </div>
-
-        <div className="hidden md:flex">
-          <NavbarLinks />
         </div>
 
         {/* Right Side Items */}
