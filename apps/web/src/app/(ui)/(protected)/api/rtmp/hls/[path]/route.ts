@@ -3,6 +3,18 @@ import fs from 'fs';
 import { getRedisConnection } from '@hctv/db';
 import { cookies } from 'next/headers';
 
+type HLSPathParams = {
+  path: string;
+};
+type HLSResponse = ArrayBuffer | string;
+
+/**
+ * Serve HLS segments
+ * @description Serves HLS segments from /dev/shm/hls. Requires a valid auth_session cookie.
+ * @pathParams HLSPathParams
+ * @response HLSResponse
+ * @openapi
+ */
 export async function GET(request: Request, { params }: { params: Promise<{ path: string }> }) {
   const { path } = await params;
   const c = await cookies();

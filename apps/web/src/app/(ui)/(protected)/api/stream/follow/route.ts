@@ -3,6 +3,19 @@ import { getNotificationQueue } from '@/lib/workers';
 import { prisma } from '@hctv/db';
 import { NextRequest } from 'next/server';
 
+type FollowParams = {
+  username: string;
+};
+type FollowResponse = {
+  following: boolean;
+};
+/**
+ * Follow or unfollow a channel
+ * @description Follow or unfollow a channel. Requires authentication.
+ * @params FollowParams
+ * @response FollowResponse
+ * @openapi
+ */
 export async function GET(request: NextRequest) {
   const { user } = await validateRequest();
   const searchParams = new URL(request.url).searchParams;
