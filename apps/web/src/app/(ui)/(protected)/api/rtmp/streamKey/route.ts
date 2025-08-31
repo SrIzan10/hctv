@@ -2,20 +2,6 @@ import { validateRequest } from '@/lib/auth/validate';
 import { prisma } from '@hctv/db';
 import { NextRequest } from "next/server";
 
-type StreamKeyRequest = {
-  channel: string;
-};
-type StreamKeyResponse = {
-  key: string;
-};
-
-/**
- * Generate a new stream key
- * @description Generates (or regenerates) a stream key for a given channel. Requires authentication
- * @body StreamKeyRequest
- * @response StreamKeyResponse
- * @openapi
- */
 export async function POST(request: NextRequest) {
   const { user } = await validateRequest();
   const body = await request.json();

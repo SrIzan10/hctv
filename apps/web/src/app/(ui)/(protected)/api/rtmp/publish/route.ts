@@ -1,16 +1,6 @@
 import { prisma } from '@hctv/db';
 import { NextRequest } from 'next/server';
- 
-type PublishForm = {
-  name: string;
-};
 
-/**
- * Verifies a stream key
- * @description Verifies a stream key and redirects to the channel name if valid.
- * @body PublishForm
- * @contentType multipart/form-data
- */
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
   const streamKey = formData.get('name');

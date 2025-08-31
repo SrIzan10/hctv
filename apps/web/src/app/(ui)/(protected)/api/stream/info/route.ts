@@ -4,19 +4,6 @@ import { validateRequest } from '@/lib/auth/validate';
 import { Channel, Prisma, prisma, StreamInfo } from '@hctv/db';
 import type { NextRequest } from 'next/server';
 
-type StreamInfoResponse = Array<StreamInfo & { channel: Channel }>;
-type StreamInfoQuery = {
-  owned?: boolean;
-  personal?: boolean;
-  live?: boolean;
-};
-/**
- * Get stream information
- * @description Retrieves stream information based on query parameters. Requires authentication for certain queries.
- * @queryParams StreamInfoQuery
- * @response StreamInfoResponse
- * @openapi
- */
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const shouldGetOwned = searchParams.get('owned') === 'true';

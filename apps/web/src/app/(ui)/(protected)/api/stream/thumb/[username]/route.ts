@@ -2,18 +2,6 @@ import { validateRequest } from '@/lib/auth/validate';
 import fsP from 'fs/promises';
 import fs from 'fs';
 
-type ThumbPathParams = {
-  username: string;
-};
-type ThumbResponse = Buffer<ArrayBufferLike> | string;
-
-/**
- * Serve user thumbnail
- * @description Serves user thumbnails. Requires authentication.
- * @pathParams ThumbPathParams
- * @response ThumbResponse
- * @openapi
- */
 export async function GET(request: Request, { params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
   const { user } = await validateRequest();

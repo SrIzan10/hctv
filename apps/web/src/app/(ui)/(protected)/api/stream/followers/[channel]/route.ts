@@ -2,20 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@hctv/db';
 import { resolveChannelNameId } from '@/lib/db/resolve';
 
-type FollowersParams = {
-  channel: string;
-};
-type FollowersResponse = {
-  count: number;
-  success: boolean;
-};
-/**
- * Get the number of followers for a channel
- * @description Retrieves the total number of followers for a specified channel.
- * @pathParams FollowersParams
- * @response FollowersResponse
- * @openapi
- */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ channel: string }> }
