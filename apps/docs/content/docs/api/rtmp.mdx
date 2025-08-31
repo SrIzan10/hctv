@@ -1,0 +1,16 @@
+---
+title: RTMP
+description: RTMP related endpoint group
+---
+
+## GET `/rtmp/hls/:path`
+gets HLS segments, the backbone of hctv livestreaming. **authentication required**.  
+not really sure why you would need this? but check the browser console when playing a stream for an insight on how it's used.
+
+## POST `/rtmp/streamKey`
+regenerates your stream key. **authentication required**.  
+body parameters (json):
+- `channel`: string - the channel name you want to regenerate the key for. must be one of your channels.
+
+response (json):
+- `key`: string - the new stream key

@@ -1,0 +1,19 @@
+---
+title: API Documentation
+description: Documented API endpoints for hackclub.tv
+---
+
+hctv is meant to be one of the most hackable streaming platforms out there. to that end, we have a (currently limited) public API that you can use to interact with the platform.
+
+since this is beta software, the API is subject to change. additionally, many endpoints are yet not implemented. please send a message in #hctv on the Hack Club Slack if you have any requests.
+
+## Base url
+
+base url for all endpoints is `https://hctv.srizan.dev/api`.
+
+## Authentication
+
+most endpoints require authentication. this will be pointed out in the documentation.  
+for now, it is done via a cookie called `auth_session` (as per lucia auth). this will change in the future as bot accounts are planned.
+
+you'll need your user account to authenticate. as a recommendation, open an incognito window, log in to hctv, and copy the `auth_session` cookie from there.
