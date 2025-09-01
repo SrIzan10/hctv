@@ -1,7 +1,7 @@
 // FIXME: THIS EFFING SUCKS OH MY GOD
 
 import { validateRequest } from '@/lib/auth/validate';
-import { Channel, Prisma, prisma, StreamInfo } from '@hctv/db';
+import { Prisma, prisma } from '@hctv/db';
 import type { NextRequest } from 'next/server';
 
 export async function GET(request: NextRequest) {
