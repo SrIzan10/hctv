@@ -1,0 +1,47 @@
+---
+title: Stream
+description: Stream related endpoint group
+---
+
+## GET `/stream/follow`
+checks if **authenticated user** is following a certain channel.  
+query parameters:
+- `username`: string - the channel name you want to check.
+
+response (json):
+- `following`: boolean - whether the authenticated user is following the channel or not.
+
+## POST `/stream/follow`
+cycle through follow or unfollow a channel. **authentication required**.  
+body parameters (json):
+- `channel`: string - the channel name you want to make the action. must be one of your channels.
+
+response (json):
+- `success`: boolean - whether the operation was successful or not.
+
+## GET `/stream/followers/:channel`
+gets the followcount of a channel.
+path parameters:
+- `channel`: string - the channel name you want to get the followcount of.
+
+response (json):
+- `count`: integer - the number of followers the channel has.
+- `success`: boolean - whether the operation was successful or not. (true if 200 status code)
+
+## GET `/stream/info`
+get stream info of certain channels by filtering. **authentication on some**.
+query parameters:
+- `owned`: boolean (optional) - if true, only returns channels owned by the authenticated user. requires authentication.
+- `personal`: boolean (optional) - if true, only returns personal channels. requires authentication.
+- `live`: boolean (optional) - if true, only returns channels that are currently live.
+
+response (json):
+- StreamInfo[] (check database schema for all returned data or just try it out!)
+
+## GET `/stream/thumb/:channel`
+gets the preview thumbnail of a channel's livestream. **authentication required**
+
+path parameters:
+- `channel`: string - the channel name you want to get the thumbnail of.
+
+response: image (webp)

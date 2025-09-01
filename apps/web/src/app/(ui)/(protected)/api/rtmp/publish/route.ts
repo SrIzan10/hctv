@@ -3,7 +3,12 @@ import { NextRequest } from 'next/server';
 
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
-  const streamKey = formData.get('name')?.toString() || '';
+  const streamKey = formData.get('name');
+  if (typeof streamKey !== 'string') {
+    return new Response('bad request', {
+      status: 400,
+    });
+  }
 
   const key = await prisma.streamKey.findFirst({
     where: {

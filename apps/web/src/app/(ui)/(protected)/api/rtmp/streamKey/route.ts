@@ -11,6 +11,10 @@ export async function POST(request: NextRequest) {
     return new Response('Unauthorized', { status: 401 });
   }
 
+  if (!channel || typeof channel !== 'string') {
+    return new Response('Bad Request', { status: 400 });
+  }
+
   const channelInfo = await prisma.channel.findUnique({
     where: { name: channel },
     include: {

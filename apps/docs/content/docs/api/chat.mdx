@@ -1,0 +1,155 @@
+---
+title: Chat
+description: Chat websocket
+---
+
+The chat system is powered by a websocket server. Please read the entire page before implementing anything, as there are some important notes.
+
+## Connection and messages
+
+The websocket server is located at `wss://hctv.srizan.dev/api/chat/ws/:username`, where `:username` is the channel you want to connect to.  
+You'll need to provide authentication, which can be done by providing an `auth_session` cookie, just like the REST API.
+
+Once connected, you must implement a subroutine in your code to send ping messages every 5 seconds. This is because of Cloudflare limitations.
+
+Messages are sent and received in JSON format. The following message types are supported:
+- `message`: a chat message.  
+  - sent by client:  
+    ```json
+    {
+      "type": "message",
+      "content": "Hello, world!"
+    }
+    ```
+  - received by client:  
+    ```json
+    {
+      "user": {
+        "id": "user_id",
+        "username": "user_who_sent_message",
+        "avatar": "https://emoji.slack-edge.com/avatar.png"
+      },
+      "message": "Hello, world!",
+    }
+    ```
+- `ping`: a ping message to keep the connection alive.  
+  - sent by client:  
+    ```json
+    {
+      "type": "ping"
+    }
+    ```
+  - received by client:  
+    ```json
+    {
+      "type": "ping"
+    }
+    ```
+- `history`: a message containing the chat history. This is sent upon connection.  
+  - received by client:  
+    ```json
+    {
+      "type": "history",
+      "messages": [
+        {
+          "user": {
+            "id": "user_id",
+            "username": "user_who_sent_message",
+            "avatar": "https://emoji.slack-edge.com/avatar.png"
+          },
+          "message": "Hello, world!",
+          "type": "message",
+        },
+        ...
+      ]
+    }
+    ```
+## Emoji handling
+
+*diagram source: devin deepwiki*
+```mermaid
+graph TB
+    subgraph "Emoji Processing Pipeline"
+        CHAT_MSG["Chat Message"]
+        PATTERN_MATCH["Regex :emoji: Pattern"]
+        EMOJI_REQUEST["emojiMsg WebSocket"]
+        REDIS_LOOKUP["Redis HGET emojis"]
+        FUZZY_SEARCH["uFuzzy"]
+        EMOJI_RESPONSE["emojiMsgResponse"]
+    end
+
+    subgraph "Redis Storage"
+        EMOJI_HASH["emojis hash key"]
+        EMOJI_PREFIXED["emoji:{name} url"]
+        EMOJIS_PREFIXED["emojis:{name} url"]
+    end
+
+    CHAT_MSG --> PATTERN_MATCH
+    PATTERN_MATCH --":emojiname:"--> EMOJI_REQUEST
+    EMOJI_REQUEST --> REDIS_LOOKUP
+
+    REDIS_LOOKUP --> EMOJI_HASH
+    REDIS_LOOKUP --> EMOJI_PREFIXED
+    REDIS_LOOKUP --> EMOJIS_PREFIXED
+
+    REDIS_LOOKUP --> EMOJI_RESPONSE
+
+    FUZZY_SEARCH --> EMOJI_HASH
+    FUZZY_SEARCH --"search results"--> EMOJI_RESPONSE
+```
+
+When a chat message is sent, the server looks for patterns in the format `:emojiname:` using regex. For each match, it sends a request to the `emojiMsg` WebSocket.  
+The server then checks Redis for the emoji URL and returns it.
+
+When a user wants to look up an emoji (by typing `:(partial name)`), the server uses uFuzzy to find matching emojis in the Redis `emojis` hash key and returns the results.
+
+Here's what gets sent on the websocket:
+- `emojiMsg`: Looks up emojis
+  - sent by client:
+    ```json
+    {
+      "type": "emojiMsg",
+      "emojis": ["aga", "yapa", "heavysob", "yay", "yay-bounce"]
+    }
+    ```
+  - received by client:
+    ```json
+    {
+      "type": "emojiMsgResponse",
+      "emojis": {
+        // rough example of urls
+        "aga": "https://emoji.slack-edge.com/aga.png",
+        "yapa": "https://emoji.slack-edge.com/yapa.png",
+        "heavysob": "https://emoji.slack-edge.com/heavysob.png",
+        "yay": "https://emoji.slack-edge.com/yay.png",
+        "yay-bounce": "https://emoji.slack-edge.com/yay-bounce.png"
+      }
+    }
+    ```
+- `emojiSearch`: Searches for emojis
+  - sent by client:
+    ```json
+    {
+      "type": "emojiSearch",
+      "searchTerm": "aga"
+    }
+    ```
+  - received by client:
+    ```json
+    {
+      "type": "emojiSearchResponse",
+      "results": [
+        // real results btw
+        "aga",
+        "aga-brick-throw",
+        "aga-dance",
+        "aga-transparent",
+        "a-aga",
+        "a-aga-transparent",
+        "agaban",
+        "agaboing",
+        "agabounce",
+        "agabusiness"
+      ]
+    }
+    ```
