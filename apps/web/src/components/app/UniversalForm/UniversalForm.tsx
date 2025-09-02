@@ -39,7 +39,7 @@ export function UniversalForm<T extends z.ZodType>({
   otherSubmitButton,
   submitButtonDivClassname,
 }: UniversalFormProps<T>) {
-  // @ts-ignore idk why this error is happening, first apprearing on the react 19 update.
+  // @ts-expect-error - idk
   const [state, formAction] = useActionState<{ success: boolean; error?: string }>(action, null);
   const schema = schemaDb.find((s) => s.name === schemaName)?.zod;
 
@@ -56,9 +56,11 @@ export function UniversalForm<T extends z.ZodType>({
     return { ...values, ...defaultValues };
   }, [fields, defaultValues]);
 
-  const form = useForm<z.infer<T>>({
-    resolver: zodResolver(schema),
-    defaultValues: initialValues as z.infer<T>,
+  type FormData = z.infer<T>;
+  
+  const form = useForm<FormData>({
+    resolver: zodResolver(schema as any),
+    defaultValues: initialValues as FormData,
   });
 
   React.useEffect(() => {
@@ -77,7 +79,7 @@ export function UniversalForm<T extends z.ZodType>({
           <FormField
             key={field.name}
             control={form.control}
-            name={field.name as Path<z.infer<T>>}
+            name={field.name as Path<FormData>}
             render={({ field: formField }) => (
               <FormItem>
                 {field.type !== 'hidden' && <FormLabel>{field.label}</FormLabel>}
