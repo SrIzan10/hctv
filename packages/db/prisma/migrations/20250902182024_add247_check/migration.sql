@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Channel" ADD COLUMN     "is247" BOOLEAN NOT NULL DEFAULT false;

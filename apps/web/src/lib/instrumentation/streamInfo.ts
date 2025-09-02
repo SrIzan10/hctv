@@ -102,6 +102,7 @@ export async function syncStream() {
       if (stream.active) {
         const existingStream = await prisma.streamInfo.findUnique({
           where: { username: stream.name },
+          include: { channel: true },
         });
 
         if (existingStream && !existingStream.isLive) {
@@ -125,12 +126,14 @@ export async function syncStream() {
           
           const queue = getNotificationQueue();
 
-          queue.add(`streamStartChannel:${existingStream.username}`, {
-            text: `${existingStream.username} is now *live*, streaming *${existingStream.title}* (${existingStream.category})!\n<https://hctv.srizan.dev/${existingStream.username}|Go check them out>`,
-            channel: process.env.NOTIFICATION_CHANNEL_ID!,
-            unfurl_links: true,
-          });
-          if (existingStream.enableNotifications) {
+          if (!existingStream.channel.is247) {
+            queue.add(`streamStartChannel:${existingStream.username}`, {
+              text: `${existingStream.username} is now *live*, streaming *${existingStream.title}* (${existingStream.category})!\n<https://hctv.srizan.dev/${existingStream.username}|Go check them out>`,
+              channel: process.env.NOTIFICATION_CHANNEL_ID!,
+              unfurl_links: true,
+            });
+          }
+          if (existingStream.enableNotifications && !existingStream.channel.is247) {
             for (const follower of subscribedFollowers) {
               queue.add(`streamStartDm:${follower.user.id}`, {
                 text: `${existingStream.username} is now *live*, streaming *${existingStream.title}* (${existingStream.category})!\n<https://hctv.srizan.dev/${existingStream.username}|Go check them out>\n_Stream notifications are enabled for this user. If you want to disable them, you can do so in \`Profile > Follows\`._`,

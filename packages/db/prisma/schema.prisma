@@ -52,6 +52,7 @@ model Channel {
   followers Follow[] @relation("ChannelFollowers")
   streamKey StreamKey?
   obsChatGrantToken String @unique @default(cuid())
+  is247     Boolean @default(false)
   
   @@index([ownerId])
 }
