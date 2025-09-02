@@ -547,6 +547,13 @@
     cross-fetch "^3.0.4"
     fontkit "^2.0.2"
 
+"@catppuccin/starlight@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@catppuccin/starlight/-/starlight-1.0.2.tgz#8c869e39a20289e1f4707d63ed44639171b3804d"
+  integrity sha512-Qfy0l5EjGCoyRFlpsyDm9YFaxHCZXrMbLaEFPjzbFHMndKLv457nEyNlFnP7EkN1djnJgfORmmoaQ4ru2wiQEg==
+  dependencies:
+    "@astrojs/starlight" "^0.35.2"
+
 "@chevrotain/cst-dts-gen@11.0.3":
   version "11.0.3"
   resolved "https://registry.yarnpkg.com/@chevrotain/cst-dts-gen/-/cst-dts-gen-11.0.3.tgz#5e0863cc57dc45e204ccfee6303225d15d9d4783"
