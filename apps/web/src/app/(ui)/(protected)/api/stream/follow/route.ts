@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
     });
 
     await queue.add(`newFollow:${username}`, {
-      text: `You started following \`${username}\`!\n_Stream notifications are enabled by default. If you want to disable them, you can do so in \`Profile > Notifications\`._`,
+      text: `You started following \`${username}\`!\n_Stream notifications are disabled by default. If you want to enable them, you can do so in \`Profile > Notifications\`._`,
       channel: user.slack_id,
     });
   }
