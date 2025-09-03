@@ -1,10 +1,10 @@
 [package]
 name = "slack-import-emojis"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 
 [dependencies]
-reqwest = { version = "0.11", features = ["blocking", "json"] }
+reqwest = { version = "0.11", features = ["json"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-tokio = { version = "1", features = ["full"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }

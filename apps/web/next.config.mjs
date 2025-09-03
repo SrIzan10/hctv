@@ -28,7 +28,11 @@ const nextConfig = {
       },
       {
         hostname: 'emoji.slack-edge.com',
-      }
+      },
+      {
+        hostname: 'cdn.jsdelivr.net',
+        pathname: '/npm/emoji-datasource-twitter@15.1.2/img/twitter/64/*',
+      },
     ],
     minimumCacheTTL: 120,
   },

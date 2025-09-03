@@ -3,6 +3,7 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Write;
+use std::env;
 
 #[derive(Debug, Deserialize)]
 struct SlackEmojiResponse {
@@ -25,6 +26,7 @@ struct EmojiData {
 
 #[tokio::main]
 async fn main() {
+  let args: Vec<String> = env::args().collect();
   if std::env::var("SLACK_TOKEN").is_err() {
     eprintln!("Error: SLACK_TOKEN environment variable is not set.");
     return;
@@ -35,12 +37,13 @@ async fn main() {
     .expect("Failed to fetch slack_emojis from Slack API");
   println!("{:?} slack_emojis fetched", slack_emojis.emoji.len());
 
-  let default_emojis = default_request()
-    .await
-    .expect("Failed to fetch default_emojis from GitHub");
-  println!("{:?} default_emojis fetched", default_emojis.emoji.len());
-
-  slack_emojis.emoji.extend(default_emojis.emoji);
+  if args.len() > 1 && args[1] == "default" {
+    let default_emojis = default_request()
+      .await
+      .expect("Failed to fetch default_emojis from GitHub");
+    println!("{:?} default_emojis fetched", default_emojis.emoji.len());
+    slack_emojis.emoji.extend(default_emojis.emoji);
+  }
 
   let mut file = File::create("emojis.json").expect("failed to create file for some reason");
   let json_data =
