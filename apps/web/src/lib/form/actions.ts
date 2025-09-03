@@ -202,6 +202,7 @@ export async function updateChannelSettings(prev: any, formData: FormData) {
     data: {
       description: zod.data.description || undefined,
       pfpUrl: zod.data.pfpUrl,
+      is247: zod.data.is247,
     },
   });
 

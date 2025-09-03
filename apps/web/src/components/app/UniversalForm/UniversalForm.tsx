@@ -82,7 +82,7 @@ export function UniversalForm<T extends z.ZodType>({
             name={field.name as Path<FormData>}
             render={({ field: formField }) => (
               <FormItem>
-                {field.type !== 'hidden' && <FormLabel>{field.label}</FormLabel>}
+                {(field.type !== 'hidden' || field.label) && <FormLabel>{field.label}</FormLabel>}
                 <FormControl>
                   {field.component ? (
                     field.component({ field: formField, ...field.componentProps })

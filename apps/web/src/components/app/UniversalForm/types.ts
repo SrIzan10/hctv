@@ -5,7 +5,7 @@ import { schemaDb } from './UniversalForm';
 
 export type FormFieldConfig = {
   name: string;
-  label: string;
+  label?: string;
   type?: HTMLInputTypeAttribute;
   placeholder?: string;
   description?: string;

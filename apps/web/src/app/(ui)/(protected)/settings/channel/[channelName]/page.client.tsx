@@ -61,6 +61,7 @@ interface ChannelSettingsClientProps {
     streamKey: StreamKey | null;
     followers: (Follow & { user: { id: string; slack_id: string } })[];
     followerPersonalChannels: (Channel | null)[];
+    is247: boolean;
   };
   isOwner: boolean;
   currentUser: User;
@@ -306,6 +307,27 @@ export default function ChannelSettingsClient({
                       </div>
                     ),
                   },
+                  {
+                    name: 'is247',
+                    value: channel.is247,
+                    component: ({ field }) => (
+                      <div className="flex items-center justify-between mt-2">
+                        <div>
+                          <label className="text-sm font-medium">24/7 Channel</label>
+                          <p className="text-xs text-muted-foreground">
+                            Mark this channel as always live. It will disable notifications on #hctv-streams.
+                          </p>
+                        </div>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={(checked) => {
+                            field.onChange(checked);
+                          }}
+                        />
+                        <input type="hidden" {...field} value={field.value ? 'true' : 'false'} />
+                      </div>
+                    ),
+                  }
                 ]}
                 schemaName="updateChannelSettings"
                 action={updateChannelSettings}
