@@ -10,6 +10,12 @@ jobs:
     name: Push frontend to Docker Hub
     runs-on: ubuntu-latest
     steps:
+      - name: Wait 
+        uses: NathanFirmo/wait-for-other-action@v1.0.4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: 'emojis.yml'
+
       - name: Check out the repo
         uses: actions/checkout@v3
 
