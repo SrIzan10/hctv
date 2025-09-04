@@ -33,7 +33,7 @@ WORKDIR /app
 COPY --from=builder /app/out/json/ .
 RUN yarn install --frozen-lockfile
 
-RUN yarn add sharp --platform=linuxmusl --arch=x64
+RUN cd apps/web && yarn add sharp --platform=linuxmusl --arch=x64
 
 COPY --from=builder /app/out/full/ .
 RUN --mount=type=secret,id=TURBO_TOKEN --mount=type=secret,id=TURBO_TEAM \
