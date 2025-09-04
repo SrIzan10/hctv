@@ -20,7 +20,7 @@ RUN turbo prune @hctv/web --docker
 # Add lockfile and package.json's of isolated subworkspace
 FROM base AS installer
 RUN apk update
-RUN apk add --no-cache libc6-compat git vips
+RUN apk add --no-cache libc6-compat git vips vips-dev
 # Get the commit hash from the builder stage
 COPY --from=builder /tmp/commit_hash /tmp/commit_hash
 # Read commit hash and set as build arg
@@ -42,7 +42,7 @@ RUN --mount=type=secret,id=TURBO_TOKEN --mount=type=secret,id=TURBO_TEAM \
 FROM base AS runner
 WORKDIR /app
 
-RUN apk add --no-cache ffmpeg vips
+RUN apk add --no-cache ffmpeg vips vips-dev
 
 # Don't run production as root
 RUN addgroup --system --gid 1001 nodejs
