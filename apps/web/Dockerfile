@@ -20,7 +20,7 @@ RUN turbo prune @hctv/web --docker
 # Add lockfile and package.json's of isolated subworkspace
 FROM base AS installer
 RUN apk update
-RUN apk add --no-cache libc6-compat git vips vips-dev
+RUN apk add --no-cache libc6-compat git vips vips-dev python3 make g++
 # Get the commit hash from the builder stage
 COPY --from=builder /tmp/commit_hash /tmp/commit_hash
 # Read commit hash and set as build arg
@@ -32,6 +32,8 @@ WORKDIR /app
 # First install the dependencies (as they change less often)
 COPY --from=builder /app/out/json/ .
 RUN yarn install --frozen-lockfile
+
+RUN yarn add sharp --platform=linuxmusl --arch=x64
 
 COPY --from=builder /app/out/full/ .
 RUN --mount=type=secret,id=TURBO_TOKEN --mount=type=secret,id=TURBO_TEAM \
