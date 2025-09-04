@@ -1,3 +1,5 @@
+import * as Sentry from "@sentry/nextjs";
+
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     await (await import('@/lib/instrumentation/streamInfo')).default();
@@ -40,4 +42,21 @@ export async function register() {
       await viewerCountSync();
     }, 2000);
   }
+  
+  Sentry.init({
+    dsn: "https://f3c26671c39af48406c6e23702a4f3dd@o4506961023860736.ingest.us.sentry.io/4509895816773632",
+  
+    // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
+    tracesSampleRate: 1,
+  
+    // Enable logs to be sent to Sentry
+    enableLogs: true,
+  
+    // Setting this option to true will print useful information to the console while you're setting up Sentry.
+    debug: false,
+    
+    integrations: [
+      Sentry.extraErrorDataIntegration(),
+    ],
+  });
 }
