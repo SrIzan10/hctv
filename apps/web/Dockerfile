@@ -20,7 +20,7 @@ RUN turbo prune @hctv/web --docker
 # Add lockfile and package.json's of isolated subworkspace
 FROM base AS installer
 RUN apk update
-RUN apk add --no-cache libc6-compat git
+RUN apk add --no-cache libc6-compat git vips
 # Get the commit hash from the builder stage
 COPY --from=builder /tmp/commit_hash /tmp/commit_hash
 # Read commit hash and set as build arg
