@@ -49,7 +49,7 @@ export function ApiKeys({ slug }: { slug: string }) {
             });
           await mutate();
         } else {
-          alert(res.error || 'Error creating API key');
+          toast.error(res.error || 'Error creating API key');
         }
       }
     );
@@ -126,7 +126,7 @@ export function ApiKeys({ slug }: { slug: string }) {
                               });
                             mutate();
                           } else {
-                            alert(res.error || 'Error regenerating API key');
+                            toast.error(res.error || 'Error regenerating API key');
                           }
                         }
                       );
@@ -151,7 +151,7 @@ export function ApiKeys({ slug }: { slug: string }) {
                           if (res.success) {
                             await mutate();
                           } else {
-                            alert(res.error || 'Error revoking API key');
+                            toast.error(res.error || 'Error revoking API key');
                           }
                         }
                       );
