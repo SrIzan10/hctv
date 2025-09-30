@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation';
 import Image from 'next/image';
 import { GeneralSettings } from '@/app/(ui)/(protected)/settings/bot/[slug]/gensettings';
 import { ApiKeys } from '@/app/(ui)/(protected)/settings/bot/[slug]/apikeys';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const { user } = await validateRequest();
@@ -16,6 +18,9 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
 
   return (
     <div className={'container mx-auto py-6 space-y-6'}>
+      <Link href={'/settings/bot'} className="text-sm text-muted-foreground hover:underline flex items-center gap-2">
+        <ArrowLeft className='size-4' /> Back to Bot Accounts
+      </Link>
       <div className="flex items-center justify-between">
         <div className={'flex items-center space-x-4'}>
           <Image
