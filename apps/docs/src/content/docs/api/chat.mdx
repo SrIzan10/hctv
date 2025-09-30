@@ -3,12 +3,19 @@ title: Chat
 description: Chat websocket
 ---
 
+import { Aside } from '@astrojs/starlight/components';
+
 The chat system is powered by a websocket server. Please read the entire page before implementing anything, as there are some important notes.
 
 ## Connection and messages
 
-The websocket server is located at `wss://hctv.srizan.dev/api/chat/ws/:username`, where `:username` is the channel you want to connect to.  
-You'll need to provide authentication, which can be done by providing an `auth_session` cookie, just like the REST API.
+The websocket server is located at `wss://hctv.srizan.dev/api/chat/ws/:username`, where `:username` is the channel you want to connect to.
+
+You'll need to provide authentication, which can be done by providing an `auth_session` cookie, just like the REST API.  
+<Aside type="tip">
+Bot accounts are now supported. You can choose to connect as a bot by providing a bot account's API key on the Authentication header: `Bearer hctvb_xxxxxxx`  
+It is highly advised to use a bot account for any automated task, and to implement anything pointed out in this page.
+</Aside>
 
 Once connected, you must implement a subroutine in your code to send ping messages every 5 seconds. This is because of Cloudflare limitations.
 
