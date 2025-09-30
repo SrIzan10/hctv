@@ -51,7 +51,7 @@ export default function Navbar(props: Props) {
                   <Link href={`/settings/follows`}>
                     <DropdownMenuItem className="cursor-pointer">Follows</DropdownMenuItem>
                   </Link>
-                  <Link href={`/create`}>
+                  <Link href={`/settings/channel/create`}>
                     <DropdownMenuItem className="cursor-pointer">Create channel</DropdownMenuItem>
                   </Link>
                 </DropdownMenuGroup>

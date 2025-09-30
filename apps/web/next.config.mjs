@@ -33,6 +33,9 @@ const nextConfig = {
         hostname: 'cdn.jsdelivr.net',
         pathname: '/npm/emoji-datasource-twitter@15.1.2/img/twitter/64/*',
       },
+      {
+        hostname: 'eoceqrx2r7.ufs.sh'
+      },
     ],
     minimumCacheTTL: 120,
   },
@@ -44,6 +47,7 @@ const nextConfig = {
   reactStrictMode: false,
   output: 'standalone',
   outputFileTracingRoot: path.join(__dirname, '../../'),
+  serverExternalPackages: ['bullmq'],
   async rewrites() {
     return [
       {

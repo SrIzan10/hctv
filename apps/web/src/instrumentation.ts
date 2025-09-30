@@ -44,8 +44,8 @@ export async function register() {
       await viewerCountSync();
     }, 2000);
   }
-  
-  Sentry.init({
+
+  process.env.NODE_ENV === 'production' && Sentry.init({
     dsn: "https://f3c26671c39af48406c6e23702a4f3dd@o4506961023860736.ingest.us.sentry.io/4509895816773632",
   
     // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.

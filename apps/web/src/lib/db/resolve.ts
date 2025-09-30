@@ -1,4 +1,5 @@
-import { prisma } from '@hctv/db';
+import {Prisma, prisma} from '@hctv/db';
+import {validateRequest} from "@/lib/auth/validate";
 
 export async function resolveChannelNameId(channelName: string) {
   const channel = await prisma.channel.findUnique({
@@ -28,4 +29,14 @@ export async function resolveUserPersonalChannel(userId: string) {
   }
 
   return channel;
+}
+
+export async function getBotBySlug(slug: string) {
+  const bot = await prisma.botAccount.findFirst({
+    where: {
+      slug,
+    },
+  });
+
+  return bot;
 }

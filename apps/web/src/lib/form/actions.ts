@@ -4,7 +4,10 @@ import { revalidatePath } from 'next/cache';
 import { validateRequest } from '@/lib/auth/validate';
 import { prisma } from '@hctv/db';
 import zodVerify from '../zodVerify';
-import { createChannelSchema, onboardSchema, streamInfoEditSchema, updateChannelSettingsSchema } from './zod';
+import {
+  createBotSchema,
+  createChannelSchema, editBotSchema, onboardSchema, streamInfoEditSchema, updateChannelSettingsSchema
+} from './zod';
 import { initializeStreamInfo } from '../instrumentation/streamInfo';
 import { resolveFollowedChannels, resolveStreamInfo, resolveUserFromPersonalChannelName } from '../auth/resolve';
 import { genIdenticonUpload } from '../utils/genIdenticonUpload';
@@ -353,4 +356,76 @@ export async function deleteChannel(channelId: string) {
   });
 
   return { success: true }; */
+}
+
+export async function createBot(prev: any, formData: FormData) {
+  const { user } = await validateRequest();
+  if (!user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+  const zod = await zodVerify(createBotSchema, formData);
+  if (!zod.success) {
+    return zod;
+  }
+
+  const botExists = await prisma.botAccount.findFirst({
+    where: { slug: zod.data.slug },
+  });
+  if (botExists) {
+    return { success: false, error: 'Bot slug already exists' };
+  }
+
+  const createdBot = await prisma.botAccount.create({
+    data: {
+      displayName: zod.data.name,
+      slug: zod.data.slug,
+      ownerId: user.id,
+      description: zod.data.description,
+      pfpUrl: await genIdenticonUpload(zod.data.slug, 'botpfp'),
+    }
+  });
+
+  return { success: true, slug: createdBot.slug }
+}
+
+export async function editBot(prev: any, formData: FormData) {
+  const { user } = await validateRequest();
+  if (!user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+  const zod = await zodVerify(editBotSchema, formData);
+  if (!zod.success) {
+    return zod;
+  }
+
+  const bot = await prisma.botAccount.findUnique({
+    where: { id: zod.data.from },
+  });
+  if (!bot) {
+    return { success: false, error: 'Bot not found' };
+  }
+  if (bot.ownerId !== user.id) {
+    return { success: false, error: 'Unauthorized' };
+  }
+  if (bot.slug !== zod.data.slug) {
+    const botExists = await prisma.botAccount.findFirst({
+      where: { slug: zod.data.slug },
+    });
+    if (botExists) {
+      return { success: false, error: 'Bot slug already exists' };
+    }
+  }
+
+  const updatedBot = await prisma.botAccount.update({
+    where: { id: zod.data.from },
+    data: {
+      displayName: zod.data.name,
+      slug: zod.data.slug,
+      description: zod.data.description,
+    }
+  });
+
+  revalidatePath(`/settings/bot/${updatedBot.slug}`);
+
+  return { success: true, slug: updatedBot.slug }
 }
