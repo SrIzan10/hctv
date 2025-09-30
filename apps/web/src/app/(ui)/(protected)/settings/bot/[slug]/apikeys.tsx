@@ -28,6 +28,33 @@ export function ApiKeys({ slug }: { slug: string }) {
   );
   const { trigger } = useSWRMutation(`/api/settings/bot/${slug}/apiKey`, createApiKey);
 
+  const apiKeyCreate = () => {
+    if (newApiKeyName.trim().length < 3) {
+      toast.error('API Key name must be at least 3 characters long');
+      return;
+    }
+    if (newApiKeyName.trim().length > 50) {
+      toast.error('API Key name must be at most 50 characters long');
+      return;
+    }
+    trigger({ action: 'create', name: newApiKeyName }).then(
+      async (res: PostResponse) => {
+        if (res.success) {
+          setNewApiKeyName('');
+          await navigator.clipboard
+            .writeText(res.apiKey || '')
+            .then(() => toast.success('API key copied to clipboard'))
+            .catch(() => {
+              alert('Failed to copy API key to clipboard, here it is: ' + res.apiKey);
+            });
+          await mutate();
+        } else {
+          alert(res.error || 'Error creating API key');
+        }
+      }
+    );
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -45,35 +72,15 @@ export function ApiKeys({ slug }: { slug: string }) {
               className="flex-1 mr-2"
               value={newApiKeyName}
               onChange={(e) => setNewApiKeyName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  apiKeyCreate();
+                }
+              }}
             />
             <Button
               size="icon"
-              onClick={() => {
-                if (newApiKeyName.trim().length < 3) {
-                  toast.error('API Key name must be at least 3 characters long');
-                  return;
-                }
-                if (newApiKeyName.trim().length > 50) {
-                  toast.error('API Key name must be at most 50 characters long');
-                  return;
-                }
-                trigger({ action: 'create', name: newApiKeyName }).then(
-                  async (res: PostResponse) => {
-                    if (res.success) {
-                      setNewApiKeyName('');
-                      await navigator.clipboard
-                        .writeText(res.apiKey || '')
-                        .then(() => toast.success('API key copied to clipboard'))
-                        .catch(() => {
-                          alert('Failed to copy API key to clipboard, here it is: ' + res.apiKey);
-                        });
-                      await mutate();
-                    } else {
-                      alert(res.error || 'Error creating API key');
-                    }
-                  }
-                );
-              }}
+              onClick={apiKeyCreate}
             >
               <Plus />
             </Button>
