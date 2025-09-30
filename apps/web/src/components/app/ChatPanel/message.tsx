@@ -1,11 +1,8 @@
 import { User } from './ChatPanel';
 import React from 'react';
 import Image from 'next/image';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Bot } from 'lucide-react';
 
 export function Message({ user, message, type, emojiMap }: MessageProps) {
   if (type === 'systemMsg') {
@@ -18,12 +15,18 @@ export function Message({ user, message, type, emojiMap }: MessageProps) {
 
   return (
     <div className="flex">
-      <div
-        lang="en"
-        className="max-w-full break-all whitespace-pre-wrap hyphens-auto"
-      >
-        <p>
-          <span className="font-bold mr-2">{user?.username}</span>
+      <div lang="en" className="max-w-full break-all whitespace-pre-wrap hyphens-auto">
+        <p className="flex flex-wrap items-center">
+          <span className="font-bold mr-2 flex items-center">
+            {user?.isBot && (
+              <span className="text-xs text-muted-foreground flex mr-1">
+                {' '}
+                <Bot className="size-5" />
+              </span>
+            )}
+            {user?.displayName || user?.username}
+          </span>
+
           <EmojiRenderer text={message} emojiMap={emojiMap} />
         </p>
       </div>
@@ -47,13 +50,21 @@ export function EmojiRenderer({ text, emojiMap }: EmojiRendererProps) {
             return (
               <Tooltip key={index} delayDuration={250}>
                 <TooltipTrigger>
-                  <span key={index} className="inline-block align-middle" style={{ height: '1.2em' }}>
-                    <Image src={emojiUrl} alt={part} width={20} height={20} className="inline-block" />
+                  <span
+                    key={index}
+                    className="inline-block align-middle"
+                    style={{ height: '1.2em' }}
+                  >
+                    <Image
+                      src={emojiUrl}
+                      alt={part}
+                      width={20}
+                      height={20}
+                      className="inline-block"
+                    />
                   </span>
                 </TooltipTrigger>
-                <TooltipContent>
-                  {part}
-                </TooltipContent>
+                <TooltipContent>{part}</TooltipContent>
               </Tooltip>
             );
           }

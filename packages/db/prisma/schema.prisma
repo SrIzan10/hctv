@@ -5,55 +5,56 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
-  output = "../generated/client"
+  provider      = "prisma-client-js"
+  output        = "../generated/client"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DATABASE_DIRECT_URL")
 }
 
 model User {
-  id            String    @id @default(cuid())
-  slack_id      String
-  pfpUrl        String
-  hasOnboarded  Boolean   @default(false)
+  id           String  @id @default(cuid())
+  slack_id     String
+  pfpUrl       String
+  hasOnboarded Boolean @default(false)
 
-  personalChannel    Channel?  @relation("PersonalChannel", fields: [personalChannelId], references: [id])
-  personalChannelId  String?   @unique
+  personalChannel   Channel? @relation("PersonalChannel", fields: [personalChannelId], references: [id])
+  personalChannelId String?  @unique
 
-  ownedChannels     Channel[] @relation("ChannelOwner")
-  managedChannels   Channel[] @relation("ChannelManagers")
-  sessions          Session[]
-  streams           StreamInfo[]
-  followers         Follow[]  @relation("UserFollows")
+  ownedChannels   Channel[]    @relation("ChannelOwner")
+  managedChannels Channel[]    @relation("ChannelManagers")
+  sessions        Session[]
+  streams         StreamInfo[]
+  followers       Follow[]     @relation("UserFollows")
+  botAccounts     BotAccount[]
 
   @@index([personalChannelId])
 }
 
 model Channel {
-  id        String   @id @default(cuid())
-  name      String   @unique
+  id          String @id @default(cuid())
+  name        String @unique
   description String @default("A hctv channel")
-  pfpUrl    String
+  pfpUrl      String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   personalFor User? @relation("PersonalChannel")
 
-  owner     User     @relation("ChannelOwner", fields: [ownerId], references: [id])
-  ownerId   String
-  managers  User[]   @relation("ChannelManagers")
-  streamInfo StreamInfo[]
-  followers Follow[] @relation("ChannelFollowers")
-  streamKey StreamKey?
-  obsChatGrantToken String @unique @default(cuid())
-  is247     Boolean @default(false)
-  
+  owner             User         @relation("ChannelOwner", fields: [ownerId], references: [id])
+  ownerId           String
+  managers          User[]       @relation("ChannelManagers")
+  streamInfo        StreamInfo[]
+  followers         Follow[]     @relation("ChannelFollowers")
+  streamKey         StreamKey?
+  obsChatGrantToken String       @unique @default(cuid())
+  is247             Boolean      @default(false)
+
   @@index([ownerId])
 }
 
@@ -65,20 +66,20 @@ model Session {
 }
 
 model StreamInfo {
-  id        String @id @default(cuid())
-  username  String @unique
+  id        String   @id @default(cuid())
+  username  String   @unique
   title     String
   thumbnail String
   viewers   Int
   category  String
   startedAt DateTime
   isLive    Boolean
-  
+
   channelId String
   channel   Channel @relation(fields: [channelId], references: [id])
 
-  ownedBy   User   @relation(fields: [userId], references: [id])
-  userId    String
+  ownedBy User   @relation(fields: [userId], references: [id])
+  userId  String
 
   enableNotifications Boolean @default(true)
 
@@ -88,13 +89,13 @@ model StreamInfo {
 model Follow {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
-  
-  user      User     @relation("UserFollows", fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  
-  channel   Channel  @relation("ChannelFollowers", fields: [channelId], references: [id], onDelete: Cascade)
+
+  user   User   @relation("UserFollows", fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  channel   Channel @relation("ChannelFollowers", fields: [channelId], references: [id], onDelete: Cascade)
   channelId String
-  
+
   notifyStream Boolean @default(false)
 
   @@unique([userId, channelId])
@@ -103,9 +104,37 @@ model Follow {
 }
 
 model StreamKey {
-  id        String   @id @default(cuid())
-  key       String   @unique
+  id  String @id @default(cuid())
+  key String @unique
 
-  channelId String   @unique
-  channel   Channel  @relation(fields: [channelId], references: [id])
+  channelId String  @unique
+  channel   Channel @relation(fields: [channelId], references: [id])
+}
+
+model BotAccount {
+  id          String   @id @default(cuid())
+  displayName String
+  slug        String   @unique
+  description String   @default("A hctv bot account")
+  pfpUrl      String
+  owner       User     @relation(fields: [ownerId], references: [id])
+  ownerId     String
+  apiKeys     BotApiKey[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+  @@index([slug])
+}
+
+model BotApiKey {
+  id           String     @id @default(cuid())
+  name         String
+  key          String     @unique
+  botAccount   BotAccount @relation(fields: [botAccountId], references: [id], onDelete: Cascade)
+  botAccountId String
+  createdAt    DateTime   @default(now())
+
+  @@index([botAccountId])
 }

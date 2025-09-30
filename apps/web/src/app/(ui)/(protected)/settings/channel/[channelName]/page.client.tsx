@@ -150,7 +150,7 @@ export default function ChannelSettingsClient({
             value={channel.name}
             onSelect={(value) => {
               if (value === 'create') {
-                router.push(`/create`);
+                router.push(`/settings/channel/create`);
               } else {
                 router.push(`/settings/channel/${value}?tab=${selTab}`);
               }

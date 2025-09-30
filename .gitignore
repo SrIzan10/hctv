@@ -46,3 +46,5 @@ packages/db/generated/client
 
 slack-import-emojis/target
 **/*/emojis.json
+
+.idea

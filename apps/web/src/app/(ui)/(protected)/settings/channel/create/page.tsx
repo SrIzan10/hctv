@@ -32,8 +32,7 @@ function CreateChannelPage() {
             schemaName="createChannel"
             action={createChannel}
             onActionComplete={(r) => {
-              // @ts-expect-error
-              const channelName = r?.channel;
+              const channelName = r.channel;
               if (channelName) {
                 router.push(`/${channelName}`);
               }

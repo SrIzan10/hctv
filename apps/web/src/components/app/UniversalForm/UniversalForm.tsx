@@ -19,13 +19,18 @@ import React from 'react';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { createChannelSchema, onboardSchema, streamInfoEditSchema, updateChannelSettingsSchema } from '@/lib/form/zod';
+import {
+  createBotSchema,
+  createChannelSchema, editBotSchema, onboardSchema, streamInfoEditSchema, updateChannelSettingsSchema
+} from '@/lib/form/zod';
 
 export const schemaDb = [
   { name: 'streamInfoEdit', zod: streamInfoEditSchema },
   { name: 'onboard', zod: onboardSchema },
   { name: 'createChannel', zod: createChannelSchema },
   { name: 'updateChannelSettings', zod: updateChannelSettingsSchema },
+  { name: 'createBot', zod: createBotSchema },
+  { name: 'editBot', zod: editBotSchema }
 ] as const;
 
 export function UniversalForm<T extends z.ZodType>({

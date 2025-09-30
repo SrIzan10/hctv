@@ -51,8 +51,21 @@ export default function Navbar(props: Props) {
                   <Link href={`/settings/follows`}>
                     <DropdownMenuItem className="cursor-pointer">Follows</DropdownMenuItem>
                   </Link>
-                  <Link href={`/create`}>
+                  <Link href={`/settings/channel/create`}>
                     <DropdownMenuItem className="cursor-pointer">Create channel</DropdownMenuItem>
+                  </Link>
+                  <Link href={`/settings/bot`}>
+                    <DropdownMenuItem className="cursor-pointer">Bot accounts</DropdownMenuItem>
+                  </Link>
+                  <DropdownMenuSeparator />
+                  <Link href={'https://docs.hctv.srizan.dev'} target="_blank" rel="noreferrer">
+                    <DropdownMenuItem className="cursor-pointer">API Docs</DropdownMenuItem>
+                  </Link>
+                  <Link href={'https://github.com/SrIzan10/hctv'} target="_blank" rel="noreferrer">
+                    <DropdownMenuItem className="cursor-pointer">Github</DropdownMenuItem>
+                  </Link>
+                  <Link href={'https://github.com/sponsors/SrIzan10'} target="_blank" rel="noreferrer">
+                    <DropdownMenuItem className="cursor-pointer">Sponsor</DropdownMenuItem>
                   </Link>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />

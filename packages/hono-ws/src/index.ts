@@ -249,16 +249,27 @@ interface ModifiedWSContext extends WSContext<ModifiedWebSocket> {
   user?: any;
   personalChannel?: any;
   viewerId?: string;
+  botUsername?: string;
+  chatUser?: ChatUser | null;
 }
 
 export interface ModifiedWebSocket extends WebSocket {
   targetUsername?: string;
   user?: User;
   personalChannel?: Channel;
+  chatUser?: ChatUser | null;
 }
 
 interface CloseEventInit extends EventInit {
   code?: number;
   reason?: string;
   wasClean?: boolean;
+}
+
+interface ChatUser {
+  id: string;
+  username: string;
+  pfpUrl: string;
+  displayName?: string;
+  isBot: boolean;
 }

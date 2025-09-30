@@ -14,13 +14,14 @@ export type FormFieldConfig = {
   textAreaRows?: number;
   component?: (props: { field: ControllerRenderProps<any, any> } & any) => React.ReactNode;
   componentProps?: Record<string, any>;
+  required?: boolean;
 };
 
 export type UniversalFormProps<T extends z.ZodType> = {
   fields: FormFieldConfig[];
   schemaName: (typeof schemaDb)[number]['name'];
   action: (prev: any, formData: FormData) => void;
-  onActionComplete?: (result: unknown) => void;
+  onActionComplete?: (result: any) => void;
   defaultValues?: Partial<z.infer<T>>;
   submitText?: string;
   submitClassname?: string;
