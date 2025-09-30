@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { lucia } from '@hctv/auth';
 import { getCookie } from 'hono/cookie';
 import { getPersonalChannel } from './utils/personalChannel.js';
-import { getRedisConnection, prisma, type User } from '@hctv/db';
+import { getRedisConnection, prisma, type BotAccount, type BotApiKey, type User } from '@hctv/db';
 import uFuzzy from '@leeoniya/ufuzzy';
 import { randomString } from './utils/randomString.js';
 
@@ -29,71 +29,92 @@ app.get('/up', async (c) => {
 app.get(
   '/ws/:username',
   upgradeWebSocket((c) => ({
-    // https://hono.dev/helpers/websocket
     async onOpen(evt, ws) {
       const token = getCookie(c, 'auth_session');
       const grant = c.req.query('grant');
-      console.log({
-        token,
-        grant,
-      })
+      const authHeader = c.req.header('Authorization');
 
-      // random checks that actually make sense if you read trust me bro
-      if (!token && !grant) {
-        ws.close();
-        return;
-      }
-      if (!token && grant === 'null') {
+      if (!token && (!grant || grant === 'null') && !authHeader) {
         ws.close();
         return;
       }
 
-      let user: User | null = null
+      let chatUser: ChatUser | null = null;
+      let personalChannel: any = null;
+
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const apiKey = authHeader.substring(7);
+        const botAccount = await prisma.botApiKey.findUnique({
+          where: { key: apiKey },
+          include: { botAccount: true }
+        });
+
+        if (botAccount) {
+          chatUser = {
+            id: botAccount.botAccount.id,
+            username: botAccount.botAccount.slug,
+            pfpUrl: botAccount.botAccount.pfpUrl,
+            displayName: botAccount.botAccount.displayName,
+            isBot: true
+          };
+
+          personalChannel = {
+            id: botAccount.botAccount.id,
+            name: botAccount.botAccount.slug
+          };
+        }
+      }
+
+      if (!chatUser && token) {
+        const session = await lucia.validateSession(token);
+        if (session.user) {
+          const userChannel = await getPersonalChannel(session.user.id);
+          if (userChannel) {
+            chatUser = {
+              id: session.user.id,
+              username: userChannel.name,
+              pfpUrl: session.user.pfpUrl,
+              isBot: false
+            };
+            personalChannel = userChannel;
+          }
+        }
+      }
+
       const dbGrant = await prisma.channel.findFirst({
-        where: {
-          obsChatGrantToken: grant,
-        }
+        where: { obsChatGrantToken: grant }
       });
-      if (token) {
-        user = (await lucia.validateSession(token)).user;
-        const personalChannel = await getPersonalChannel(user!.id);
-        if (!personalChannel) {
-          ws.close();
-          return;
-        }
-        ws.personalChannel = personalChannel;
-      }
-      if (!user && !dbGrant) {
+
+      if (!chatUser && !dbGrant) {
         ws.close();
         return;
       }
 
       const { username } = c.req.param();
-      if (dbGrant && dbGrant?.name !== username) {
+      if (dbGrant && dbGrant.name !== username) {
         ws.close();
         return;
       }
+
       ws.targetUsername = username;
-      ws.user = user;
+      ws.chatUser = chatUser;
+      ws.personalChannel = personalChannel;
       ws.viewerId = randomString(10);
+      
       if (ws.raw) {
         ws.raw.targetUsername = username;
-        // @ts-ignore
-        ws.raw.user = user;
-        ws.raw.personalChannel = ws.personalChannel;
+        ws.raw.chatUser = chatUser;
+        ws.raw.personalChannel = personalChannel;
       }
 
-      const redis = getRedisConnection();
       const channelKey = `chat:history:${username}`;
       const messages = await redis.zrange(channelKey, 0, MESSAGE_HISTORY_SIZE - 1);
 
       if (messages.length > 0) {
-        ws.send(
-          JSON.stringify({
-            type: 'history',
-            messages: messages.map((msg) => JSON.parse(msg)),
-          })
-        );
+        ws.send(JSON.stringify({
+          type: 'history',
+          messages: messages.map((msg) => JSON.parse(msg)),
+        }));
       }
     },
     async onClose(evt, ws) {
@@ -116,33 +137,34 @@ app.get(
     },
     async onMessage(evt, ws) {
       const msg = JSON.parse(evt.data.toString());
+      
       if (msg.type === 'ping') {
         await redis.setex(`viewer:${ws.targetUsername}:${ws.viewerId}`, 30, '1');
-        ws.send(
-          JSON.stringify({
-            type: 'pong',
-          })
-        );
+        ws.send(JSON.stringify({ type: 'pong' }));
         return;
       }
+
       if (msg.type === 'message') {
-        if (!ws.personalChannel) return;
+        if (!ws.chatUser || !ws.personalChannel) return;
+        
         const message = (msg.message as string).trim();
         const msgObj = {
           user: {
-            id: ws.user.id,
-            username: ws.personalChannel.name,
-            pfpUrl: ws.user.pfpUrl,
+            id: ws.chatUser.id,
+            username: ws.chatUser.username,
+            pfpUrl: ws.chatUser.pfpUrl,
+            displayName: ws.chatUser.displayName,
+            isBot: ws.chatUser.isBot || false
           },
           message,
         };
         
-        // Save to Redis without the type field to maintain compatibility
         const redisObj = {
           user: msgObj.user,  
           message: msgObj.message,
           type: 'message',
         };
+        
         const redisStr = JSON.stringify(redisObj);
         const msgStr = JSON.stringify(msgObj);
 
@@ -238,3 +260,11 @@ const server = serve(
   }
 );
 injectWebSocket(server);
+
+interface ChatUser {
+  id: string;
+  username: string;
+  pfpUrl: string;
+  displayName?: string;
+  isBot: boolean;
+}

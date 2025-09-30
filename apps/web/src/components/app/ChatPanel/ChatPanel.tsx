@@ -313,6 +313,8 @@ export interface User {
   id: string;
   username: string;
   pfpUrl: string;
+  isBot: boolean;
+  displayName?: string;
 }
 
 interface Props {
