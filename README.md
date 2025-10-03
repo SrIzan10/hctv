@@ -1,6 +1,6 @@
 # hackclub.tv
 
-This is the source code for [hackclub.tv (hctv.srizan.dev)](https://hctv.srizan.dev), a livestreaming website for hackclubbers.
+This is the source code for [hackclub.tv (hackclub.tv)](https://hackclub.tv), a livestreaming website for hackclubbers.
 
 Development has been ongoing for a few months, and the site is now live! There are some half-baked features, but I'm all ears for feedback.
 

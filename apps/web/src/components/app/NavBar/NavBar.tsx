@@ -58,7 +58,7 @@ export default function Navbar(props: Props) {
                     <DropdownMenuItem className="cursor-pointer">Bot accounts</DropdownMenuItem>
                   </Link>
                   <DropdownMenuSeparator />
-                  <Link href={'https://docs.hctv.srizan.dev'} target="_blank" rel="noreferrer">
+                  <Link href={'https://docs.hackclub.tv'} target="_blank" rel="noreferrer">
                     <DropdownMenuItem className="cursor-pointer">API Docs</DropdownMenuItem>
                   </Link>
                   <Link href={'https://github.com/SrIzan10/hctv'} target="_blank" rel="noreferrer">

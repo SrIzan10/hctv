@@ -649,7 +649,7 @@ export default function ChannelSettingsClient({
                     <div className="relative flex-1">
                       <input
                         type={keyVisible ? 'text' : 'password'}
-                        value={`https://hctv.srizan.dev/chat/${channel.name}?grant=${channel.obsChatGrantToken}`}
+                        value={`https://hackclub.tv/chat/${channel.name}?grant=${channel.obsChatGrantToken}`}
                         readOnly
                         className="w-full px-3 py-2 border rounded-md bg-mantle font-mono text-sm"
                       />

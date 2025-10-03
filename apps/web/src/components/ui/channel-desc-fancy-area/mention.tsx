@@ -37,7 +37,7 @@ export function Mention({ children, handle }: Props) {
   }
 
   const fallback = handle.substring(0, 2).toUpperCase();
-  const url = `https://hctv.srizan.dev/${handle}`;
+  const url = `https://hackclub.tv/${handle}`;
 
   return (
     <HoverCard>
