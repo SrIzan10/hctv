@@ -54,7 +54,12 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=installer /tmp/commit_hash /tmp/commit_hash
 RUN COMMIT_VALUE=$(cat /tmp/commit_hash 2>/dev/null || echo "unknown") && \
     echo "#!/bin/sh" > /usr/local/bin/start.sh && \
+    echo "set -e" >> /usr/local/bin/start.sh && \
+    echo "echo 'Running database migrations...'" >> /usr/local/bin/start.sh && \
+    echo "cd /app/packages/db && npx prisma migrate deploy" >> /usr/local/bin/start.sh && \
+    echo "cd /app" >> /usr/local/bin/start.sh && \
     echo "export commit=$COMMIT_VALUE" >> /usr/local/bin/start.sh && \
+    echo "echo 'Starting Next.js application...'" >> /usr/local/bin/start.sh && \
     echo "exec node apps/web/server.js" >> /usr/local/bin/start.sh && \
     chmod +x /usr/local/bin/start.sh
 
