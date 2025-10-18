@@ -46,17 +46,21 @@ WORKDIR /app
 
 RUN apk add --no-cache ffmpeg vips vips-dev
 
-# Don't run production as root
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Get the commit hash from the installer stage and create a startup script
+# Copy Prisma files for migrations
+COPY --from=installer --chown=nextjs:nodejs /app/packages/db/prisma ./packages/db/prisma
+COPY --from=installer --chown=nextjs:nodejs /app/packages/db/generated ./packages/db/generated
+COPY --from=installer --chown=nextjs:nodejs /app/packages/db/package.json ./packages/db/package.json
+COPY --from=installer --chown=nextjs:nodejs /app/node_modules ./node_modules
+
 COPY --from=installer /tmp/commit_hash /tmp/commit_hash
 RUN COMMIT_VALUE=$(cat /tmp/commit_hash 2>/dev/null || echo "unknown") && \
     echo "#!/bin/sh" > /usr/local/bin/start.sh && \
     echo "set -e" >> /usr/local/bin/start.sh && \
     echo "echo 'Running database migrations...'" >> /usr/local/bin/start.sh && \
-    echo "cd /app/packages/db && npx prisma migrate deploy" >> /usr/local/bin/start.sh && \
+    echo "npx prisma migrate deploy --schema=/app/packages/db/prisma/schema.prisma" >> /usr/local/bin/start.sh && \
     echo "cd /app" >> /usr/local/bin/start.sh && \
     echo "export commit=$COMMIT_VALUE" >> /usr/local/bin/start.sh && \
     echo "echo 'Starting Next.js application...'" >> /usr/local/bin/start.sh && \
