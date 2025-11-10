@@ -1,4 +1,4 @@
-FROM alpine:3.19 as builder
+FROM alpine:3.19 AS builder
 
 RUN apk add --no-cache \
     build-base \
@@ -37,20 +37,8 @@ RUN mkdir -p /etc/nginx/templates
 
 EXPOSE 80 1935 8888
 
-# Create an entrypoint script to handle environment variable substitution
-RUN echo '#!/bin/sh \n\
-# Replace environment variables in configuration templates \n\
-for template in /etc/nginx/templates/*.conf.template; do \n\
-  if [ -f "$template" ]; then \n\
-    output_file="/usr/local/nginx/conf/$(basename $template .template)" \n\
-    echo "Processing template: $template -> $output_file" \n\
-    envsubst "$(env | awk -F= "{printf \\\"\\\$%s \\\",\\\$1}")" < $template > $output_file \n\
-  fi \n\
-done \n\
-\n\
-# Start Nginx \n\
-exec "$@"' > /docker-entrypoint.sh && \
-chmod +x /docker-entrypoint.sh
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["/usr/local/nginx/sbin/nginx", "-g", "daemon off;"]

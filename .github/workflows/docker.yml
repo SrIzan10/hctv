@@ -98,22 +98,3 @@ jobs:
           secrets: |
             TURBO_TOKEN=${{ secrets.TURBO_TOKEN }}
             TURBO_TEAM=${{ secrets.TURBO_TEAM }}
-  deploy:
-    name: Deploy to server
-    runs-on: ubuntu-latest
-    needs: [frontend, chat]
-    steps:
-      # source https://github.com/taciturnaxolotl/cachet/blob/main/.github/workflows/deploy.yaml
-      - name: Deploy with Docker
-        uses: appleboy/ssh-action@v1
-        with:
-          host: hackclub.app
-          username: srizan
-          key: ${{ secrets.SSH_KEY }}
-          port: 22
-          script: |
-            cd ~/compose/hctv
-            docker compose pull
-            docker compose up -d --remove-orphans
-            # for some reason, without the restart, the rtmp container stops working
-            docker compose restart
