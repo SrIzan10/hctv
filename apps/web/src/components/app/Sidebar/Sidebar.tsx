@@ -83,7 +83,7 @@ function StreamerItem({ streamer }: { streamer: StreamInfoResponse[0] }) {
       }}>
         <div className="relative">
           <Avatar className="h-9 w-9">
-            <AvatarImage src={streamer.channel.pfpUrl} alt={streamer.username} />
+            <AvatarImage src={streamer.channel.pfpUrl} alt={streamer.username} loading='lazy' />
             <AvatarFallback>{streamer.username}</AvatarFallback>
           </Avatar>
           {streamer.isLive && (
