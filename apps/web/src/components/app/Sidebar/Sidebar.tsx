@@ -18,6 +18,7 @@ import { StreamInfoResponse, useStreams } from '@/lib/providers/StreamInfoProvid
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAllChannels } from '@/lib/hooks/useUserList';
+import Image from 'next/image';
 
 export default function Sidebar({ ...props }: React.ComponentProps<typeof UISidebar>) {
   const { channels: stream, isLoading } = useAllChannels(5000);
@@ -83,7 +84,17 @@ function StreamerItem({ streamer }: { streamer: StreamInfoResponse[0] }) {
       }}>
         <div className="relative">
           <Avatar className="h-9 w-9">
-            <AvatarImage src={streamer.channel.pfpUrl} alt={streamer.username} loading='lazy' />
+            <AvatarImage src={streamer.channel.pfpUrl} alt={streamer.username} asChild>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={streamer.channel.pfpUrl}
+                alt={streamer.username}
+                width={36}
+                height={36}
+                className="rounded-full"
+                loading="lazy"
+              />
+            </AvatarImage>
             <AvatarFallback>{streamer.username}</AvatarFallback>
           </Avatar>
           {streamer.isLive && (
