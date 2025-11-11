@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar } from '@/components/ui/avatar';
 import {
   Sidebar as UISidebar,
   SidebarContent,
@@ -18,7 +18,6 @@ import { StreamInfoResponse, useStreams } from '@/lib/providers/StreamInfoProvid
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAllChannels } from '@/lib/hooks/useUserList';
-import Image from 'next/image';
 
 export default function Sidebar({ ...props }: React.ComponentProps<typeof UISidebar>) {
   const { channels: stream, isLoading } = useAllChannels(5000);
@@ -84,18 +83,15 @@ function StreamerItem({ streamer }: { streamer: StreamInfoResponse[0] }) {
       }}>
         <div className="relative">
           <Avatar className="h-9 w-9">
-            <AvatarImage src={streamer.channel.pfpUrl} alt={streamer.username} asChild>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={streamer.channel.pfpUrl}
-                alt={streamer.username}
-                width={36}
-                height={36}
-                className="rounded-full"
-                loading="lazy"
-              />
-            </AvatarImage>
-            <AvatarFallback>{streamer.username}</AvatarFallback>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={streamer.channel.pfpUrl}
+              alt={streamer.username}
+              width={36}
+              height={36}
+              className="rounded-full h-9 w-9 object-cover"
+              loading="lazy"
+            />
           </Avatar>
           {streamer.isLive && (
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-black" />
