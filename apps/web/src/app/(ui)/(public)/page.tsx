@@ -42,7 +42,8 @@ export default async function Home() {
             <Card className="overflow-hidden hover:shadow-lg transition-shadow">
               <CardContent className="p-0">
                 <div className="relative">
-                  <Image
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src={`/api/stream/thumb/${stream.channel.name}`}
                     width={512}
                     height={512}
