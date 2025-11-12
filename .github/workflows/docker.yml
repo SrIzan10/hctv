@@ -98,3 +98,11 @@ jobs:
           secrets: |
             TURBO_TOKEN=${{ secrets.TURBO_TOKEN }}
             TURBO_TEAM=${{ secrets.TURBO_TEAM }}
+  deploy:
+    name: Deploy to Coolify
+    runs-on: ubuntu-latest
+    needs: [frontend, chat]
+    steps:
+      - name: Send coolify redeploy webhook
+        run: |
+          curl -X POST https://coolify.srizan.dev/api/v1/deploy?uuid=${{ secrets.COOLIFY_APP_UUID }}&force=true -H "Authorization: Bearer ${{ secrets.COOLIFY_API_KEY }}"
