@@ -31,10 +31,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 # Get the commit hash from the builder stage
 COPY --from=builder /tmp/commit_hash /tmp/commit_hash
-# Read commit hash and set as build arg
-ARG COMMIT_HASH_FILE=/tmp/commit_hash
-RUN COMMIT_HASH=$(cat /tmp/commit_hash 2>/dev/null || echo "unknown") && \
-    echo "COMMIT_HASH=$COMMIT_HASH" > /tmp/build_env
 WORKDIR /app
 
 # First install the dependencies (as they change less often)
@@ -43,9 +39,9 @@ RUN yarn install --frozen-lockfile
 
 COPY --from=builder /app/out/full/ .
 RUN --mount=type=secret,id=TURBO_TOKEN --mount=type=secret,id=TURBO_TEAM \
-    . /tmp/build_env && \
-    export commit=$COMMIT_HASH && \
-    TURBO_TOKEN=$(cat /run/secrets/TURBO_TOKEN) TURBO_TEAM=$(cat /run/secrets/TURBO_TEAM) yarn turbo run build --env-mode=loose
+    COMMIT=$(cat /tmp/commit_hash 2>/dev/null || echo "unknown") && \
+    TURBO_TOKEN=$(cat /run/secrets/TURBO_TOKEN) TURBO_TEAM=$(cat /run/secrets/TURBO_TEAM) \
+    commit=$COMMIT yarn turbo run build --env-mode=loose
  
 FROM base AS runner
 WORKDIR /app
