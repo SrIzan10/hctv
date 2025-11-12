@@ -1,7 +1,7 @@
 import { User } from './ChatPanel';
 import React from 'react';
 import Image from 'next/image';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Bot } from 'lucide-react';
 
 export function Message({ user, message, type, emojiMap }: MessageProps) {
@@ -48,24 +48,26 @@ export function EmojiRenderer({ text, emojiMap }: EmojiRendererProps) {
 
           if (emojiUrl) {
             return (
-              <Tooltip key={index} delayDuration={250}>
-                <TooltipTrigger>
-                  <span
-                    key={index}
-                    className="inline-block align-middle"
-                    style={{ height: '1.2em' }}
-                  >
-                    <Image
-                      src={emojiUrl}
-                      alt={part}
-                      width={20}
-                      height={20}
-                      className="inline-block"
-                    />
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>{part}</TooltipContent>
-              </Tooltip>
+              <TooltipProvider key={index}>
+                <Tooltip delayDuration={250}>
+                  <TooltipTrigger>
+                    <span
+                      key={index}
+                      className="inline-block align-middle"
+                      style={{ height: '1.2em' }}
+                    >
+                      <Image
+                        src={emojiUrl}
+                        alt={part}
+                        width={20}
+                        height={20}
+                        className="inline-block"
+                      />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>{part}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             );
           }
         }
