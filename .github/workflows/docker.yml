@@ -105,4 +105,4 @@ jobs:
     steps:
       - name: Send coolify redeploy webhook
         run: |
-          curl -X POST https://coolify.srizan.dev/api/v1/deploy?uuid=${{ secrets.COOLIFY_APP_UUID }}&force=true -H "Authorization: Bearer ${{ secrets.COOLIFY_API_KEY }}"
+          curl -X POST -H "Authorization: Bearer ${{ secrets.COOLIFY_API_KEY }}" https://coolify.srizan.dev/api/v1/deploy?uuid=${{ secrets.COOLIFY_APP_UUID }}&force=true
