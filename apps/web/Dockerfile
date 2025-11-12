@@ -1,8 +1,10 @@
-FROM node:lts-alpine AS base
+FROM node:lts-slim AS base
 
 FROM base AS builder
-RUN apk update
-RUN apk add --no-cache libc6-compat git
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 # Set working directory
 WORKDIR /app
 # Replace <your-major-version> with the major version installed in your repository. For example:
@@ -19,8 +21,14 @@ RUN turbo prune @hctv/web --docker
  
 # Add lockfile and package.json's of isolated subworkspace
 FROM base AS installer
-RUN apk update
-RUN apk add --no-cache libc6-compat git vips vips-dev python3 make g++
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    libvips-dev \
+    python3 \
+    make \
+    g++ \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 # Get the commit hash from the builder stage
 COPY --from=builder /tmp/commit_hash /tmp/commit_hash
 # Read commit hash and set as build arg
@@ -33,8 +41,6 @@ WORKDIR /app
 COPY --from=builder /app/out/json/ .
 RUN yarn install --frozen-lockfile
 
-RUN cd apps/web && yarn add sharp --platform=linuxmusl --arch=x64
-
 COPY --from=builder /app/out/full/ .
 RUN --mount=type=secret,id=TURBO_TOKEN --mount=type=secret,id=TURBO_TEAM \
     . /tmp/build_env && \
@@ -44,10 +50,13 @@ RUN --mount=type=secret,id=TURBO_TOKEN --mount=type=secret,id=TURBO_TEAM \
 FROM base AS runner
 WORKDIR /app
 
-RUN apk add --no-cache ffmpeg vips vips-dev
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    libvips42 \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN groupadd --system --gid 1001 nodejs
+RUN useradd --system --uid 1001 nextjs
 
 # Copy Prisma files for migrations
 COPY --from=installer --chown=nextjs:nodejs /app/packages/db/prisma ./packages/db/prisma
