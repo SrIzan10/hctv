@@ -13,7 +13,7 @@ export default async function ChannelSettingsPage({
   const { user } = await validateRequest();
 
   if (!user) {
-    redirect('/auth/slack');
+    redirect('/auth/hackclub');
   }
 
   const channel = await prisma.channel.findUnique({

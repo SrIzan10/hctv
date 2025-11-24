@@ -1,6 +1,6 @@
-import { slack, lucia } from '@hctv/auth';
+import { hackClub, lucia, HCID_TOKEN_URL, HCID_USER_INFO_URL } from '@hctv/auth';
 import { cookies as nextCookies } from 'next/headers';
-import { decodeIdToken, OAuth2RequestError } from 'arctic';
+import { OAuth2RequestError } from 'arctic';
 import { generateIdFromEntropySize } from 'lucia';
 import { prisma } from '@hctv/db';
 import { getRedisConnection } from '@hctv/db';
@@ -10,7 +10,7 @@ export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
 	const code = url.searchParams.get("code");
 	const state = url.searchParams.get("state");
-	const storedState = cookies.get("slack_oauth_state")?.value ?? null;
+	const storedState = cookies.get("hackclub_oauth_state")?.value ?? null;
 	if (!code || !state || !storedState || state !== storedState) {
     console.log('invalid state stuff');
 		return new Response(null, {
@@ -19,22 +19,33 @@ export async function GET(request: Request): Promise<Response> {
 	}
 
   try {
-    const tokens = await slack.validateAuthorizationCode(code);
-    const accessToken = tokens.accessToken()
-    const slackUserResponse = await fetch('https://slack.com/api/openid.connect.userInfo', {
+    const tokens = await hackClub.validateAuthorizationCode(HCID_TOKEN_URL, code, null);
+    const accessToken = tokens.accessToken();
+    const userResponse = await fetch(HCID_USER_INFO_URL, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
       },
     });
-    const slackUser: SlackUserInfo = await slackUserResponse.json();
+    const userResult: HackClubUserResponse = await userResponse.json();
+    const identity = userResult.identity;
+
+    const slackId = identity.slack_id || identity.id;
 
     const existingUser = await prisma.user.findFirst({
       where: {
-        slack_id: slackUser.sub,
+        slack_id: slackId,
       },
     });
 
     if (existingUser) {
+      // Update email if it's missing or changed
+      if (existingUser.email !== identity.primary_email) {
+        await prisma.user.update({
+          where: { id: existingUser.id },
+          data: { email: identity.primary_email },
+        });
+      }
+
       const session = await lucia.createSession(existingUser.id, {});
       const sessionCookie = lucia.createSessionCookie(session.id);
       await getRedisConnection().set(`sessions:${session.id}`, '');
@@ -52,8 +63,9 @@ export async function GET(request: Request): Promise<Response> {
     await prisma.user.create({
       data: {
         id: userId,
-        slack_id: slackUser.sub,
-        pfpUrl: `https://cachet.dunkirk.sh/users/${slackUser.sub}/r`,
+        slack_id: slackId,
+        email: identity.primary_email,
+        pfpUrl: identity.slack_id ? `https://cachet.dunkirk.sh/users/${identity.slack_id}/r` : 'https://github.com/hackclub.png',
         hasOnboarded: false,
       },
     });
@@ -83,40 +95,15 @@ export async function GET(request: Request): Promise<Response> {
   }
 }
 
-interface SlackUserInfo {
-  // OpenID Connect standard fields
-  ok: boolean;
-  sub: string;
-  email: string;
-  email_verified: boolean;
-  date_email_verified: number;
-  name: string;
-  picture: string;
-  given_name: string;
-  family_name: string;
-  locale: string;
-
-  // Slack-specific fields
-  ['https://slack.com/user_id']: string;
-  ['https://slack.com/team_id']: string;
-  ['https://slack.com/team_name']: string;
-  ['https://slack.com/team_domain']: string;
-
-  // User image URLs
-  ['https://slack.com/user_image_24']: string;
-  ['https://slack.com/user_image_32']: string;
-  ['https://slack.com/user_image_48']: string;
-  ['https://slack.com/user_image_72']: string;
-  ['https://slack.com/user_image_192']: string;
-  ['https://slack.com/user_image_512']: string;
-
-  // Team image URLs
-  ['https://slack.com/team_image_34']?: string;
-  ['https://slack.com/team_image_44']?: string;
-  ['https://slack.com/team_image_68']?: string;
-  ['https://slack.com/team_image_88']?: string;
-  ['https://slack.com/team_image_102']?: string;
-  ['https://slack.com/team_image_132']?: string;
-  ['https://slack.com/team_image_230']?: string;
-  ['https://slack.com/team_image_default']?: boolean;
+interface HackClubIdentity {
+  id: string;
+  slack_id?: string;
+  first_name: string;
+  last_name: string;
+  primary_email: string;
 }
+
+interface HackClubUserResponse {
+  identity: HackClubIdentity;
+}
+
