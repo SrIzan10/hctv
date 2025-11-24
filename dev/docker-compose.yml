@@ -50,3 +50,12 @@ services:
         /usr/local/nginx/sbin/nginx -t
 
         /usr/local/nginx/sbin/nginx -g 'daemon off;'
+  ovenmediaengine:
+      container_name: ome
+      user: "1000:1000"
+      volumes:
+          - ./ome-conf:/opt/ovenmediaengine/bin/origin_conf
+          - ./ome-logs:/var/log/ovenmediaengine
+          - /home/srizan/.local/share/mkcert:/mkcert:ro
+      network_mode: host
+      image: airensoft/ovenmediaengine:v0.19.0
