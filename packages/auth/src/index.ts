@@ -10,9 +10,9 @@ export const hackClub = new OAuth2Client(
   process.env.HCID_REDIRECT_URI!
 );
 
-export const HCID_AUTH_URL = "https://identity.hackclub.com/oauth/authorize";
-export const HCID_TOKEN_URL = "https://identity.hackclub.com/oauth/token";
-export const HCID_USER_INFO_URL = "https://identity.hackclub.com/api/v1/me";
+export const HCID_AUTH_URL = "https://account.hackclub.com/oauth/authorize";
+export const HCID_TOKEN_URL = "https://account.hackclub.com/oauth/token";
+export const HCID_USER_INFO_URL = "https://account.hackclub.com/api/v1/me";
 
 export const lucia = new Lucia(adapter, {
   sessionCookie: {
