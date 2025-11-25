@@ -6,12 +6,12 @@ use std::io::Write;
 use std::env;
 
 #[derive(Debug, Deserialize)]
-struct SlackEmojiResponse {
-  emoji: HashMap<String, String>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  #[allow(dead_code)]
-  error: Option<String>,
+struct SlackEmojiItem {
+  name: String,
+  #[serde(rename = "imageUrl")]
+  image_url: String,
 }
+
 #[derive(Debug, Deserialize)]
 struct DefaultEmojiResponse {
   emoji: HashMap<String, String>,
@@ -35,41 +35,41 @@ async fn main() {
   let mut slack_emojis = slack_request()
     .await
     .expect("Failed to fetch slack_emojis from Slack API");
-  println!("{:?} slack_emojis fetched", slack_emojis.emoji.len());
+  println!("{:?} slack_emojis fetched", slack_emojis.len());
 
   if args.len() > 1 && args[1] == "default" {
     let default_emojis = default_request()
       .await
       .expect("Failed to fetch default_emojis from GitHub");
     println!("{:?} default_emojis fetched", default_emojis.emoji.len());
-    slack_emojis.emoji.extend(default_emojis.emoji);
+    slack_emojis.extend(default_emojis.emoji);
   }
 
   let mut file = File::create("emojis.json").expect("failed to create file for some reason");
   let json_data =
-    serde_json::to_string(&slack_emojis.emoji).expect("failed to serialize emojis wtf");
+    serde_json::to_string(&slack_emojis).expect("failed to serialize emojis wtf");
   file
     .write_all(json_data.as_bytes())
     .expect("failed to write emojis to file");
   println!("saved :yay:");
 }
 
-async fn slack_request() -> Result<SlackEmojiResponse, Box<dyn std::error::Error>> {
+async fn slack_request() -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
   let client = reqwest::Client::new();
   let res = client
-    .get("https://slack.com/api/emoji.list")
-    .header(
-      "Authorization",
-      format!(
-        "Bearer {}",
-        std::env::var("SLACK_TOKEN").expect("SLACK_TOKEN not set")
-      ),
-    )
+    .get("https://cachet.dunkirk.sh/emojis")
     .send()
     .await;
 
   match res {
-    Ok(response) => Ok(response.json().await?),
+    Ok(response) => {
+      let items: Vec<SlackEmojiItem> = response.json().await?;
+      let map: HashMap<String, String> = items
+        .into_iter()
+        .map(|item| (item.name, item.image_url))
+        .collect();
+      Ok(map)
+    }
     Err(err) => {
       eprintln!("Error: {:?}", err);
       Err(Box::new(err))

@@ -1,10 +1,18 @@
 import { PrismaAdapter } from '@lucia-auth/adapter-prisma';
 import { Lucia } from 'lucia';
 import { prisma } from '@hctv/db';
-import { Slack } from 'arctic';
+import { OAuth2Client } from 'arctic';
 
 const adapter = new PrismaAdapter(prisma.session, prisma.user);
-export const slack = new Slack(process.env.SLACK_ID!, process.env.SLACK_SECRET!, process.env.SLACK_REDIRECT_URI!);
+export const hackClub = new OAuth2Client(
+  process.env.HCID_CLIENT!,
+  process.env.HCID_SECRET!,
+  process.env.HCID_REDIRECT_URI!
+);
+
+export const HCID_AUTH_URL = "https://account.hackclub.com/oauth/authorize";
+export const HCID_TOKEN_URL = "https://account.hackclub.com/oauth/token";
+export const HCID_USER_INFO_URL = "https://account.hackclub.com/api/v1/me";
 
 export const lucia = new Lucia(adapter, {
   sessionCookie: {
@@ -19,6 +27,7 @@ export const lucia = new Lucia(adapter, {
   getUserAttributes: (attributes) => {
     return {
       slack_id: attributes.slack_id,
+      email: attributes.email,
       pfpUrl: attributes.pfpUrl,
       hasOnboarded: attributes.hasOnboarded,
       personalChannelId: attributes.personalChannelId,
@@ -35,6 +44,7 @@ declare module 'lucia' {
 
 interface DatabaseUserAttributes {
   slack_id: string;
+  email: string | null;
   pfpUrl: string;
   hasOnboarded: boolean;
   personalChannelId: string | null;

@@ -1,12 +1,12 @@
 import { generateState } from "arctic";
-import { slack } from '@hctv/auth';
+import { hackClub, HCID_AUTH_URL } from '@hctv/auth';
 import { cookies } from "next/headers";
 
 export async function GET(): Promise<Response> {
 	const state = generateState();
-	const url = slack.createAuthorizationURL(state, ['openid', 'profile']);
+	const url = hackClub.createAuthorizationURL(HCID_AUTH_URL, state, ['slack_id', 'verification_status', 'email']);
 
-	(await cookies()).set("slack_oauth_state", state, {
+	(await cookies()).set("hackclub_oauth_state", state, {
 		path: "/",
 		secure: process.env.NODE_ENV === "production",
 		httpOnly: true,

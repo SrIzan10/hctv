@@ -97,7 +97,7 @@ export default function Navbar(props: Props) {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Link href="/auth/slack">
+            <Link href="/auth/hackclub">
               <Button variant="outline" size="sm" className="gap-1 md:gap-2 text-xs md:text-sm">
                 <Slack className="w-3 h-3 md:w-4 md:h-4" />
                 <span className="hidden sm:inline">Sign in</span>
