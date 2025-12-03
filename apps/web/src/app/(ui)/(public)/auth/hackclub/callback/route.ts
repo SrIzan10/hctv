@@ -29,7 +29,12 @@ export async function GET(request: Request): Promise<Response> {
     const userResult: HackClubUserResponse = await userResponse.json();
     const identity = userResult.identity;
 
-    const slackId = identity.slack_id || identity.id;
+    const slackId = identity.slack_id;
+    if (!slackId) {
+      return new Response("Please make sure to have a Slack account before continuing.", {
+        status: 400,
+      });
+    }
 
     const existingUser = await prisma.user.findFirst({
       where: {
