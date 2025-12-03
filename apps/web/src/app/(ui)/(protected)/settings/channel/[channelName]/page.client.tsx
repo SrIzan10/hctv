@@ -388,7 +388,7 @@ export default function ChannelSettingsClient({
                   <p className="text-xs text-muted-foreground mb-4">
                     Need help getting started? Check out our{' '}
                     <Link
-                      href="https://gist.github.com/SrIzan10/ebd89ced6b21b016d4d389e6711a94e9" 
+                      href="https://docs.hackclub.tv/guides/start-stream/" 
                       className="text-primary hover:underline"
                       target="_blank"
                       rel="noopener noreferrer"
