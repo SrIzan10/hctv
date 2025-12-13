@@ -50,3 +50,10 @@ services:
         /usr/local/nginx/sbin/nginx -t
 
         /usr/local/nginx/sbin/nginx -g 'daemon off;'
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    ports:
+      - 8890:8890/udp
+      - 8891:8888
+    volumes:
+      - ./mediamtx.yml:/mediamtx.yml
