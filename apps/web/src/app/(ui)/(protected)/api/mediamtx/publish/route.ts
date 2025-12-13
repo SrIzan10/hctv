@@ -14,11 +14,13 @@ export async function POST(request: NextRequest) {
   console.log('Parsed data:', parsed.data);
   const { action, protocol, path, password } = parsed.data;
 
-  // if (action !== 'publish') return new Response('Action not allowed', { status: 403 });
   if (action === 'publish' && protocol !== 'srt') {
     const key = await prisma.streamKey.findFirst({
       where: {
         key: password,
+        channel: {
+          name: path,
+        }
       },
       include: {
         channel: true,

@@ -20,11 +20,17 @@ export default function StreamPlayer() {
   return (
     <MediaController className="w-full aspect-video">
       <HlsVideo
-        src={`/api/rtmp/hls/${username}.m3u8`}
+        src={`${process.env.NEXT_PUBLIC_MEDIAMTX_URL}/${username}/index.m3u8`}
         slot="media"
         crossOrigin="anonymous"
         autoplay
         config={{
+          xhrSetup: async (xhr: XMLHttpRequest, url: string) => {
+            const user = 'skibiditoilet';
+            const pass = getCookie('auth_session');
+              const credentials = btoa(`${user}:${pass}`);
+              xhr.setRequestHeader('Authorization', `Basic ${credentials}`);
+          },
           lowLatencyMode: true,
           liveSyncDurationCount: 1,
           liveMaxLatencyDurationCount: 2,
@@ -66,4 +72,11 @@ export default function StreamPlayer() {
       </MediaControlBar>
     </MediaController>
   );
+}
+
+function getCookie(name: string): string | null {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()!.split(';').shift() || null;
+  return null;
 }
