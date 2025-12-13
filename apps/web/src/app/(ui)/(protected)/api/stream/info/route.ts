@@ -51,5 +51,14 @@ export async function GET(request: NextRequest) {
     },
   });
 
+  db.forEach((obj) => {
+    if (obj.channel.personalFor) {
+      // @ts-ignore
+      delete obj.channel.personalFor.email;
+    }
+    // @ts-ignore
+    delete obj.channel.obsChatGrantToken;
+  });
+
   return Response.json(db);
 }
