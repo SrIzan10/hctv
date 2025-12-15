@@ -11,7 +11,8 @@
     "start": "next start",
     "lint": "next lint",
     "ui:add": "shadcn add",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "genMtxTypes": "bunx openapi-typescript https://github.com/bluenviron/mediamtx/raw/refs/tags/v1.15.5/api/openapi.yaml -o ./src/lib/types/mediamtx.d.ts"
   },
   "dependencies": {
     "@hctv/auth": "*",
