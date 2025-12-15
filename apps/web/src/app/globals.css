@@ -4,111 +4,125 @@
 
 @layer base {
   :root {
-    --background: 220 23.077% 94.902%;
-    --foreground: 233.793 16.022% 35.49%;
+    /* Light theme - based on your color scheme */
 
-    --muted: 222.857 15.909% 82.745%;
-    --muted-foreground: 233.333 12.796% 41.373%;
+    /* Main background and foreground */
+    --background: 350 59% 98%; /* FDF7F8 - main background */
+    --foreground: 351 34% 30%; /* 5D3A3F - main text */
 
-    --popover: 220 23.077% 94.902%;
-    --popover-foreground: 233.793 16.022% 35.49%;
+    /* Muted elements */
+    --muted: 350 40% 93%; /* F8E8EA - muted background */
+    --muted-foreground: 350 30% 45%; /* Lighter version of main text */
 
-    --card: 220 23.077% 94.902%;
-    --card-foreground: 233.793 16.022% 35.49%;
+    /* Popover and card */
+    --popover: 0 0% 100%; /* FFFFFF - popover background */
+    --popover-foreground: 351 34% 30%; /* 5D3A3F - popover text */
+    --card: 0 0% 100%; /* FFFFFF - card background */
+    --card-foreground: 351 34% 30%; /* 5D3A3F - card text */
 
-    --border: 225 13.559% 76.863%;
-    --input: 225 13.559% 76.863%;
+    /* Border and input */
+    --border: 350 30% 85%; /* Derived border color */
+    --input: 350 30% 85%; /* Input background */
 
-    --primary: 219.907 91.489% 53.922%;
-    --primary-foreground: 220 23.077% 94.902%;
+    /* Primary actions */
+    --primary: 350 70% 50%; /* C8394F - primary button */
+    --primary-foreground: 0 0% 100%; /* FFFFFF - text on primary */
 
-    --secondary: 222.857 15.909% 82.745%;
-    --secondary-foreground: 233.793 16.022% 35.49%;
+    /* Secondary elements */
+    --secondary: 350 40% 93%; /* F8E8EA - secondary background */
+    --secondary-foreground: 351 34% 30%; /* 5D3A3F - text on secondary */
 
-    --accent: 222.857 15.909% 82.745%;
-    --accent-foreground: 233.793 16.022% 35.49%;
+    /* Accent elements */
+    --accent: 350 70% 40%; /* A12D3E - accent color */
+    --accent-foreground: 0 0% 100%; /* FFFFFF - text on accent */
 
-    --destructive: 347.077 86.667% 44.118%;
-    --destructive-foreground: 220 21.951% 91.961%;
+    /* Destructive actions */
+    --destructive: 350 70% 55%; /* D63C56 - error/destroy */
+    --destructive-foreground: 0 0% 100%; /* FFFFFF - text on destructive */
 
-    --ring: 233.793 16.022% 35.49%;
+    /* Focus ring */
+    --ring: 350 70% 50%; /* C8394F - focus ring */
 
-    --surface-1: 225 14% 77%;
-    --surface-2: 227 12% 71%;
+    /* Surface colors */
+    --surface-1: 350 40% 93%; /* F8E8EA - surface 1 */
+    --surface-2: 350 35% 88%; /* Derived surface 2 */
 
-    --mantle: 220 22% 92%;
+    /* Mantle */
+    --mantle: 350 59% 98%; /* FDF7F8 - mantle */
 
+    /* Radius */
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Sidebar specific */
+    --sidebar-background: 350 59% 98%; /* FDF7F8 - sidebar bg */
+    --sidebar-foreground: 351 34% 30%; /* 5D3A3F - sidebar text */
+    --sidebar-primary: 350 70% 50%; /* C8394F - sidebar primary */
+    --sidebar-primary-foreground: 0 0% 100%; /* FFFFFF - text on sidebar primary */
+    --sidebar-accent: 350 40% 93%; /* F8E8EA - sidebar accent */
+    --sidebar-accent-foreground: 351 34% 30%; /* 5D3A3F - text on sidebar accent */
+    --sidebar-border: 350 30% 85%; /* Derived border */
+    --sidebar-ring: 350 70% 50%; /* C8394F - sidebar focus ring */
   }
 
   .dark {
-    --background: 240 21.053% 14.902%;
-    --foreground: 226.154 63.934% 88.039%;
+    /* Dark theme - based on your color scheme */
 
-    --muted: 240 12% 19%;
-    --muted-foreground: 240 12% 69%;
+    /* Main background and foreground */
+    --background: 350 20% 15%; /* 2A1F21 - main background */
+    --foreground: 350 30% 92%; /* F5E6E8 - main text */
 
-    --popover: 240 21.053% 14.902%;
-    --popover-foreground: 226.154 63.934% 88.039%;
+    /* Muted elements */
+    --muted: 350 20% 25%; /* 4A2D31 - muted background */
+    --muted-foreground: 350 30% 75%; /* Lighter version of main text */
 
-    --card: 240 21.053% 14.902%;
-    --card-foreground: 226.154 63.934% 88.039%;
+    /* Popover and card */
+    --popover: 350 20% 15%; /* 2A1F21 - popover background */
+    --popover-foreground: 350 30% 92%; /* F5E6E8 - popover text */
+    --card: 350 20% 15%; /* 2A1F21 - card background */
+    --card-foreground: 350 30% 92%; /* F5E6E8 - card text */
 
-    --border: 234.286 13.208% 31.176%;
-    --input: 234.286 13.208% 31.176%;
+    /* Border and input */
+    --border: 350 20% 35%; /* Derived border color */
+    --input: 350 20% 35%; /* Input background */
 
-    --primary: 267 84% 81%;
-    --primary-foreground: 267 84% 21%;
+    /* Primary actions */
+    --primary: 350 100% 75%; /* FF7A8A - primary button */
+    --primary-foreground: 350 20% 15%; /* 2A1F21 - text on primary */
 
-    --secondary: 236.842 16.239% 22.941%;
-    --secondary-foreground: 226.154 63.934% 88.039%;
+    /* Secondary elements */
+    --secondary: 350 20% 25%; /* 4A2D31 - secondary background */
+    --secondary-foreground: 350 30% 92%; /* F5E6E8 - text on secondary */
 
-    --accent: 236.842 16.239% 22.941%;
-    --accent-foreground: 226.154 63.934% 88.039%;
+    /* Accent elements */
+    --accent: 350 100% 80%; /* FF9AAA - accent color */
+    --accent-foreground: 350 20% 15%; /* 2A1F21 - text on accent */
 
-    --destructive: 343.269 81.25% 74.902%;
-    --destructive-foreground: 240 21.311% 11.961%;
+    /* Destructive actions */
+    --destructive: 350 100% 70%; /* FF6B7D - error/destroy */
+    --destructive-foreground: 350 20% 15%; /* 2A1F21 - text on destructive */
 
-    --ring: 226.154 63.934% 88.039%;
+    /* Focus ring */
+    --ring: 350 100% 75%; /* FF7A8A - focus ring */
 
-    --surface-1: 234 13% 31%;
-    --surface-2: 233 12% 39%;
+    /* Surface colors */
+    --surface-1: 350 20% 25%; /* 4A2D31 - surface 1 */
+    --surface-2: 350 20% 35%; /* Derived surface 2 */
 
-    --mantle: 240 21.311% 11.961%;
+    /* Mantle */
+    --mantle: 350 20% 12%; /* 1F1617 - mantle */
 
+    /* Radius */
     --radius: 0.5rem;
 
-    --sidebar-background: 240 21.311% 11.961%;     /* crust - matches mantle var */
-    
-    --sidebar-foreground: 226.154 63.934% 88.039%; /* matches main foreground */
-    
-    --sidebar-primary: 217.168 91.87% 75.882%;     /* matches primary */
-    
-    --sidebar-primary-foreground: 240 21.053% 14.902%; /* matches primary-foreground */
-    
-    --sidebar-accent: 236.842 16.239% 22.941%;     /* matches accent */
-    
-    --sidebar-accent-foreground: 226.154 63.934% 88.039%; /* matches accent-foreground */
-    
-    --sidebar-border: 234.286 13.208% 31.176%;     /* matches border */
-    
-    --sidebar-ring: 217.168 91.87% 75.882%;        /* matches primary */
+    /* Sidebar specific */
+    --sidebar-background: 350 20% 12%; /* 1F1617 - sidebar bg */
+    --sidebar-foreground: 350 30% 92%; /* F5E6E8 - sidebar text */
+    --sidebar-primary: 350 100% 75%; /* FF7A8A - sidebar primary */
+    --sidebar-primary-foreground: 350 20% 15%; /* 2A1F21 - text on sidebar primary */
+    --sidebar-accent: 350 20% 25%; /* 4A2D31 - sidebar accent */
+    --sidebar-accent-foreground: 350 30% 92%; /* F5E6E8 - text on sidebar accent */
+    --sidebar-border: 350 20% 35%; /* Derived border */
+    --sidebar-ring: 350 100% 75%; /* FF7A8A - sidebar focus ring */
   }
 }
 
@@ -119,17 +133,20 @@
   body {
     @apply bg-background text-foreground;
   }
-
+  
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 }
+
 h1 {
   @apply scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl;
 }
+
 h2 {
   @apply scroll-m-20 pb-2 text-3xl font-semibold tracking-tight first:mt-0;
 }
 
+/* Media controller styles remain unchanged */
 media-controller {
   --media-primary-color: #ffffff;
   --media-secondary-color: hsla(var(--background), 0.85);
@@ -161,7 +178,7 @@ media-time-range {
 }
 
 media-time-display {
-  --media-text-color: #ffffff; 
+  --media-text-color: #ffffff;
 }
 
 media-controller::part(centered-layer) {
