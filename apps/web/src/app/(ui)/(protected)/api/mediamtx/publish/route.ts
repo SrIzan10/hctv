@@ -1,4 +1,4 @@
-import { prisma } from '@hctv/db';
+import { prisma, getRedisConnection } from '@hctv/db';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 
@@ -8,29 +8,35 @@ export async function POST(request: NextRequest) {
   const parsed = schema.safeParse(body);
 
   if (!parsed.success) {
-    console.log('Parsing error:', parsed.error);
-    return new Response('Invalid request', { status: 400 });
+    return new Response('invalid request', { status: 400 });
   }
-  console.log('Parsed data:', parsed.data);
   const { action, protocol, path, password } = parsed.data;
+  if (action === 'publish' && protocol === 'srt') {
+    const redis = getRedisConnection();
+    const channelKey = await redis.get(`streamKey:${path}`)
 
-  if (action === 'publish' && protocol !== 'srt') {
-    const key = await prisma.streamKey.findFirst({
-      where: {
-        key: password,
-        channel: {
-          name: path,
-        }
-      },
-      include: {
-        channel: true,
-      },
-    });
+    if (channelKey) {
+      if (channelKey !== password) {
+        return new Response('invalid stream key', { status: 403 });
+      }
+      return new Response('youre in yay', { status: 200 });
+    } else {
+      const key = await prisma.streamKey.findFirst({
+        where: {
+          key: password,
+          channel: {
+            name: path,
+          }
+        },
+        include: {
+          channel: true,
+        },
+      });
 
-    if (!key) {
-      return new Response('Invalid stream key', { status: 403 });
+      if (!key) {
+        return new Response('invalid stream key', { status: 403 });
+      }
     }
-    console.log('Stream key valid for channel:', key.channel.name);
   }
   
   return new Response('Request processed', { status: 200 });

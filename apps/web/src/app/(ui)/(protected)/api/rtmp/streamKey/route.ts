@@ -1,5 +1,5 @@
 import { validateRequest } from '@/lib/auth/validate';
-import { prisma } from '@hctv/db';
+import { prisma, getRedisConnection } from '@hctv/db';
 import { NextRequest } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -46,6 +46,9 @@ export async function POST(request: NextRequest) {
       channelId: channelInfo.id
     }
   })
+
+  const redis = getRedisConnection();
+  await redis.set(`streamKey:${channel}`, dbUpdate.key);
 
   return new Response(JSON.stringify({ key: dbUpdate.key }), {
     status: 200,

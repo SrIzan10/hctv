@@ -56,6 +56,9 @@ const nextConfig = {
       },
     ];
   },
+  logging: {
+    incomingRequests: false,
+  },
 };
 
 export default withSentryConfig(nextConfig, {
