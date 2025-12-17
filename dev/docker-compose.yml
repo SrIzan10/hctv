@@ -20,5 +20,6 @@ services:
     ports:
       - 8890:8890/udp
       - 8891:8888
+      - 9997:9997
     volumes:
       - ./mediamtx.yml:/mediamtx.yml
