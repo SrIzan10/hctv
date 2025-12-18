@@ -324,8 +324,7 @@ export async function toggleGlobalChannelNotifs(channelId: string) {
 }
 
 export async function deleteChannel(channelId: string) {
-  return { success: false, error: 'disabled atm. dm @eth0 if you want to request a deletion.' }
-  /* const { user } = await validateRequest();
+  const { user } = await validateRequest();
   if (!user) {
     return { success: false, error: 'Unauthorized' };
   }
@@ -346,7 +345,6 @@ export async function deleteChannel(channelId: string) {
     return { success: false, error: 'Only channel owners can delete channels' };
   }
 
-  // Prevent deletion of personal channels
   if (channel.personalFor) {
     return { success: false, error: 'Cannot delete personal channels' };
   }
@@ -355,7 +353,7 @@ export async function deleteChannel(channelId: string) {
     where: { id: channelId },
   });
 
-  return { success: true }; */
+  return { success: true };
 }
 
 export async function createBot(prev: any, formData: FormData) {

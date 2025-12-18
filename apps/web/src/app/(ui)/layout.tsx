@@ -49,7 +49,11 @@ export default async function RootLayout({
             <NextSSRPlugin
               routerConfig={extractRouterConfig(ourFileRouter)}
             />
-            <ConfirmDialogProvider>
+            <ConfirmDialogProvider defaultOptions={{
+              cancelButton: {
+                variant: 'outline',
+              },
+            }}>
               <NuqsAdapter>
                 <SidebarProvider defaultOpen={defaultOpen}>
                   <StreamInfoProvider>

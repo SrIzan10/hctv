@@ -52,6 +52,7 @@ import { useOwnedChannels } from '@/lib/hooks/useUserList';
 import { ChannelSelect } from '@/components/app/ChannelSelect/ChannelSelect';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useConfirm } from '@omit/react-confirm-dialog';
 
 interface ChannelSettingsClientProps {
   channel: Channel & {
@@ -76,9 +77,13 @@ export default function ChannelSettingsClient({
   currentUser,
   isPersonal,
 }: ChannelSettingsClientProps) {
+  const confirm = useConfirm();
   const [streamKey, setStreamKey] = useState(channel.streamKey?.key || '');
   const [keyVisible, setKeyVisible] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState({
+    streamKey: false,
+    streamUrl: false,
+  });
   const [selTab, setSelTab] = useQueryState('tab', parseAsString.withDefault('general'));
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -100,9 +105,9 @@ export default function ChannelSettingsClient({
   const copyStreamKey = async () => {
     if (streamKey) {
       await navigator.clipboard.writeText(streamKey);
-      setCopied(true);
+      setCopied({ ...copied, streamKey: true });
       toast.success('Stream key copied to clipboard');
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied({ ...copied, streamKey: false }), 2000);
     }
   };
 
@@ -138,9 +143,9 @@ export default function ChannelSettingsClient({
     const url = generateStreamUrl();
     if (url) {
       await navigator.clipboard.writeText(url);
-      setCopied(true);
+      setCopied({ ...copied, streamUrl: true });
       toast.success('Stream URL copied to clipboard');
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied({ ...copied, streamUrl: false }), 2000);
     }
   };
 
@@ -355,36 +360,45 @@ export default function ChannelSettingsClient({
                 onActionComplete={handleChannelSettingsActionComplete}
               />
 
-              {false && isOwner && (
+              {isOwner && !isPersonal && (
                 <>
                   <Separator />
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-destructive">Danger Zone</h3>
-                    <Card className="border-destructive">
-                      <CardHeader>
-                        <CardTitle className="text-destructive">Delete Channel</CardTitle>
-                        <CardDescription>
+                    <div className="flex items-center justify-between p-4 border border-destructive/20 rounded-lg bg-destructive/5">
+                      <div>
+                        <p className="font-medium text-destructive">Delete Channel</p>
+                        <p className="text-sm text-muted-foreground">
                           Permanently delete this channel. This action cannot be undone.
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <Button
-                          variant="destructive"
-                          onClick={() => {
-                            if (
-                              confirm(
-                                'Are you sure you want to delete this channel? This action cannot be undone.'
-                              )
-                            ) {
-                              deleteChannel(channel.id);
+                        </p>
+                      </div>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={async () => {
+                          if (
+                            await confirm({
+                              title: 'Delete Channel',
+                              description:
+                                'Are you sure you want to delete this channel? This action cannot be undone.',
+                              confirmText: 'Delete',
+                              cancelText: 'Cancel',
+                            })
+                          ) {
+                            const result = await deleteChannel(channel.id);
+                            if (result.success) {
+                              toast.success('Channel deleted successfully');
+                              router.push('/settings/channel');
+                            } else {
+                              toast.error(result.error || 'Failed to delete channel');
                             }
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete Channel
-                        </Button>
-                      </CardContent>
-                    </Card>
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </Button>
+                    </div>
                   </div>
                 </>
               )}
@@ -428,7 +442,7 @@ export default function ChannelSettingsClient({
                         onClick={copyStreamKey}
                         disabled={!streamKey}
                       >
-                        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        {copied.streamKey ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                       </Button>
                     </div>
                   </div>
@@ -450,7 +464,7 @@ export default function ChannelSettingsClient({
                         onClick={copyStreamUrl}
                         disabled={!streamKey}
                       >
-                        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        {copied.streamUrl ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                       </Button>
                     </div>
                   </div>
@@ -579,8 +593,13 @@ export default function ChannelSettingsClient({
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => {
-                                if (confirm('Remove this manager?')) {
+                              onClick={async () => {
+                                if (await confirm({
+                                  title: 'Remove Manager',
+                                  description: `Are you sure you want to remove ${personalChannel?.name} as a manager? They will no longer be able to stream or moderate this channel.`,
+                                  confirmText: 'Remove',
+                                  cancelText: 'Cancel',
+                                })) {
                                   removeChannelManager(channel.id, manager.id);
                                 }
                               }}
