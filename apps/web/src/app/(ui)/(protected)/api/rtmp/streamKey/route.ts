@@ -1,6 +1,7 @@
 import { validateRequest } from '@/lib/auth/validate';
-import { prisma, getRedisConnection } from '@hctv/db';
+import { prisma } from '@hctv/db';
 import { NextRequest } from "next/server";
+import { regenerateStreamKey } from '@/lib/db/streamKey';
 
 export async function POST(request: NextRequest) {
   const { user } = await validateRequest();
@@ -34,23 +35,9 @@ export async function POST(request: NextRequest) {
     return new Response('Unauthorized', { status: 401 });
   }
 
-  const dbUpdate = await prisma.streamKey.upsert({
-    create: {
-      key: crypto.randomUUID(),
-      channelId: channelInfo.id
-    },
-    update: {
-      key: crypto.randomUUID()
-    },
-    where: {
-      channelId: channelInfo.id
-    }
-  })
+  const streamKey = await regenerateStreamKey(channelInfo.id, channel);
 
-  const redis = getRedisConnection();
-  await redis.set(`streamKey:${channel}`, dbUpdate.key);
-
-  return new Response(JSON.stringify({ key: dbUpdate.key }), {
+  return new Response(JSON.stringify({ key: streamKey.key }), {
     status: 200,
     headers: {
       'Content-Type': 'application/json'
