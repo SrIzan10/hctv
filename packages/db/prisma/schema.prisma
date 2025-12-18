@@ -109,7 +109,7 @@ model StreamKey {
   key String @unique
 
   channelId String  @unique
-  channel   Channel @relation(fields: [channelId], references: [id])
+  channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
 }
 
 model BotAccount {
