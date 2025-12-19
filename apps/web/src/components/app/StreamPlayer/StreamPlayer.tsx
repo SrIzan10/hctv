@@ -22,24 +22,31 @@ export default function StreamPlayer() {
   const videoRef = useRef(null);
 
   useEffect(() => {
-    if (videoRef.current && username) {
+    const video = videoRef.current;
+    if (video && username && session) {
       const user = 'skibiditoilet';
-      const credentials = btoa(`${user}:${session!.id}`);
+      const credentials = btoa(`${user}:${session.id}`);
 
       // @ts-ignore
-      videoRef.current.config = {
+      video.config = {
         xhrSetup: (xhr: XMLHttpRequest) => {
           xhr.setRequestHeader('Authorization', `Basic ${credentials}`);
-          xhr.setRequestHeader('hi', 'afjlkafbjadlkfghbjlk');
         },
         lowLatencyMode: true,
         debug: process.env.NODE_ENV === 'development',
       };
 
       // @ts-ignore
-      videoRef.current.src = `${process.env.NEXT_PUBLIC_MEDIAMTX_URL}/${username}/index.m3u8`;
+      video.src = `${process.env.NEXT_PUBLIC_MEDIAMTX_URL}/${username}/index.m3u8`;
     }
-  }, [username]);
+
+    return () => {
+      if (video) {
+        // @ts-ignore
+        video.src = '';
+      }
+    };
+  }, [username, session]);
 
   return (
     <MediaController className="w-full aspect-video">
