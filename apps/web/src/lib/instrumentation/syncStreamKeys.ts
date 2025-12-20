@@ -18,7 +18,7 @@ export default async function syncStreamKeys() {
     const pipeline = redis.pipeline();
 
     for (const key of keys) {
-      if (key.channel) {
+      if (key.channel && key.channel.name) {
         pipeline.set(`streamKey:${key.channel.name}`, key.key);
       }
     }
