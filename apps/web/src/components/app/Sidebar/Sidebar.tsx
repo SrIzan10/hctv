@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Sidebar as UISidebar,
   SidebarContent,
@@ -90,10 +89,13 @@ function StreamerItem({ streamer, isCollapsed }: { streamer: StreamInfoResponse[
       >
         <button className="flex w-full items-center gap-3">
           <div className="relative flex-shrink-0">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={streamer.channel.pfpUrl} alt={streamer.username} className="object-cover" loading='lazy' />
-              <AvatarFallback>{streamer.username[0]?.toUpperCase()}</AvatarFallback>
-            </Avatar>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={streamer.channel.pfpUrl}
+              alt={streamer.username}
+              className="h-8 w-8 rounded-full object-cover"
+              loading="lazy"
+            />
             {streamer.isLive && (
               <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3 items-center justify-center rounded-full bg-background ring-2 ring-background">
                 <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
