@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import { cookies } from 'next/headers';
 import '../globals.css';
 import Navbar from '@/components/app/NavBar/NavBar';
 import { SessionProvider } from '@/lib/providers/SessionProvider';
@@ -31,6 +32,9 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const sessionData = await validateRequest();
+  const cookieStore = await cookies();
+  const defaultOpen = cookieStore.get('sidebar:state')?.value === 'true';
+
   return (
     <html lang="en">
       <body className={cn('flex flex-col h-screen', inter.className)}>
@@ -45,9 +49,13 @@ export default async function RootLayout({
             <NextSSRPlugin
               routerConfig={extractRouterConfig(ourFileRouter)}
             />
-            <ConfirmDialogProvider>
+            <ConfirmDialogProvider defaultOptions={{
+              cancelButton: {
+                variant: 'outline',
+              },
+            }}>
               <NuqsAdapter>
-                <SidebarProvider>
+                <SidebarProvider defaultOpen={defaultOpen}>
                   <StreamInfoProvider>
                     {/* this promise is ugly but i'm lazy to fix the type errors */}
                     <Navbar editLivestream={Promise.resolve(<EditLivestream />)} />

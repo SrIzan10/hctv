@@ -2,6 +2,7 @@ import { prisma } from '@hctv/db';
 import { HttpFlv } from '../types/liveBackendJson';
 import { getNotificationQueue } from '../workers';
 import client from '../services/slackNotifier';
+import type { paths } from '../types/mediamtx.d.ts';
 
 export default async function runner() {
   // if there are no users it explodes so yeah
@@ -48,28 +49,21 @@ export async function initializeStreamInfo(channelId?: string) {
 
 export async function syncStream() {
   try {
-    const response = await fetch(`${process.env.LIVE_SERVER_URL}/stat`, {
-      headers: {
-        Authorization: process.env.STAT_AUTH!,
-      },
-    });
+    const response = await fetch(`${process.env.MEDIAMTX_API}/v3/paths/list?itemsPerPage=1000`);
 
     if (!response.ok) {
       console.error(`Failed to fetch stream stats: ${response.status} ${response.statusText}`);
       return;
     }
 
-    const data = await response.json();
-    const httpFlv = data['http-flv'] as HttpFlv;
+    type ResponseType = paths['/v3/paths/list']['get']['responses']['200']['content']['application/json'];
+    const data = await response.json() as ResponseType;
 
-    if (!httpFlv?.servers?.[0]?.applications) {
+    if (!data) {
       return;
     }
 
-    const channelLiveApp = httpFlv.servers[0].applications.find(
-      (app) => app.name === 'channel-live'
-    );
-    const activeStreams = channelLiveApp?.live?.streams || [];
+    const activeStreams = data.items!;
 
     const currentLiveStreams = await prisma.streamInfo.findMany({
       where: { isLive: true },
@@ -78,8 +72,7 @@ export async function syncStream() {
     const activeStreamMap = new Map();
     for (const stream of activeStreams) {
       activeStreamMap.set(stream.name, {
-        isLive: stream.active,
-        viewers: stream.clients.filter((c) => !c.publishing).length,
+        isLive: stream.ready,
       });
     }
 
@@ -99,7 +92,7 @@ export async function syncStream() {
     }
 
     for (const stream of activeStreams) {
-      if (stream.active) {
+      if (stream.ready) {
         const existingStream = await prisma.streamInfo.findUnique({
           where: { username: stream.name },
           include: { channel: true },

@@ -15,38 +15,11 @@ services:
       - ./redis:/data
     ports:
       - 6379:6379
-  nginx-rtmp:
-    # ports:
-    #   - 1935:1935
-    #   - 8888:8888
-    network_mode: host
-    environment:
-      UID: 1000
-      GID: 1000
-      API_AUTH: skibiditoilet
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    ports:
+      - 8890:8890/udp
+      - 8891:8888
+      - 9997:9997
     volumes:
-      - ./nginx.conf:/etc/nginx/templates/nginx.conf.template
-      - ./html:/var/www/html
-      - /dev/shm/hls:/dev/shm/hls
-    image: srizan10/flv-module
-    entrypoint:
-      - /bin/sh
-      - -c
-      - |
-        # Process the template file
-        mkdir -p /usr/local/nginx/conf
-        envsubst '$${API_AUTH}' < /etc/nginx/templates/nginx.conf.template > /usr/local/nginx/conf/nginx.conf
-
-        echo "Setting UID to $${UID} and GID to $${GID}"
-        usermod -u $${UID} nginx || echo "failed to change uid"
-        groupmod -g $${GID} nginx || echo "failed to change gid"
-
-        mkdir -p /usr/local/nginx/proxy_temp /usr/local/nginx/client_body_temp
-        chown -R nginx:nginx /usr/local/nginx
-        mkdir -p /var/www/html
-        chown -R nginx:nginx /var/www/html
-
-        echo "testing nginx config..."
-        /usr/local/nginx/sbin/nginx -t
-
-        /usr/local/nginx/sbin/nginx -g 'daemon off;'
+      - ./mediamtx.yml:/mediamtx.yml

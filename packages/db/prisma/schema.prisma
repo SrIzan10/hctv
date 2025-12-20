@@ -77,7 +77,7 @@ model StreamInfo {
   isLive    Boolean
 
   channelId String
-  channel   Channel @relation(fields: [channelId], references: [id])
+  channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
   ownedBy User   @relation(fields: [userId], references: [id])
   userId  String
@@ -109,7 +109,7 @@ model StreamKey {
   key String @unique
 
   channelId String  @unique
-  channel   Channel @relation(fields: [channelId], references: [id])
+  channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
 }
 
 model BotAccount {

@@ -19,6 +19,8 @@ import {
   Copy,
   Check,
   Wrench,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { UniversalForm } from '@/components/app/UniversalForm/UniversalForm';
 import {
@@ -50,6 +52,7 @@ import { useOwnedChannels } from '@/lib/hooks/useUserList';
 import { ChannelSelect } from '@/components/app/ChannelSelect/ChannelSelect';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useConfirm } from '@omit/react-confirm-dialog';
 
 interface ChannelSettingsClientProps {
   channel: Channel & {
@@ -74,9 +77,13 @@ export default function ChannelSettingsClient({
   currentUser,
   isPersonal,
 }: ChannelSettingsClientProps) {
+  const confirm = useConfirm();
   const [streamKey, setStreamKey] = useState(channel.streamKey?.key || '');
   const [keyVisible, setKeyVisible] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState({
+    streamKey: false,
+    streamUrl: false,
+  });
   const [selTab, setSelTab] = useQueryState('tab', parseAsString.withDefault('general'));
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -98,9 +105,9 @@ export default function ChannelSettingsClient({
   const copyStreamKey = async () => {
     if (streamKey) {
       await navigator.clipboard.writeText(streamKey);
-      setCopied(true);
+      setCopied({ ...copied, streamKey: true });
       toast.success('Stream key copied to clipboard');
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied({ ...copied, streamKey: false }), 2000);
     }
   };
 
@@ -121,6 +128,24 @@ export default function ChannelSettingsClient({
       }
     } catch (error) {
       toast.error('Failed to regenerate stream key');
+    }
+  };
+
+  const generateStreamUrl = () => {
+    if (!streamKey) {
+      toast.error('Stream key not available');
+      return '';
+    }
+    return `srt://${process.env.NEXT_PUBLIC_MEDIAMTX_INGEST_ROUTE}?streamid=publish:${channel.name}:thisusernameislongonpurposesoyoudontaccidentallyleakyourstreamkey:${streamKey}&pkt_size=1316`;
+  };
+
+  const copyStreamUrl = async () => {
+    const url = generateStreamUrl();
+    if (url) {
+      await navigator.clipboard.writeText(url);
+      setCopied({ ...copied, streamUrl: true });
+      toast.success('Stream URL copied to clipboard');
+      setTimeout(() => setCopied({ ...copied, streamUrl: false }), 2000);
     }
   };
 
@@ -335,36 +360,45 @@ export default function ChannelSettingsClient({
                 onActionComplete={handleChannelSettingsActionComplete}
               />
 
-              {false && isOwner && (
+              {isOwner && !isPersonal && (
                 <>
                   <Separator />
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-destructive">Danger Zone</h3>
-                    <Card className="border-destructive">
-                      <CardHeader>
-                        <CardTitle className="text-destructive">Delete Channel</CardTitle>
-                        <CardDescription>
+                    <div className="flex items-center justify-between p-4 border border-destructive/20 rounded-lg bg-destructive/5">
+                      <div>
+                        <p className="font-medium text-destructive">Delete Channel</p>
+                        <p className="text-sm text-muted-foreground">
                           Permanently delete this channel. This action cannot be undone.
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <Button
-                          variant="destructive"
-                          onClick={() => {
-                            if (
-                              confirm(
-                                'Are you sure you want to delete this channel? This action cannot be undone.'
-                              )
-                            ) {
-                              deleteChannel(channel.id);
+                        </p>
+                      </div>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={async () => {
+                          if (
+                            await confirm({
+                              title: 'Delete Channel',
+                              description:
+                                'Are you sure you want to delete this channel? This action cannot be undone.',
+                              confirmText: 'Delete',
+                              cancelText: 'Cancel',
+                            })
+                          ) {
+                            const result = await deleteChannel(channel.id);
+                            if (result.success) {
+                              toast.success('Channel deleted successfully');
+                              router.push('/settings/channel');
+                            } else {
+                              toast.error(result.error || 'Failed to delete channel');
                             }
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete Channel
-                        </Button>
-                      </CardContent>
-                    </Card>
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </Button>
+                    </div>
                   </div>
                 </>
               )}
@@ -379,51 +413,74 @@ export default function ChannelSettingsClient({
               <CardDescription>Manage your stream key and streaming configuration.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Stream Key</h3>
-                  <p className="text-sm text-mantle-foreground mb-4">
-                    Use this key to start streaming to your channel. Keep it secure!
-                  </p>
-                  <p className="text-xs text-muted-foreground mb-4">
-                    Need help getting started? Check out our{' '}
-                    <Link
-                      href="https://docs.hackclub.tv/guides/start-stream/" 
-                      className="text-primary hover:underline"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      streaming guide
-                    </Link>
-                    .
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <div className="relative flex-1">
-                      <input
-                        type={keyVisible ? 'text' : 'password'}
-                        value={streamKey}
-                        readOnly
-                        className="w-full px-3 py-2 border rounded-md bg-mantle font-mono text-sm"
-                      />
+              <div>
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Stream Key</label>
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <input
+                          type={keyVisible ? 'text' : 'password'}
+                          value={streamKey}
+                          readOnly
+                          className="w-full px-3 py-2 pr-10 border rounded-md bg-mantle font-mono text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setKeyVisible(!keyVisible)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {keyVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                      <Button onClick={regenerateStreamKey} variant="outline" size="smicon">
+                        <Key className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="smicon"
+                        onClick={copyStreamKey}
+                        disabled={!streamKey}
+                      >
+                        {copied.streamKey ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      </Button>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => setKeyVisible(!keyVisible)}>
-                      {keyVisible ? 'Hide' : 'Show'}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={copyStreamKey}
-                      disabled={!streamKey}
-                    >
-                      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                    </Button>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Stream URL (for OBS)</label>
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <input
+                          type="text"
+                          value={generateStreamUrl()}
+                          readOnly
+                          className="w-full px-3 py-2 border rounded-md bg-mantle font-mono text-xs"
+                        />
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="smicon"
+                        onClick={copyStreamUrl}
+                        disabled={!streamKey}
+                      >
+                        {copied.streamUrl ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    </div>
                   </div>
                 </div>
-
-                <Button onClick={regenerateStreamKey} variant="outline">
-                  <Key className="h-4 w-4 mr-2" />
-                  Regenerate Stream Key
-                </Button>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Need help getting started? Check out our{' '}
+                  <Link
+                    href="https://docs.hackclub.tv/guides/start-stream/" 
+                    className="text-primary hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    streaming guide
+                  </Link>
+                  .
+                </p>
               </div>
 
               <Separator />
@@ -536,8 +593,13 @@ export default function ChannelSettingsClient({
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => {
-                                if (confirm('Remove this manager?')) {
+                              onClick={async () => {
+                                if (await confirm({
+                                  title: 'Remove Manager',
+                                  description: `Are you sure you want to remove ${personalChannel?.name} as a manager? They will no longer be able to stream or moderate this channel.`,
+                                  confirmText: 'Remove',
+                                  cancelText: 'Cancel',
+                                })) {
                                   removeChannelManager(channel.id, manager.id);
                                 }
                               }}

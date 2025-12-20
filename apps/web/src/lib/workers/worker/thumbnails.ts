@@ -1,9 +1,9 @@
 import { Worker } from 'bullmq';
 import { getRedisConnection } from '@hctv/db';
-import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import { existsSync } from 'node:fs';
-const pExec = promisify(exec);
+import { exec as execCallback } from 'node:child_process';
+const pExec = promisify(execCallback);
 
 const globalForWorker = global as unknown as {
   thumbnailWorker: Worker | null;
@@ -26,28 +26,24 @@ export async function registerThumbnailWorker(): Promise<void> {
       try {
         // this is totally unnecessary, but i'll keep it for security purposes.
         const name = job.data.name.replace(/[^a-zA-Z0-9]/g, '_');
-        const m3u8location = `/dev/shm/hls/${name}.m3u8`;
+        const m3u8location = `${process.env.NEXT_PUBLIC_MEDIAMTX_URL}/${name}/index.m3u8`;
         const thumbDir = '/dev/shm/hctv-thumb';
         
-        if (!existsSync(m3u8location)) return;
         if (!existsSync(thumbDir)) {
           await pExec(`mkdir -p ${thumbDir}`);
         }
-        // unnecessary for development, but maybe docker volumes mess with permissions in prod
-        // also ik it's not the best practice to use 777, but it'll be fiiiiiine
-        // await pExec('chown -R 777 /dev/shm/hctv-thumb');
 
-        exec(
-          `ffmpeg -i ${m3u8location} -vframes 1 -an -y -f image2 ${thumbDir}/${name}.webp`,
-          (error) => {
-            if (error) {
-              console.error(`Error: ${error.message}`);
-              return { success: false, error: error.message };
-            }
-          }
-        );
-
-        return { success: true };
+        const header = `-headers "Authorization: Basic ${Buffer.from(`skibiditoilet:${process.env.MEDIAMTX_PUBLISH_KEY}`).toString('base64')}\r\n" `;
+        
+        try {
+          await pExec(
+            `ffmpeg ${header} -i ${m3u8location} -vframes 1 -an -y -f image2 ${thumbDir}/${name}.webp`
+          );
+          return { success: true };
+        } catch (ffmpegError) {
+          console.error(`FFmpeg error for ${name}:`, ffmpegError);
+          return { success: false, error: ffmpegError instanceof Error ? ffmpegError.message : String(ffmpegError) };
+        }
       } catch (e) {
         console.error('Slack notification failed:', e);
         // @ts-ignore e is unknown

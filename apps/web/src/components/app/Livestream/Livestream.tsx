@@ -3,7 +3,7 @@
 import StreamPlayer from '../StreamPlayer/StreamPlayer';
 import UserInfoCard from '../UserInfoCard/UserInfoCard';
 import ChatPanel from '../ChatPanel/ChatPanel';
-import type { StreamInfo, User, Channel } from '@hctv/db';
+import type { StreamInfo, Channel } from '@hctv/db';
 import { useIsMobile } from '@/lib/hooks/useMobile';
 
 export default function LiveStream(props: Props) {

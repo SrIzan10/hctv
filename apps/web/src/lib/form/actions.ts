@@ -6,11 +6,20 @@ import { prisma } from '@hctv/db';
 import zodVerify from '../zodVerify';
 import {
   createBotSchema,
-  createChannelSchema, editBotSchema, onboardSchema, streamInfoEditSchema, updateChannelSettingsSchema
+  createChannelSchema,
+  editBotSchema,
+  onboardSchema,
+  streamInfoEditSchema,
+  updateChannelSettingsSchema,
 } from './zod';
 import { initializeStreamInfo } from '../instrumentation/streamInfo';
-import { resolveFollowedChannels, resolveStreamInfo, resolveUserFromPersonalChannelName } from '../auth/resolve';
+import {
+  resolveFollowedChannels,
+  resolveStreamInfo,
+  resolveUserFromPersonalChannelName,
+} from '../auth/resolve';
 import { genIdenticonUpload } from '../utils/genIdenticonUpload';
+import { generateStreamKey } from '../db/streamKey';
 
 export async function editStreamInfo(prev: any, formData: FormData) {
   const { user } = await validateRequest();
@@ -81,8 +90,8 @@ export async function onboard(prev: any, formData: FormData) {
       ownerId: user.id,
       personalFor: { connect: { id: user.id } },
       pfpUrl: user.pfpUrl,
-    }
-  })
+    },
+  });
   await prisma.user.update({
     where: { id: user.id },
     data: {
@@ -94,13 +103,15 @@ export async function onboard(prev: any, formData: FormData) {
   });
   await initializeStreamInfo(createdChannel.id);
 
+  await generateStreamKey(createdChannel.id, createdChannel.name);
+
   if (process.env.NODE_ENV === 'production') {
     await fetch(process.env.WELCOME_WORKFLOW_URL!, {
       method: 'POST',
       body: JSON.stringify({
         username: zod.data.username,
       }),
-    })
+    });
   }
 
   return { success: true };
@@ -153,10 +164,12 @@ export async function createChannel(prev: any, formData: FormData) {
       name: zod.data.name,
       ownerId: user.id,
       pfpUrl: identicon,
-    }
+    },
   });
 
   await initializeStreamInfo(createdChannel.id);
+
+  await generateStreamKey(createdChannel.id, createdChannel.name);
 
   return { success: true, channel: createdChannel.name };
 }
@@ -166,9 +179,10 @@ export async function updateChannelSettings(prev: any, formData: FormData) {
   if (!user) {
     return { success: false, error: 'Unauthorized' };
   }
-  
+
   const zod = await zodVerify(updateChannelSettingsSchema, formData);
-  const urlRegex = /(?:http[s]?:\/\/.)?(?:www\.)?[-a-zA-Z0-9@%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)/gm;
+  const urlRegex =
+    /(?:http[s]?:\/\/.)?(?:www\.)?[-a-zA-Z0-9@%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)/gm;
   if (!zod.success) {
     return zod;
   }
@@ -189,7 +203,7 @@ export async function updateChannelSettings(prev: any, formData: FormData) {
   }
 
   const isOwner = channel.ownerId === user.id;
-  const isManager = channel.managers.some(manager => manager.id === user.id);
+  const isManager = channel.managers.some((manager) => manager.id === user.id);
 
   if (!isOwner && !isManager) {
     return { success: false, error: 'Unauthorized' };
@@ -233,7 +247,7 @@ export async function addChannelManager(channelId: string, userChannel: string) 
   }
 
   if (channel.ownerId === userChannel) {
-    return { success: false, error: 'Owner can\'t add themselves as managers' };
+    return { success: false, error: "Owner can't add themselves as managers" };
   }
 
   const userDb = await resolveUserFromPersonalChannelName(userChannel);
@@ -315,8 +329,8 @@ export async function toggleGlobalChannelNotifs(channelId: string) {
     },
     data: {
       enableNotifications: !streamInfo.enableNotifications,
-    }
-  })
+    },
+  });
 
   revalidatePath(`/settings/channel/${channel.name}`);
 
@@ -324,15 +338,14 @@ export async function toggleGlobalChannelNotifs(channelId: string) {
 }
 
 export async function deleteChannel(channelId: string) {
-  return { success: false, error: 'disabled atm. dm @eth0 if you want to request a deletion.' }
-  /* const { user } = await validateRequest();
+  const { user } = await validateRequest();
   if (!user) {
     return { success: false, error: 'Unauthorized' };
   }
 
   const channel = await prisma.channel.findUnique({
     where: { id: channelId },
-    include: { 
+    include: {
       owner: true,
       personalFor: true,
     },
@@ -346,7 +359,6 @@ export async function deleteChannel(channelId: string) {
     return { success: false, error: 'Only channel owners can delete channels' };
   }
 
-  // Prevent deletion of personal channels
   if (channel.personalFor) {
     return { success: false, error: 'Cannot delete personal channels' };
   }
@@ -355,7 +367,7 @@ export async function deleteChannel(channelId: string) {
     where: { id: channelId },
   });
 
-  return { success: true }; */
+  return { success: true };
 }
 
 export async function createBot(prev: any, formData: FormData) {
@@ -382,10 +394,10 @@ export async function createBot(prev: any, formData: FormData) {
       ownerId: user.id,
       description: zod.data.description,
       pfpUrl: await genIdenticonUpload(zod.data.slug, 'botpfp'),
-    }
+    },
   });
 
-  return { success: true, slug: createdBot.slug }
+  return { success: true, slug: createdBot.slug };
 }
 
 export async function editBot(prev: any, formData: FormData) {
@@ -422,10 +434,10 @@ export async function editBot(prev: any, formData: FormData) {
       displayName: zod.data.name,
       slug: zod.data.slug,
       description: zod.data.description,
-    }
+    },
   });
 
   revalidatePath(`/settings/bot/${updatedBot.slug}`);
 
-  return { success: true, slug: updatedBot.slug }
+  return { success: true, slug: updatedBot.slug };
 }
