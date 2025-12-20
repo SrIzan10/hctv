@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Sidebar as UISidebar,
@@ -9,23 +8,19 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { StreamInfoResponse, useStreams } from '@/lib/providers/StreamInfoProvider';
+import { StreamInfoResponse } from '@/lib/providers/StreamInfoProvider';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAllChannels } from '@/lib/hooks/useUserList';
-import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 
 export default function Sidebar({ ...props }: React.ComponentProps<typeof UISidebar>) {
   const { channels: stream, isLoading } = useAllChannels(5000);
-  const [followedExpanded, setFollowedExpanded] = React.useState(true);
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
 
@@ -96,7 +91,7 @@ function StreamerItem({ streamer, isCollapsed }: { streamer: StreamInfoResponse[
         <button className="flex w-full items-center gap-3">
           <div className="relative flex-shrink-0">
             <Avatar className="h-8 w-8">
-              <AvatarImage src={streamer.channel.pfpUrl} alt={streamer.username} className="object-cover" />
+              <AvatarImage src={streamer.channel.pfpUrl} alt={streamer.username} className="object-cover" loading='lazy' />
               <AvatarFallback>{streamer.username[0]?.toUpperCase()}</AvatarFallback>
             </Avatar>
             {streamer.isLive && (
