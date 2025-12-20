@@ -15,6 +15,7 @@ import {
 } from 'media-chrome/react';
 import HlsVideo from 'hls-video-element/react';
 import { useSession } from '@/lib/providers/SessionProvider';
+import { MEDIAMTX_URL } from '@/lib/env';
 
 export default function StreamPlayer() {
   const { username } = useParams();
@@ -37,7 +38,7 @@ export default function StreamPlayer() {
       };
 
       // @ts-ignore
-      video.src = `${process.env.NEXT_PUBLIC_MEDIAMTX_URL}/${username}/index.m3u8`;
+      video.src = `${MEDIAMTX_URL}/${username}/index.m3u8`;
     }
 
     return () => {

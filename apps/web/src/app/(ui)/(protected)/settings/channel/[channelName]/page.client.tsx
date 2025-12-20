@@ -53,6 +53,7 @@ import { ChannelSelect } from '@/components/app/ChannelSelect/ChannelSelect';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useConfirm } from '@omit/react-confirm-dialog';
+import { MEDIAMTX_INGEST_ROUTE } from '@/lib/env';
 
 interface ChannelSettingsClientProps {
   channel: Channel & {
@@ -136,7 +137,7 @@ export default function ChannelSettingsClient({
       toast.error('Stream key not available');
       return '';
     }
-    return `srt://${process.env.NEXT_PUBLIC_MEDIAMTX_INGEST_ROUTE}?streamid=publish:${channel.name}:thisusernameislongonpurposesoyoudontaccidentallyleakyourstreamkey:${streamKey}&pkt_size=1316`;
+    return `srt://${MEDIAMTX_INGEST_ROUTE}?streamid=publish:${channel.name}:thisusernameislongonpurposesoyoudontaccidentallyleakyourstreamkey:${streamKey}&pkt_size=1316`;
   };
 
   const copyStreamUrl = async () => {
