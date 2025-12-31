@@ -15,8 +15,8 @@
     "genMtxTypes": "bunx openapi-typescript https://github.com/bluenviron/mediamtx/raw/refs/tags/v1.15.5/api/openapi.yaml -o ./src/lib/types/mediamtx.d.ts"
   },
   "dependencies": {
-    "@hctv/auth": "*",
-    "@hctv/db": "*",
+    "@hctv/auth": "workspace:*",
+    "@hctv/db": "workspace:*",
     "@hookform/resolvers": "^3.9.1",
     "@lucia-auth/adapter-prisma": "^4.0.1",
     "@node-rs/argon2": "^2.0.2",

@@ -1,4 +1,7 @@
 FROM node:lts-slim AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
 
 FROM base AS builder
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -7,9 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 # Set working directory
 WORKDIR /app
-# Replace <your-major-version> with the major version installed in your repository. For example:
-# RUN yarn global add turbo@^2
-RUN yarn global add turbo@^2
+RUN pnpm add -g turbo@^2
 COPY . .
 
 # Get the git commit hash before pruning (since .git might be removed)
@@ -35,13 +36,13 @@ WORKDIR /app
 
 # First install the dependencies (as they change less often)
 COPY --from=builder /app/out/json/ .
-RUN yarn install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 COPY --from=builder /app/out/full/ .
 RUN --mount=type=secret,id=TURBO_TOKEN --mount=type=secret,id=TURBO_TEAM \
     COMMIT=$(cat /tmp/commit_hash 2>/dev/null || echo "unknown") && \
     TURBO_TOKEN=$(cat /run/secrets/TURBO_TOKEN) TURBO_TEAM=$(cat /run/secrets/TURBO_TEAM) \
-    commit=$COMMIT yarn turbo run build --env-mode=loose
+    commit=$COMMIT pnpm turbo run build --env-mode=loose
  
 FROM base AS runner
 WORKDIR /app
@@ -65,7 +66,7 @@ RUN COMMIT_VALUE=$(cat /tmp/commit_hash 2>/dev/null || echo "unknown") && \
     echo "#!/bin/sh" > /usr/local/bin/start.sh && \
     echo "set -e" >> /usr/local/bin/start.sh && \
     echo "echo 'Running database migrations...'" >> /usr/local/bin/start.sh && \
-    echo "npx prisma migrate deploy --schema=/app/packages/db/prisma/schema.prisma" >> /usr/local/bin/start.sh && \
+    echo "pnpm prisma migrate deploy --schema=/app/packages/db/prisma/schema.prisma" >> /usr/local/bin/start.sh && \
     echo "cd /app" >> /usr/local/bin/start.sh && \
     echo "export commit=$COMMIT_VALUE" >> /usr/local/bin/start.sh && \
     echo "echo 'Starting Next.js application...'" >> /usr/local/bin/start.sh && \
