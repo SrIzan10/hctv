@@ -31,6 +31,7 @@ export const lucia = new Lucia(adapter, {
       pfpUrl: attributes.pfpUrl,
       hasOnboarded: attributes.hasOnboarded,
       personalChannelId: attributes.personalChannelId,
+      isAdmin: attributes.isAdmin,
     };
   },
 });
@@ -48,4 +49,5 @@ interface DatabaseUserAttributes {
   pfpUrl: string;
   hasOnboarded: boolean;
   personalChannelId: string | null;
+  isAdmin: boolean;
 }

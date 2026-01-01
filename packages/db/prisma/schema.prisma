@@ -17,11 +17,13 @@ datasource db {
 }
 
 model User {
-  id           String  @id @default(cuid())
-  slack_id     String
-  email        String?
-  pfpUrl       String
+  id       String  @id @default(cuid())
+  slack_id String
+  email    String?
+  pfpUrl   String
+
   hasOnboarded Boolean @default(false)
+  isAdmin      Boolean @default(false)
 
   personalChannel   Channel? @relation("PersonalChannel", fields: [personalChannelId], references: [id])
   personalChannelId String?  @unique
@@ -32,6 +34,7 @@ model User {
   streams         StreamInfo[]
   followers       Follow[]     @relation("UserFollows")
   botAccounts     BotAccount[]
+  ban             UserBan?
 
   @@index([personalChannelId])
 }
@@ -55,6 +58,7 @@ model Channel {
   streamKey         StreamKey?
   obsChatGrantToken String       @unique @default(cuid())
   is247             Boolean      @default(false)
+  restriction       ChannelRestriction?
 
   @@index([ownerId])
 }
@@ -113,12 +117,12 @@ model StreamKey {
 }
 
 model BotAccount {
-  id          String   @id @default(cuid())
+  id          String      @id @default(cuid())
   displayName String
-  slug        String   @unique
-  description String   @default("A hctv bot account")
+  slug        String      @unique
+  description String      @default("A hctv bot account")
   pfpUrl      String
-  owner       User     @relation(fields: [ownerId], references: [id])
+  owner       User        @relation(fields: [ownerId], references: [id])
   ownerId     String
   apiKeys     BotApiKey[]
 
@@ -138,4 +142,28 @@ model BotApiKey {
   createdAt    DateTime   @default(now())
 
   @@index([botAccountId])
+}
+
+model UserBan {
+  id        String    @id @default(cuid())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String    @unique
+  reason    String
+  bannedBy  String
+  createdAt DateTime  @default(now())
+  expiresAt DateTime?
+
+  @@index([userId])
+}
+
+model ChannelRestriction {
+  id           String    @id @default(cuid())
+  channel      Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  channelId    String    @unique
+  reason       String
+  restrictedBy String
+  createdAt    DateTime  @default(now())
+  expiresAt    DateTime?
+
+  @@index([channelId])
 }

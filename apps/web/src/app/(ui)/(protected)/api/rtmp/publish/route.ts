@@ -15,7 +15,14 @@ export async function POST(request: NextRequest) {
       key: streamKey,
     },
     include: {
-      channel: true,
+      channel: {
+        include: {
+          restriction: true,
+          owner: {
+            include: { ban: true },
+          },
+        },
+      },
     },
   });
 
@@ -24,6 +31,23 @@ export async function POST(request: NextRequest) {
       status: 403,
     });
   }
+
+  if (key.channel.restriction) {
+    const isExpired = key.channel.restriction.expiresAt &&
+      new Date(key.channel.restriction.expiresAt) < new Date();
+    if (!isExpired) {
+      return new Response('channel restricted', { status: 403 });
+    }
+  }
+
+  if (key.channel.owner?.ban) {
+    const isExpired = key.channel.owner.ban.expiresAt &&
+      new Date(key.channel.owner.ban.expiresAt) < new Date();
+    if (!isExpired) {
+      return new Response('user banned', { status: 403 });
+    }
+  }
+
   return new Response('', {
     status: 302,
     headers: {

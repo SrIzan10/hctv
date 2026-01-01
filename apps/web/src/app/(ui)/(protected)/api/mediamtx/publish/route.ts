@@ -20,6 +20,33 @@ export async function POST(request: NextRequest) {
       if (channelKey !== password) {
         return new Response('invalid stream key', { status: 403 });
       }
+
+      const channel = await prisma.channel.findUnique({
+        where: { name: path },
+        include: {
+          restriction: true,
+          owner: {
+            include: { ban: true },
+          },
+        },
+      });
+
+      if (channel?.restriction) {
+        const isExpired = channel.restriction.expiresAt &&
+          new Date(channel.restriction.expiresAt) < new Date();
+        if (!isExpired) {
+          return new Response('channel restricted', { status: 403 });
+        }
+      }
+
+      if (channel?.owner?.ban) {
+        const isExpired = channel.owner.ban.expiresAt &&
+          new Date(channel.owner.ban.expiresAt) < new Date();
+        if (!isExpired) {
+          return new Response('user banned', { status: 403 });
+        }
+      }
+
       return new Response('youre in yay', { status: 200 });
     }
   } else if (action === 'read' && protocol === 'hls') {

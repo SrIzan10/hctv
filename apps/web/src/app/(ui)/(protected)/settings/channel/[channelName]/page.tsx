@@ -3,6 +3,7 @@ import { prisma } from '@hctv/db';
 import { redirect } from 'next/navigation';
 import ChannelSettingsClient from './page.client';
 import { resolvePersonalChannel } from '@/lib/auth/resolve';
+import { can } from '@/lib/auth/abac';
 
 export default async function ChannelSettingsPage({
   params,
@@ -42,9 +43,8 @@ export default async function ChannelSettingsPage({
   }
 
   const isOwner = channel.ownerId === user.id;
-  const isManager = channel.managers.some((manager) => manager.id === user.id);
 
-  if (!isOwner && !isManager) {
+  if (!can(user, 'update', 'channel', { channel })) {
     redirect('/');
   }
 
