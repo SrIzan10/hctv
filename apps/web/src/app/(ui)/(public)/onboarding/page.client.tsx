@@ -107,7 +107,9 @@ export default function OnboardingClient() {
                   name: 'username', 
                   label: 'Channel Username', 
                   type: 'text',
-                  placeholder: 'e.g., yourname or yourname-codes'
+                  placeholder: 'e.g., yourname or yourname-codes',
+                  maxChars: 20,
+                  inputFilter: /[^a-z0-9_-]/g,
                 },
               ]}
               schemaName="onboard"

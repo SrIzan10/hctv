@@ -97,13 +97,21 @@ export function UniversalForm<T extends z.ZodType>({
                       {...formField}
                       value={formField.value ?? ''}
                       rows={field.textAreaRows ?? 5}
+                      maxLength={field.maxChars}
                     />
                   ) : (
                     <Input
                       type={field.type || 'text'}
                       placeholder={field.placeholder}
                       {...formField}
+                      onChange={(e) => {
+                        if (field.inputFilter) {
+                          e.target.value = e.target.value.replace(field.inputFilter, '');
+                        }
+                        formField.onChange(e);
+                      }}
                       value={formField.value ?? ''}
+                      maxLength={field.maxChars}
                     />
                   )}
                 </FormControl>
