@@ -5,30 +5,41 @@ description: Instructions to set up a local development environment for hackclub
 
 1. clone repo
 2. `pnpm install`
-3. `pnpm dev`
-4. `pnpm db:migrate` (RUN THIS AFTER POPULATING BELOW ENV)
+3. `cp apps/web/.env.example apps/web/.env && cp packages/db/.env.example packages/db/.env` 
+4. `pnpm dev`
+5. `pnpm db:migrate` (RUN THIS AFTER POPULATING ENV)
 
-- create file at apps/web/.env:  
+- create file at apps/web/.env (skip if you did step 3):
 ```
 DATABASE_URL=postgresql://postgres:skbiditoilet@localhost:5555/postgres
+
+# make a slack app here: https://api.slack.com/apps
 SLACK_NOTIFIER_TOKEN=<make a bot for this, check app manifest below>
+
 # invite your bot to the channel you created. below is #hctv-dev, so use that if you want!
 NOTIFICATION_CHANNEL_ID=C08M3MGE6PJ
+
 REDIS_URL=redis://localhost:6379
+
+# get from https://uploadthing.com/
 UPLOADTHING_TOKEN=<get from uploadthing>
-# enable oauth mode on your hca account
+
+# enable oauth mode on your hca account and make an app: https://auth.hackclub.com/identity/edit
 HCID_CLIENT=<auth.hackclub.com client>
 HCID_SECRET=<auth.hackclub.com secret>
 # make sure to put this as one of the redirect uri
 HCID_REDIRECT_URI=http://localhost:3000/auth/hackclub/callback
+
+# mediamtx settings
 NEXT_PUBLIC_MEDIAMTX_URL=http://localhost:8891
 MEDIAMTX_API=http://localhost:9997
+
 # idt you should change this
 MEDIAMTX_PUBLISH_KEY=rjq1xdpCPA4qyt3jge
 NEXT_PUBLIC_MEDIAMTX_INGEST_ROUTE=localhost:8890
 ```
 
-- create file at packages/db/.env:  
+- create file at packages/db/.env (skip if you did step 3):
 ```
 DATABASE_URL=postgresql://postgres:skbiditoilet@localhost:5555/postgres
 DATABASE_DIRECT_URL=postgresql://postgres:skbiditoilet@localhost:5555/postgres

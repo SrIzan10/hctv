@@ -12,6 +12,8 @@ export type FormFieldConfig = {
   value?: any;
   textArea?: boolean;
   textAreaRows?: number;
+  maxChars?: number;
+  inputFilter?: RegExp;
   component?: (props: { field: ControllerRenderProps<any, any> } & any) => React.ReactNode;
   componentProps?: Record<string, any>;
   required?: boolean;
