@@ -11,6 +11,7 @@ const disallowedUsernames = [
 const username = z
   .string()
   .min(1)
+  .max(20)
   .regex(/^[a-z0-9_-]+$/, { message: 'Only characters from a-z, 0-9, underscores and dashes' })
   .refine((val) => !disallowedUsernames.includes(val.toLowerCase()), {
     message: 'This username is reserved',

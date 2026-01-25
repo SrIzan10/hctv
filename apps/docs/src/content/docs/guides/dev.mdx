@@ -1,0 +1,54 @@
+## development docs
+
+1. clone repo
+2. `pnpm install`
+3. `pnpm dev`
+4. `pnpm db:migrate` (RUN THIS AFTER POPULATING BELOW ENV)
+
+- create file at apps/web/.env:  
+```
+DATABASE_URL=postgresql://postgres:skbiditoilet@localhost:5555/postgres
+SLACK_NOTIFIER_TOKEN=<make a bot for this, check app manifest below>
+# invite your bot to the channel you created. below is #hctv-dev, so use that if you want!
+NOTIFICATION_CHANNEL_ID=C08M3MGE6PJ
+REDIS_URL=redis://localhost:6379
+UPLOADTHING_TOKEN=<get from uploadthing>
+# enable oauth mode on your hca account
+HCID_CLIENT=<auth.hackclub.com client>
+HCID_SECRET=<auth.hackclub.com secret>
+# make sure to put this as one of the redirect uri
+HCID_REDIRECT_URI=http://localhost:3000/auth/hackclub/callback
+NEXT_PUBLIC_MEDIAMTX_URL=http://localhost:8891
+MEDIAMTX_API=http://localhost:9997
+# idt you should change this
+MEDIAMTX_PUBLISH_KEY=rjq1xdpCPA4qyt3jge
+NEXT_PUBLIC_MEDIAMTX_INGEST_ROUTE=localhost:8890
+```
+
+- create file at packages/db/.env:  
+```
+DATABASE_URL=postgresql://postgres:skbiditoilet@localhost:5555/postgres
+DATABASE_DIRECT_URL=postgresql://postgres:skbiditoilet@localhost:5555/postgres
+```
+
+- app manifest is as follows:  
+```
+display_information:
+  # please change the name to something that can be linked to you if possible
+  name: hctv notifier dev
+features:
+  bot_user:
+    # same with this :pray:
+    display_name: hctv notifier dev
+    always_online: false
+oauth_config:
+  scopes:
+    bot:
+      - chat:write
+      - users:read
+      - channels:join
+settings:
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false
+```
