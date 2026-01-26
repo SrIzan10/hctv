@@ -35,6 +35,11 @@ export default function StreamPlayer() {
         },
         lowLatencyMode: true,
         debug: process.env.NODE_ENV === 'development',
+        backBufferLength: 90,
+        enableWorker: true,
+        maxLiveSyncPlaybackRate: 1.5,
+        liveSyncDurationCount: 2,
+        liveMaxLatencyDurationCount: 4,
       };
 
       // @ts-ignore

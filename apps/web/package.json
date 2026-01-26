@@ -49,6 +49,7 @@
     "cmdk": "1.0.0",
     "date-fns": "^4.1.0",
     "hls-video-element": "^1.5.0",
+    "hls.js": "^1.6.15",
     "lucia": "^3.2.2",
     "lucide-react": "^0.473.0",
     "media-chrome": "^4.8.0",
