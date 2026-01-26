@@ -7,8 +7,6 @@ import {
   MediaLoadingIndicator,
   MediaControlBar,
   MediaPlayButton,
-  MediaSeekBackwardButton,
-  MediaSeekForwardButton,
   MediaMuteButton,
   MediaVolumeRange,
   MediaFullscreenButton,

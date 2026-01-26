@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
           owner: {
             include: { ban: true },
           },
+          streamInfo: true,
         },
       });
 
@@ -45,6 +46,10 @@ export async function POST(request: NextRequest) {
         if (!isExpired) {
           return new Response('user banned', { status: 403 });
         }
+      }
+
+      if (channel?.streamInfo[0].isLive) {
+        return new Response('stream already live', { status: 403 });
       }
 
       return new Response('youre in yay', { status: 200 });
