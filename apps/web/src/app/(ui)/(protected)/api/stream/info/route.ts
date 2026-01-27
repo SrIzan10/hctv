@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
   const shouldGetOwned = searchParams.get('owned') === 'true';
   const allPersonalChannels = searchParams.get('personal') === 'true';
   const isLive = searchParams.get('live') === 'true';
+  const username = searchParams.get('username');
   const { user } = await validateRequest();
 
   if ((shouldGetOwned || allPersonalChannels) && !user) {
@@ -17,6 +18,10 @@ export async function GET(request: NextRequest) {
 
   const where: Prisma.StreamInfoWhereInput = {};
   const channelConditions: Prisma.ChannelWhereInput[] = [];
+
+  if (username) {
+    where.username = username;
+  }
 
   if (shouldGetOwned && user) {
     channelConditions.push({ ownerId: user.id });

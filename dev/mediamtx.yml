@@ -5,7 +5,6 @@ paths:
 srt: yes
 srtAddress: :8890
 
-# HLS Configuration - Low Latency HLS (LL-HLS)
 hls: yes
 hlsAddress: :8891
 hlsSegmentCount: 7
@@ -14,6 +13,6 @@ hlsPartDuration: 200ms
 hlsMuxerCloseAfter: 5s
 
 authMethod: http
-authHTTPAddress: http://localhost:3000/api/mediamtx/publish
+authHTTPAddress: http://host.docker.internal:3000/api/mediamtx/publish
 
 api: yes

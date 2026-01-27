@@ -1,12 +1,17 @@
 import { prisma, getRedisConnection } from '@hctv/db';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { lucia } from '@hctv/auth';
 
 export async function POST(request: NextRequest) {
   const redis = getRedisConnection();
   const body = await request.json();
 
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(
+      'Mediamtx publish auth request:',
+      JSON.stringify(body, null, 2)
+    )
+  }
   const parsed = schema.safeParse(body);
 
   if (!parsed.success) {
@@ -56,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
   } else if (action === 'read' && protocol === 'hls') {
     if (password === process.env.MEDIAMTX_PUBLISH_KEY) {
-      return new Response('authorized', { status: 200 });
+      return new Response('authorized (hls read key for thumbs)', { status: 200 });
     }
     const sessionExists = await redis.exists(`sessions:${password}`);
     if (!sessionExists) {

@@ -17,10 +17,21 @@ services:
       - 6379:6379
   mediamtx:
     image: bluenviron/mediamtx:latest
-    network_mode: "host"
-    # ports:
-    #   - 8890:8890/udp
-    #   - 8891:8888
-    #   - 9997:9997
+    ports:
+      - 8890:8890/udp
+      - 8891:8888
+      - 9997:9997
     volumes:
       - ./mediamtx.yml:/mediamtx.yml
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  mediamtx2:
+    image: bluenviron/mediamtx:latest
+    ports:
+      - 8990:8890/udp
+      - 8991:8891
+      - 9999:9997
+    volumes:
+      - ./mediamtx.yml:/mediamtx.yml
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

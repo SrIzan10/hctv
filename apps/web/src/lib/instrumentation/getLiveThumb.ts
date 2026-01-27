@@ -14,8 +14,10 @@ export default async function getLiveThumb() {
 
   const thumbQueue = getThumbnailQueue();
   for (const channel of liveChannelNames) {
+    const lc = liveChannels.find(c => c.channel.name === channel)!;
     await thumbQueue.add("getLiveThumb", {
       name: channel,
+      server: lc.streamRegion,
     });
   }
 }

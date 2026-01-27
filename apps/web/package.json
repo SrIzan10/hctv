@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dd": "docker compose --file ../../dev/docker-compose.yml up -d",
-    "dev": "next dev --turbo",
+    "dev": "next dev --turbo -H 0.0.0.0",
     "donly": "docker compose --file ../../dev/docker-compose.yml up",
     "build": "next build",
     "start": "next start",
