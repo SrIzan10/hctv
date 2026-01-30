@@ -14,11 +14,12 @@ The websocket server is located at `wss://hackclub.tv/api/chat/ws/:username`, wh
 You'll need to provide authentication, which can be done by providing an `auth_session` cookie, just like the REST API.
 
 <Aside type="tip">
-Bot accounts are now supported. You should connect as a bot by providing a bot account's API key using the `Authorization` header:
+Bot accounts are now supported. You can choose to connect as a bot by providing a bot account's API key in one of two ways:
+- Using the `Authorization` header: `Bearer hctvb_xxxxxxx` (for server-side connections) **[Recommended]**
+- Using the `?botAuth=hctvb_xxxxxxx` query parameter (for browser-based connections, since browsers cannot set custom headers on WebSocket connections)
 
-- `Authorization: Bearer hctvb_xxxxxxx`
+**Security Note:** When using the `?botAuth=` query parameter, be aware that query parameters may be logged in browser history, server logs, and proxy logs. Use the `Authorization` header method whenever possible. The query parameter method should only be used when connecting from a browser environment where headers cannot be set.
 
-**Security Note:** Do not pass bot API keys in query parameters (for example, via a `?botAuth=` query string), because URLs and their query strings are much more likely to be logged or stored in browser history. Always use the `Authorization` header for bot authentication.
 It is highly advised to use a bot account for any automated task, and to implement anything pointed out in this page.
 
 </Aside>
