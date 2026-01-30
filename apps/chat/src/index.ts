@@ -47,8 +47,11 @@ app.get(
       let apiKey: string | null = null;
       if (authHeader && authHeader.startsWith('Bearer ')) {
         apiKey = authHeader.substring(7);
-      } else if (botAuth) {
-        apiKey = botAuth;
+      } else if (botAuth && typeof botAuth === 'string' && botAuth.trim().length > 0) {
+        // Validate botAuth query parameter format
+        if (botAuth.startsWith('hctvb_')) {
+          apiKey = botAuth;
+        }
       }
 
       if (apiKey) {
