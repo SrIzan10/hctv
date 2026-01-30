@@ -50,7 +50,6 @@ app.get(
           apiKey = extractedKey;
         }
       } else if (botAuth && typeof botAuth === 'string' && botAuth.trim().length > 0) {
-        // Validate botAuth query parameter format
         if (botAuth.startsWith('hctvb_')) {
           apiKey = botAuth;
         }
