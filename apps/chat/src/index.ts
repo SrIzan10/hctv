@@ -44,9 +44,14 @@ app.get(
       let personalChannel: any = null;
 
       // Check for bot authentication via Authorization header or botAuth query parameter
+      // Authorization header takes precedence if both are provided
       let apiKey: string | null = null;
       if (authHeader && authHeader.startsWith('Bearer ')) {
-        apiKey = authHeader.substring(7);
+        const extractedKey = authHeader.substring(7);
+        // Validate the API key format before attempting database lookup
+        if (extractedKey.startsWith('hctvb_')) {
+          apiKey = extractedKey;
+        }
       } else if (botAuth && typeof botAuth === 'string' && botAuth.trim().length > 0) {
         // Validate botAuth query parameter format
         if (botAuth.startsWith('hctvb_')) {
