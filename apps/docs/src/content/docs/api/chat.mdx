@@ -15,16 +15,15 @@ You'll need to provide authentication, which can be done by providing an `auth_s
 
 <Aside type="tip">
 Bot accounts are now supported. You can choose to connect as a bot by providing a bot account's API key in one of two ways:
-- Using the `Authorization` header: `Bearer hctvb_xxxxxxx` (for server-side connections) **[Recommended]**
-- Using the `?botAuth=hctvb_xxxxxxx` query parameter (for browser-based connections, since browsers cannot set custom headers on WebSocket connections)
+- Using the `Authorization` header: `Bearer hctvb_xxxxxxx`
+- Using the `?botAuth=hctvb_xxxxxxx` query parameter
 
-**Security Note:** When using the `?botAuth=` query parameter, be aware that query parameters may be logged in browser history, server logs, and proxy logs. Use the `Authorization` header method whenever possible. The query parameter method should only be used when connecting from a browser environment where headers cannot be set.
+**Security Note:** When using the `?botAuth=` query parameter, be aware that query parameters may be logged in server logs, and/or proxy logs. Use the `Authorization` header method whenever possible. The query parameter method should only be used when connecting from an environment where headers cannot be set.
 
 It is highly advised to use a bot account for any automated task, and to implement anything pointed out in this page.
-
 </Aside>
 
-Once connected, you must implement a subroutine in your code to send ping messages every 5 seconds. This is because of Cloudflare limitations.
+Once connected, you must implement a subroutine in your code to send ping messages every about 5 seconds. This is because of Cloudflare limitations.
 
 Messages are sent and received in JSON format. The following message types are supported:
 
