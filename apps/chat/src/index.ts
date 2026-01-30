@@ -33,8 +33,9 @@ app.get(
       const token = getCookie(c, 'auth_session');
       const grant = c.req.query('grant');
       const authHeader = c.req.header('Authorization');
+      const botAuth = c.req.query('botAuth');
 
-      if (!token && (!grant || grant === 'null') && !authHeader) {
+      if (!token && (!grant || grant === 'null') && !authHeader && !botAuth) {
         ws.close();
         return;
       }
@@ -42,11 +43,18 @@ app.get(
       let chatUser: ChatUser | null = null;
       let personalChannel: any = null;
 
+      // Check for bot authentication via Authorization header or botAuth query parameter
+      let apiKey: string | null = null;
       if (authHeader && authHeader.startsWith('Bearer ')) {
-        const apiKey = authHeader.substring(7);
+        apiKey = authHeader.substring(7);
+      } else if (botAuth) {
+        apiKey = botAuth;
+      }
+
+      if (apiKey) {
         const botAccount = await prisma.botApiKey.findUnique({
           where: { key: apiKey },
-          include: { botAccount: true }
+          include: { botAccount: true },
         });
 
         if (botAccount) {
@@ -55,12 +63,12 @@ app.get(
             username: botAccount.botAccount.slug,
             pfpUrl: botAccount.botAccount.pfpUrl,
             displayName: botAccount.botAccount.displayName,
-            isBot: true
+            isBot: true,
           };
 
           personalChannel = {
             id: botAccount.botAccount.id,
-            name: botAccount.botAccount.slug
+            name: botAccount.botAccount.slug,
           };
         }
       }
@@ -74,7 +82,7 @@ app.get(
               id: session.user.id,
               username: userChannel.name,
               pfpUrl: session.user.pfpUrl,
-              isBot: false
+              isBot: false,
             };
             personalChannel = userChannel;
           }
@@ -82,7 +90,7 @@ app.get(
       }
 
       const dbGrant = await prisma.channel.findFirst({
-        where: { obsChatGrantToken: grant }
+        where: { obsChatGrantToken: grant },
       });
 
       if (!chatUser && !dbGrant) {
@@ -100,7 +108,7 @@ app.get(
       ws.chatUser = chatUser;
       ws.personalChannel = personalChannel;
       ws.viewerId = randomString(10);
-      
+
       if (ws.raw) {
         ws.raw.targetUsername = username;
         ws.raw.chatUser = chatUser;
@@ -111,10 +119,12 @@ app.get(
       const messages = await redis.zrange(channelKey, 0, MESSAGE_HISTORY_SIZE - 1);
 
       if (messages.length > 0) {
-        ws.send(JSON.stringify({
-          type: 'history',
-          messages: messages.map((msg) => JSON.parse(msg)),
-        }));
+        ws.send(
+          JSON.stringify({
+            type: 'history',
+            messages: messages.map((msg) => JSON.parse(msg)),
+          })
+        );
       }
     },
     async onClose(evt, ws) {
@@ -137,7 +147,7 @@ app.get(
     },
     async onMessage(evt, ws) {
       const msg = JSON.parse(evt.data.toString());
-      
+
       if (msg.type === 'ping') {
         await redis.setex(`viewer:${ws.targetUsername}:${ws.viewerId}`, 30, '1');
         ws.send(JSON.stringify({ type: 'pong' }));
@@ -146,7 +156,7 @@ app.get(
 
       if (msg.type === 'message') {
         if (!ws.chatUser || !ws.personalChannel) return;
-        
+
         const message = (msg.message as string).trim();
         const msgObj = {
           user: {
@@ -154,17 +164,17 @@ app.get(
             username: ws.chatUser.username,
             pfpUrl: ws.chatUser.pfpUrl,
             displayName: ws.chatUser.displayName,
-            isBot: ws.chatUser.isBot || false
+            isBot: ws.chatUser.isBot || false,
           },
           message,
         };
-        
+
         const redisObj = {
-          user: msgObj.user,  
+          user: msgObj.user,
           message: msgObj.message,
           type: 'message',
         };
-        
+
         const redisStr = JSON.stringify(redisObj);
         const msgStr = JSON.stringify(msgObj);
 
@@ -187,14 +197,14 @@ app.get(
         await Promise.all(
           emojis.map(async (emoji) => {
             let url = await redis.hget('emojis', emoji);
-            
+
             if (!url) {
               url = await redis.hget(`emojis:${emoji}`, 'url');
             }
             if (!url) {
               url = await redis.hget(`emoji:${emoji}`, 'url');
             }
-            
+
             emojiMap[emoji] = url ?? '';
           })
         );
@@ -214,10 +224,10 @@ app.get(
         const emojiKeys = Object.keys(emojis);
         const idxs = uf.filter(emojiKeys, searchTerm);
         console.log(`Emoji search for "${searchTerm}" found ${idxs?.length || 0} results.`);
-        
+
         if (idxs && idxs.length > 0) {
           const results: string[] = [];
-          
+
           if (idxs.length <= 150) {
             const info = uf.info(idxs, emojiKeys, searchTerm);
             const order = uf.sort(info, emojiKeys, searchTerm);
@@ -229,7 +239,7 @@ app.get(
               results.push(emojiKeys[idxs[i]]);
             }
           }
-          
+
           ws.send(
             JSON.stringify({
               type: 'emojiSearchResponse',
