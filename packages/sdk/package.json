@@ -26,6 +26,7 @@
   "author": "Izan Gil <npm@srizan.dev>",
   "license": "MIT",
   "devDependencies": {
+    "@types/node": "^25.1.0",
     "@typescript-eslint/eslint-plugin": "^8.50.1",
     "@typescript-eslint/parser": "^8.50.1",
     "eslint": "^9.39.2",

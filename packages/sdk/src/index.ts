@@ -1,21 +1,18 @@
+import { ChatClient } from './chat.js';
+import type { ChatMessage, MessageHandler } from './types.js';
+
 export class HctvSdk {
-  private botToken: string
+  private botToken: string;
+  public chat: ChatClient;
+
   constructor(args: ConstructorArgs) {
-    this.botToken = args.botToken
+    this.botToken = args.botToken;
+    this.chat = new ChatClient(args.botToken);
   }
 }
-
-
-
-/*
-const client = new HctvSdk({ botToken: 'hctvb_asddfasdfasdfasdfasdf' });
-await client.chat.connect('channelName');
-client.chat.onMessage((message) => {
-  // message would include data like the channelname etc
-  console.log('New message:', message);
-});
-*/
 
 interface ConstructorArgs {
   botToken: string;
 }
+export { ChatClient } from './chat.js';
+export type { ChatMessage, MessageHandler } from './types.js';
