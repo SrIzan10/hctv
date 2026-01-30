@@ -11,24 +11,31 @@ The chat system is powered by a websocket server. Please read the entire page be
 
 The websocket server is located at `wss://hackclub.tv/api/chat/ws/:username`, where `:username` is the channel you want to connect to.
 
-You'll need to provide authentication, which can be done by providing an `auth_session` cookie, just like the REST API.  
+You'll need to provide authentication, which can be done by providing an `auth_session` cookie, just like the REST API.
+
 <Aside type="tip">
-Bot accounts are now supported. You can choose to connect as a bot by providing a bot account's API key on the Authentication header: `Bearer hctvb_xxxxxxx`  
+Bot accounts are now supported. You can choose to connect as a bot by providing a bot account's API key in one of two ways:
+- Using the `Authorization` header: `Bearer hctvb_xxxxxxx`
+- Using the `?botAuth=hctvb_xxxxxxx` query parameter
+
+**Security Note:** When using the `?botAuth=` query parameter, be aware that query parameters may be logged in server logs, and/or proxy logs. Use the `Authorization` header method whenever possible. The query parameter method should only be used when connecting from an environment where headers cannot be set.
+
 It is highly advised to use a bot account for any automated task, and to implement anything pointed out in this page.
 </Aside>
 
-Once connected, you must implement a subroutine in your code to send ping messages every 5 seconds. This is because of Cloudflare limitations.
+Once connected, you must implement a subroutine in your code to send ping messages every about 5 seconds. This is because of Cloudflare limitations.
 
 Messages are sent and received in JSON format. The following message types are supported:
-- `message`: a chat message.  
-  - sent by client:  
+
+- `message`: a chat message.
+  - sent by client:
     ```json
     {
       "type": "message",
       "content": "Hello, world!"
     }
     ```
-  - received by client:  
+  - received by client:
     ```json
     {
       "user": {
@@ -36,24 +43,24 @@ Messages are sent and received in JSON format. The following message types are s
         "username": "user_who_sent_message",
         "avatar": "https://emoji.slack-edge.com/avatar.png"
       },
-      "message": "Hello, world!",
+      "message": "Hello, world!"
     }
     ```
-- `ping`: a ping message to keep the connection alive.  
-  - sent by client:  
+- `ping`: a ping message to keep the connection alive.
+  - sent by client:
     ```json
     {
       "type": "ping"
     }
     ```
-  - received by client:  
+  - received by client:
     ```json
     {
       "type": "ping"
     }
     ```
-- `history`: a message containing the chat history. This is sent upon connection.  
-  - received by client:  
+- `history`: a message containing the chat history. This is sent upon connection.
+  - received by client:
     ```json
     {
       "type": "history",
@@ -71,9 +78,11 @@ Messages are sent and received in JSON format. The following message types are s
       ]
     }
     ```
+
 ## Emoji handling
 
-*diagram source: devin deepwiki*
+_diagram source: devin deepwiki_
+
 ```mermaid
 graph TB
     subgraph "Emoji Processing Pipeline"
@@ -111,6 +120,7 @@ The server then checks Redis for the emoji URL and returns it.
 When a user wants to look up an emoji (by typing `:(partial name)`), the server uses uFuzzy to find matching emojis in the Redis `emojis` hash key and returns the results.
 
 Here's what gets sent on the websocket:
+
 - `emojiMsg`: Looks up emojis
   - sent by client:
     ```json
