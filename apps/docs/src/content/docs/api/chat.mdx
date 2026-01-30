@@ -20,6 +20,7 @@ Bot accounts are now supported. You should connect as a bot by providing a bot a
 
 **Security Note:** Do not pass bot API keys in query parameters (for example, via a `?botAuth=` query string), because URLs and their query strings are much more likely to be logged or stored in browser history. Always use the `Authorization` header for bot authentication.
 It is highly advised to use a bot account for any automated task, and to implement anything pointed out in this page.
+
 </Aside>
 
 Once connected, you must implement a subroutine in your code to send ping messages every about 5 seconds. This is because of Cloudflare limitations.
