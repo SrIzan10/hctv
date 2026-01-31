@@ -19,7 +19,7 @@ export default function LiveStream(props: Props) {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
-    const currentStream = channels.find(s => s.username === props.username);
+    const currentStream = channels.find((s) => s.username === props.username);
     if (currentStream?.channel?.isRestricted) {
       setIsRestricted(true);
       setRestrictionExpiresAt(currentStream.channel.restrictionExpiresAt || null);
@@ -50,32 +50,28 @@ export default function LiveStream(props: Props) {
             Restriction lifts: {format(new Date(restrictionExpiresAt), 'PPP p')}
           </p>
         )}
-        <Button
-          variant="outline"
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-        >
+        <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
           <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
           {isRefreshing ? 'Checking...' : 'Check again'}
         </Button>
       </div>
     );
   }
-  
+
   return (
     <div className={`${isMobile ? 'flex flex-col' : 'flex'} h-[calc(100vh-64px)] w-full`}>
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <StreamPlayer />
         {isMobile && (
-          <div className="h-[300px]">
+          <div className="flex-1 min-h-[250px] max-h-[400px] border-t border-border">
             <ChatPanel />
           </div>
         )}
         <UserInfoCard streamInfo={props.streamInfo} />
       </div>
-      
+
       {!isMobile && (
-        <div>
+        <div className="h-full shrink-0">
           <ChatPanel />
         </div>
       )}

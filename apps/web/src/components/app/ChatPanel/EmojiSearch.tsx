@@ -28,25 +28,27 @@ export function EmojiSearch({
   useEffect(() => {
     const beforeCursor = message.substring(0, cursorPosition);
     const match = beforeCursor.match(/:[\w\-+]*$/);
-    
+
     if (match) {
       const term = match[0].substring(1);
       setSearchTerm(term);
-      
+
       if (term.length > 0) {
         const localResults = Array.from(emojiMap.keys())
-          .filter(name => name.toLowerCase().includes(term.toLowerCase()))
+          .filter((name) => name.toLowerCase().includes(term.toLowerCase()))
           .slice(0, 5);
-        
+
         if (localResults.length > 0) {
           setSearchResults(localResults);
         }
-        
+
         if (socket && socket.readyState === WebSocket.OPEN) {
-          socket.send(JSON.stringify({
-            type: 'emojiSearch',
-            searchTerm: term
-          }));
+          socket.send(
+            JSON.stringify({
+              type: 'emojiSearch',
+              searchTerm: term,
+            })
+          );
         }
       } else {
         setSearchResults([]);
@@ -63,22 +65,22 @@ export function EmojiSearch({
     const handleEmojiSearchResponse = (event: MessageEvent) => {
       try {
         const data = JSON.parse(event.data);
-        
+
         if (data.type === 'emojiSearchResponse') {
           const serverResults = data.results || [];
-          
+
           const localResults = Array.from(emojiMap.keys())
-            .filter(name => searchTerm && name.toLowerCase().includes(searchTerm.toLowerCase()))
+            .filter((name) => searchTerm && name.toLowerCase().includes(searchTerm.toLowerCase()))
             .slice(0, 5);
-            
+
           const combinedResults = [...serverResults];
-          
-          localResults.forEach(name => {
+
+          localResults.forEach((name) => {
             if (!combinedResults.includes(name)) {
               combinedResults.push(name);
             }
           });
-          
+
           setSearchResults(combinedResults.slice(0, 10));
           setSelectedIndex(0);
         }
@@ -95,18 +97,18 @@ export function EmojiSearch({
 
   useEffect(() => {
     if (!textareaRef.current) return;
-    
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!searchTerm || searchResults.length === 0) return;
-      
+
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
-          setSelectedIndex(prev => (prev + 1) % searchResults.length);
+          setSelectedIndex((prev) => (prev + 1) % searchResults.length);
           break;
         case 'ArrowUp':
           e.preventDefault();
-          setSelectedIndex(prev => (prev - 1 + searchResults.length) % searchResults.length);
+          setSelectedIndex((prev) => (prev - 1 + searchResults.length) % searchResults.length);
           break;
         case 'Enter':
           if (searchResults[selectedIndex]) {
@@ -127,10 +129,10 @@ export function EmojiSearch({
           break;
       }
     };
-    
+
     const textarea = textareaRef.current;
     textarea.addEventListener('keydown', handleKeyDown);
-    
+
     return () => {
       textarea.removeEventListener('keydown', handleKeyDown);
     };
@@ -150,25 +152,25 @@ export function EmojiSearch({
   }
 
   return (
-    <div className="absolute bottom-16 left-4 bg-mantle border rounded-md shadow-lg max-h-60 overflow-y-auto z-10 min-w-[200px] max-w-[300px]">
+    <div className="absolute bottom-full left-0 right-0 mb-2 mx-0 bg-mantle border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto z-10">
       <div ref={resultsRef} className="py-1">
         {searchResults.map((emojiName, index) => {
           const isSelected = index === selectedIndex;
           const emojiUrl = emojiMap.get(emojiName);
-          
+
           return (
             <div
               key={emojiName}
-              className={`px-3 py-1.5 flex items-center gap-2 cursor-pointer ${
+              className={`px-3 py-2 flex items-center gap-3 cursor-pointer transition-colors ${
                 isSelected ? 'bg-primary/10' : 'hover:bg-primary/5'
               }`}
               onClick={() => onSelect(emojiName)}
             >
               {emojiUrl && (
-                <Image src={emojiUrl} alt={emojiName} width={20} height={20} className="w-5 h-5" />
+                <Image src={emojiUrl} alt={emojiName} width={24} height={24} className="w-6 h-6" />
               )}
-              <span className="flex-grow text-sm">{emojiName}</span>
-              {isSelected && <Check className="h-4 w-4 text-blue-500" />}
+              <span className="flex-grow text-sm font-medium">{emojiName}</span>
+              {isSelected && <Check className="h-4 w-4 text-primary" />}
             </div>
           );
         })}
