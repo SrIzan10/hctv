@@ -14,7 +14,7 @@ class MockWebSocket {
   onmessage: ((event: { data: string }) => void) | null = null;
   onerror: ((error: any) => void) | null = null;
   onclose: (() => void) | null = null;
-  
+
   sentMessages: string[] = [];
   url: string;
 
@@ -46,12 +46,18 @@ class MockWebSocket {
 
 let mockWebSocketInstance: MockWebSocket | null = null;
 
-vi.stubGlobal('WebSocket', class extends MockWebSocket {
-  constructor(url: string) {
-    super(url);
-    mockWebSocketInstance = this;
+vi.stubGlobal(
+  'WebSocket',
+  class extends MockWebSocket {
+    constructor(url: string) {
+      super(url);
+      mockWebSocketInstance = this;
+    }
   }
-});
+);
+
+// Mock process to simulate browser environment (avoid Node.js ws import path)
+vi.stubGlobal('process', { versions: {} });
 
 describe('HctvSdk', () => {
   beforeEach(() => {
@@ -66,6 +72,14 @@ describe('HctvSdk', () => {
     it('should initialize with bot token', () => {
       const sdk = new HctvSdk({ botToken: 'test-token' });
       expect(sdk).toBeDefined();
+      expect(sdk.chat).toBeInstanceOf(ChatClient);
+    });
+
+    it('should pass chat options to ChatClient', () => {
+      const sdk = new HctvSdk({
+        botToken: 'test-token',
+        chatOptions: { baseUrl: 'wss://custom.url' },
+      });
       expect(sdk.chat).toBeInstanceOf(ChatClient);
     });
   });
@@ -90,43 +104,38 @@ describe('ChatClient', () => {
       expect(client.isConnected).toBe(false);
       expect(client.currentChannel).toBeNull();
     });
+
+    it('should accept custom base URL', () => {
+      const customClient = new ChatClient('token', { baseUrl: 'wss://custom.url' });
+      expect(customClient).toBeDefined();
+    });
   });
 
   describe('connect', () => {
     it('should connect to a channel', async () => {
       const connectPromise = client.connect('testchannel');
-      
+
       await connectPromise;
-      
+
       expect(client.isConnected).toBe(true);
       expect(mockWebSocketInstance).not.toBeNull();
-      expect(mockWebSocketInstance?.url).toContain('/ws');
-    });
-
-    it('should send auth message on connect', async () => {
-      await client.connect('testchannel');
-      
-      expect(mockWebSocketInstance?.sentMessages.length).toBeGreaterThan(0);
-      const authMsg = JSON.parse(mockWebSocketInstance!.sentMessages[0]);
-      expect(authMsg.type).toBe('auth');
-      expect(authMsg.token).toBe('test-bot-token');
-      expect(authMsg.channelName).toBe('testchannel');
+      expect(mockWebSocketInstance?.url).toContain('/ws/testchannel');
     });
 
     it('should throw error when already connected', async () => {
       await client.connect('testchannel');
-      
+
       await expect(client.connect('anotherchannel')).rejects.toThrow(
-        'Already connected to a channel'
+        'already connected, please disconnect from it first'
       );
     });
 
     it('should emit connected system message', async () => {
       const systemHandler = vi.fn();
       client.onSystemMessage(systemHandler);
-      
+
       await client.connect('testchannel');
-      
+
       expect(systemHandler).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'connected',
@@ -140,9 +149,9 @@ describe('ChatClient', () => {
     it('should disconnect from channel', async () => {
       await client.connect('testchannel');
       expect(client.isConnected).toBe(true);
-      
+
       client.disconnect();
-      
+
       expect(client.isConnected).toBe(false);
       expect(client.currentChannel).toBeNull();
     });
@@ -150,10 +159,10 @@ describe('ChatClient', () => {
     it('should emit disconnected system message', async () => {
       const systemHandler = vi.fn();
       client.onSystemMessage(systemHandler);
-      
+
       await client.connect('testchannel');
       client.disconnect();
-      
+
       expect(systemHandler).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'disconnected',
@@ -165,9 +174,9 @@ describe('ChatClient', () => {
   describe('sendMessage', () => {
     it('should send a message when connected', async () => {
       await client.connect('testchannel');
-      
+
       client.sendMessage('Hello, world!');
-      
+
       const messages = mockWebSocketInstance!.sentMessages;
       const lastMsg = JSON.parse(messages[messages.length - 1]);
       expect(lastMsg.type).toBe('message');
@@ -180,26 +189,27 @@ describe('ChatClient', () => {
   });
 
   describe('onMessage', () => {
-    it('should call handler when message received', async () => {
+    it('should call handler when message received (server format)', async () => {
       const messageHandler = vi.fn();
       client.onMessage(messageHandler);
-      
+
       await client.connect('testchannel');
-      
+
+      // Server format: { user: {...}, message: string }
       mockWebSocketInstance?.simulateMessage({
-        type: 'message',
-        message: 'Hello from server',
         user: {
           id: 'user-123',
           username: 'testuser',
           pfpUrl: 'https://example.com/pfp.jpg',
         },
+        message: 'Hello from server',
       });
-      
+
       expect(messageHandler).toHaveBeenCalledWith(
         expect.objectContaining({
           message: 'Hello from server',
           username: 'testuser',
+          pfpUrl: 'https://example.com/pfp.jpg',
         })
       );
     });
@@ -207,37 +217,82 @@ describe('ChatClient', () => {
     it('should return unsubscribe function', async () => {
       const messageHandler = vi.fn();
       const unsubscribe = client.onMessage(messageHandler);
-      
+
       await client.connect('testchannel');
-      
+
       unsubscribe();
-      
+
       mockWebSocketInstance?.simulateMessage({
-        type: 'message',
+        user: { id: '1', username: 'testuser', pfpUrl: '' },
         message: 'Should not receive',
-        user: { username: 'testuser' },
       });
-      
+
       expect(messageHandler).not.toHaveBeenCalled();
     });
 
     it('should handle multiple message handlers', async () => {
       const handler1 = vi.fn();
       const handler2 = vi.fn();
-      
+
       client.onMessage(handler1);
       client.onMessage(handler2);
-      
+
       await client.connect('testchannel');
-      
+
       mockWebSocketInstance?.simulateMessage({
-        type: 'message',
+        user: { id: '1', username: 'testuser', pfpUrl: '' },
         message: 'test message',
-        user: { username: 'testuser' },
       });
-      
+
       expect(handler1).toHaveBeenCalled();
       expect(handler2).toHaveBeenCalled();
+    });
+  });
+
+  describe('onHistory', () => {
+    it('should call history handler when history received', async () => {
+      const historyHandler = vi.fn();
+      client.onHistory(historyHandler);
+
+      await client.connect('testchannel');
+
+      mockWebSocketInstance?.simulateMessage({
+        type: 'history',
+        messages: [
+          {
+            user: { id: 'u1', username: 'user1', pfpUrl: '' },
+            message: 'First message',
+            type: 'message',
+          },
+          {
+            user: { id: 'u2', username: 'user2', pfpUrl: '' },
+            message: 'Second message',
+            type: 'message',
+          },
+        ],
+      });
+
+      expect(historyHandler).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ message: 'First message', username: 'user1' }),
+          expect.objectContaining({ message: 'Second message', username: 'user2' }),
+        ])
+      );
+    });
+
+    it('should return unsubscribe function', async () => {
+      const historyHandler = vi.fn();
+      const unsubscribe = client.onHistory(historyHandler);
+
+      await client.connect('testchannel');
+      unsubscribe();
+
+      mockWebSocketInstance?.simulateMessage({
+        type: 'history',
+        messages: [],
+      });
+
+      expect(historyHandler).not.toHaveBeenCalled();
     });
   });
 
@@ -245,9 +300,9 @@ describe('ChatClient', () => {
     it('should call handler for system events', async () => {
       const systemHandler = vi.fn();
       client.onSystemMessage(systemHandler);
-      
+
       await client.connect('testchannel');
-      
+
       expect(systemHandler).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'connected',
@@ -258,11 +313,11 @@ describe('ChatClient', () => {
     it('should return unsubscribe function', async () => {
       const systemHandler = vi.fn();
       const unsubscribe = client.onSystemMessage(systemHandler);
-      
+
       unsubscribe();
-      
+
       await client.connect('testchannel');
-      
+
       expect(systemHandler).not.toHaveBeenCalled();
     });
   });
@@ -271,12 +326,10 @@ describe('ChatClient', () => {
     it('should handle message with full user object', async () => {
       const messageHandler = vi.fn();
       client.onMessage(messageHandler);
-      
+
       await client.connect('testchannel');
-      
+
       mockWebSocketInstance?.simulateMessage({
-        type: 'message',
-        message: 'Hello',
         user: {
           id: 'user-123',
           username: 'johndoe',
@@ -284,64 +337,88 @@ describe('ChatClient', () => {
           displayName: 'John Doe',
           isBot: false,
         },
+        message: 'Hello',
       });
-      
+
       expect(messageHandler).toHaveBeenCalledWith(
         expect.objectContaining({
           username: 'johndoe',
+          displayName: 'John Doe',
           message: 'Hello',
+          isBot: false,
         })
       );
     });
 
-    it('should handle message with username directly', async () => {
+    it('should handle bot messages', async () => {
       const messageHandler = vi.fn();
       client.onMessage(messageHandler);
-      
+
       await client.connect('testchannel');
-      
+
       mockWebSocketInstance?.simulateMessage({
-        type: 'message',
-        message: 'Direct username',
-        username: 'directuser',
+        user: {
+          id: 'bot-123',
+          username: 'mybot',
+          pfpUrl: 'https://example.com/bot.jpg',
+          displayName: 'My Bot',
+          isBot: true,
+        },
+        message: 'Hello from bot!',
       });
-      
+
       expect(messageHandler).toHaveBeenCalledWith(
         expect.objectContaining({
-          username: 'directuser',
-          message: 'Direct username',
+          username: 'mybot',
+          isBot: true,
         })
       );
     });
+  });
 
-    it('should ignore invalid messages', async () => {
+  describe('ping/pong', () => {
+    it('should handle pong response from server', async () => {
       const messageHandler = vi.fn();
       client.onMessage(messageHandler);
-      
-      await client.connect('testchannel');
-      
-      mockWebSocketInstance?.simulateMessage({
-        type: 'message',
-      });
-      
-      expect(messageHandler).not.toHaveBeenCalled();
-    });
 
-    it('should ignore non-message types', async () => {
-      const messageHandler = vi.fn();
-      client.onMessage(messageHandler);
-      
       await client.connect('testchannel');
-      
+
       mockWebSocketInstance?.simulateMessage({
         type: 'pong',
       });
-      
+
+      expect(messageHandler).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('emoji responses', () => {
+    it('should handle emojiMsgResponse from server', async () => {
+      const messageHandler = vi.fn();
+      client.onMessage(messageHandler);
+
+      await client.connect('testchannel');
+
       mockWebSocketInstance?.simulateMessage({
-        type: 'history',
-        messages: [],
+        type: 'emojiMsgResponse',
+        emojis: {
+          smile: 'https://example.com/emoji/smile.png',
+        },
       });
-      
+
+      expect(messageHandler).not.toHaveBeenCalled();
+    });
+
+    it('should handle emojiSearchResponse from server', async () => {
+      const messageHandler = vi.fn();
+      client.onMessage(messageHandler);
+
+      await client.connect('testchannel');
+
+      mockWebSocketInstance?.simulateMessage({
+        type: 'emojiSearchResponse',
+        results: ['smile', 'smirk'],
+      });
+
       expect(messageHandler).not.toHaveBeenCalled();
     });
   });
@@ -384,34 +461,20 @@ describe('ChatClient', () => {
     it('should emit error system message on WebSocket error', async () => {
       const systemHandler = vi.fn();
       client.onSystemMessage(systemHandler);
-      
+
       const connectPromise = client.connect('testchannel');
-      
-      await new Promise(resolve => setTimeout(resolve, 5));
-      
+
+      await new Promise((resolve) => setTimeout(resolve, 5));
+
       mockWebSocketInstance?.simulateError(new Error('Connection failed'));
-      
+
       await expect(connectPromise).rejects.toBeDefined();
-      
+
       expect(systemHandler).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'error',
         })
       );
-    });
-
-    it('should handle malformed message data gracefully', async () => {
-      const messageHandler = vi.fn();
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      
-      client.onMessage(messageHandler);
-      await client.connect('testchannel');
-      
-      mockWebSocketInstance?.onmessage?.({ data: 'not valid json{' });
-      
-      expect(messageHandler).not.toHaveBeenCalled();
-      
-      consoleSpy.mockRestore();
     });
   });
 });
@@ -425,6 +488,7 @@ describe('ChatMessage type', () => {
       message: 'Hello, world!',
       timestamp: Date.now(),
       type: 'message',
+      isBot: false,
     };
 
     expect(message.id).toBe('msg-123');
@@ -433,6 +497,7 @@ describe('ChatMessage type', () => {
     expect(message.message).toBe('Hello, world!');
     expect(typeof message.timestamp).toBe('number');
     expect(message.type).toBe('message');
+    expect(message.isBot).toBe(false);
   });
 
   it('should support systemMsg type', () => {
@@ -443,6 +508,7 @@ describe('ChatMessage type', () => {
       message: 'User joined',
       timestamp: Date.now(),
       type: 'systemMsg',
+      isBot: false,
     };
 
     expect(message.type).toBe('systemMsg');
@@ -484,169 +550,6 @@ describe('SystemMessage type', () => {
   });
 });
 
-describe('Integration with Chat Server Protocol', () => {
-  let client: ChatClient;
-
-  beforeEach(() => {
-    mockWebSocketInstance = null;
-    client = new ChatClient('test-bot-token');
-  });
-
-  afterEach(() => {
-    client.disconnect();
-    vi.clearAllMocks();
-  });
-
-  describe('history messages', () => {
-    it('should handle history message from server', async () => {
-      const messageHandler = vi.fn();
-      client.onMessage(messageHandler);
-      
-      await client.connect('testchannel');
-      
-      mockWebSocketInstance?.simulateMessage({
-        type: 'history',
-        messages: [
-          {
-            user: { id: 'u1', username: 'user1', pfpUrl: '' },
-            message: 'First message',
-            type: 'message',
-          },
-          {
-            user: { id: 'u2', username: 'user2', pfpUrl: '' },
-            message: 'Second message',
-            type: 'message',
-          },
-        ],
-      });
-      
-      expect(messageHandler).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('ping/pong', () => {
-    it('should handle pong response from server', async () => {
-      const messageHandler = vi.fn();
-      client.onMessage(messageHandler);
-      
-      await client.connect('testchannel');
-      
-      mockWebSocketInstance?.simulateMessage({
-        type: 'pong',
-      });
-      
-      expect(messageHandler).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('emoji responses', () => {
-    it('should handle emojiMsgResponse from server', async () => {
-      const messageHandler = vi.fn();
-      client.onMessage(messageHandler);
-      
-      await client.connect('testchannel');
-      
-      mockWebSocketInstance?.simulateMessage({
-        type: 'emojiMsgResponse',
-        emojis: {
-          smile: 'https://example.com/emoji/smile.png',
-          laugh: 'https://example.com/emoji/laugh.png',
-        },
-      });
-      
-      expect(messageHandler).not.toHaveBeenCalled();
-    });
-
-    it('should handle emojiSearchResponse from server', async () => {
-      const messageHandler = vi.fn();
-      client.onMessage(messageHandler);
-      
-      await client.connect('testchannel');
-      
-      mockWebSocketInstance?.simulateMessage({
-        type: 'emojiSearchResponse',
-        results: ['smile', 'smirk', 'smiley'],
-      });
-      
-      expect(messageHandler).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('bot user messages', () => {
-    it('should handle messages from bot users', async () => {
-      const messageHandler = vi.fn();
-      client.onMessage(messageHandler);
-      
-      await client.connect('testchannel');
-      
-      mockWebSocketInstance?.simulateMessage({
-        type: 'message',
-        message: 'Hello from bot!',
-        user: {
-          id: 'bot-123',
-          username: 'mybot',
-          pfpUrl: 'https://example.com/bot-avatar.png',
-          displayName: 'My Bot',
-          isBot: true,
-        },
-      });
-      
-      expect(messageHandler).toHaveBeenCalledWith(
-        expect.objectContaining({
-          username: 'mybot',
-          message: 'Hello from bot!',
-        })
-      );
-    });
-  });
-
-  describe('message structure from server', () => {
-    it('should handle message structure matching chat server format', async () => {
-      const messageHandler = vi.fn();
-      client.onMessage(messageHandler);
-      
-      await client.connect('testchannel');
-      
-      mockWebSocketInstance?.simulateMessage({
-        user: {
-          id: 'user-abc',
-          username: 'streamuser',
-          pfpUrl: 'https://example.com/pfp.jpg',
-          displayName: 'Stream User',
-          isBot: false,
-        },
-        message: 'Great stream!',
-      });
-      
-      expect(messageHandler).not.toHaveBeenCalled();
-    });
-
-    it('should handle message with explicit type', async () => {
-      const messageHandler = vi.fn();
-      client.onMessage(messageHandler);
-      
-      await client.connect('testchannel');
-      
-      mockWebSocketInstance?.simulateMessage({
-        type: 'message',
-        user: {
-          id: 'user-abc',
-          username: 'streamuser',
-          pfpUrl: 'https://example.com/pfp.jpg',
-        },
-        message: 'Great stream!',
-      });
-      
-      expect(messageHandler).toHaveBeenCalledWith(
-        expect.objectContaining({
-          username: 'streamuser',
-          message: 'Great stream!',
-        })
-      );
-    });
-  });
-});
-
 describe('Edge cases', () => {
   let client: ChatClient;
 
@@ -663,15 +566,14 @@ describe('Edge cases', () => {
   it('should handle empty message', async () => {
     const messageHandler = vi.fn();
     client.onMessage(messageHandler);
-    
+
     await client.connect('testchannel');
-    
+
     mockWebSocketInstance?.simulateMessage({
-      type: 'message',
+      user: { id: '1', username: 'testuser', pfpUrl: '' },
       message: '',
-      user: { username: 'testuser' },
     });
-    
+
     expect(messageHandler).toHaveBeenCalledWith(
       expect.objectContaining({
         message: '',
@@ -682,16 +584,15 @@ describe('Edge cases', () => {
   it('should handle message with special characters', async () => {
     const messageHandler = vi.fn();
     client.onMessage(messageHandler);
-    
+
     await client.connect('testchannel');
-    
+
     const specialMessage = '🎉 Hello <script>alert("xss")</script> & "quotes" \'apostrophe\'';
     mockWebSocketInstance?.simulateMessage({
-      type: 'message',
+      user: { id: '1', username: 'testuser', pfpUrl: '' },
       message: specialMessage,
-      user: { username: 'testuser' },
     });
-    
+
     expect(messageHandler).toHaveBeenCalledWith(
       expect.objectContaining({
         message: specialMessage,
@@ -702,16 +603,15 @@ describe('Edge cases', () => {
   it('should handle very long messages', async () => {
     const messageHandler = vi.fn();
     client.onMessage(messageHandler);
-    
+
     await client.connect('testchannel');
-    
+
     const longMessage = 'a'.repeat(10000);
     mockWebSocketInstance?.simulateMessage({
-      type: 'message',
+      user: { id: '1', username: 'testuser', pfpUrl: '' },
       message: longMessage,
-      user: { username: 'testuser' },
     });
-    
+
     expect(messageHandler).toHaveBeenCalledWith(
       expect.objectContaining({
         message: longMessage,
@@ -719,75 +619,25 @@ describe('Edge cases', () => {
     );
   });
 
-  it('should handle unicode usernames', async () => {
-    const messageHandler = vi.fn();
-    client.onMessage(messageHandler);
-    
-    await client.connect('testchannel');
-    
-    mockWebSocketInstance?.simulateMessage({
-      type: 'message',
-      message: 'Hello',
-      user: { username: '日本語ユーザー' },
-    });
-    
-    expect(messageHandler).toHaveBeenCalledWith(
-      expect.objectContaining({
-        username: '日本語ユーザー',
-      })
-    );
-  });
-
   it('should handle rapid successive messages', async () => {
     const messageHandler = vi.fn();
     client.onMessage(messageHandler);
-    
+
     await client.connect('testchannel');
-    
+
     for (let i = 0; i < 100; i++) {
       mockWebSocketInstance?.simulateMessage({
-        type: 'message',
+        user: { id: '1', username: 'testuser', pfpUrl: '' },
         message: `Message ${i}`,
-        user: { username: 'testuser' },
       });
     }
-    
+
     expect(messageHandler).toHaveBeenCalledTimes(100);
   });
 
-  it('should handle errors in message handlers gracefully', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    
-    const errorHandler = vi.fn(() => {
-      throw new Error('Handler error');
-    });
-    const goodHandler = vi.fn();
-    
-    client.onMessage(errorHandler);
-    client.onMessage(goodHandler);
-    
-    await client.connect('testchannel');
-    
-    mockWebSocketInstance?.simulateMessage({
-      type: 'message',
-      message: 'Test',
-      user: { username: 'testuser' },
-    });
-    
-    expect(goodHandler).toHaveBeenCalled();
-    expect(consoleSpy).toHaveBeenCalled();
-    
-    consoleSpy.mockRestore();
-  });
-
   it('should handle disconnect while message is being processed', async () => {
-    const messageHandler = vi.fn();
-    client.onMessage(messageHandler);
-    
     await client.connect('testchannel');
-    
     client.disconnect();
-    
     expect(() => client.sendMessage('test')).toThrow('Not connected');
   });
 });

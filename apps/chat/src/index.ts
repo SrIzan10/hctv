@@ -93,9 +93,12 @@ app.get(
         }
       }
 
-      const dbGrant = await prisma.channel.findFirst({
-        where: { obsChatGrantToken: grant },
-      });
+      const dbGrant =
+        grant && grant !== 'null'
+          ? await prisma.channel.findFirst({
+              where: { obsChatGrantToken: grant },
+            })
+          : null;
 
       if (!chatUser && !dbGrant) {
         ws.close();
@@ -150,115 +153,119 @@ app.get(
       await redis.del(`viewer:${ws.targetUsername}:${ws.viewerId}`);
     },
     async onMessage(evt, ws) {
-      const msg = JSON.parse(evt.data.toString());
+      try {
+        const msg = JSON.parse(evt.data.toString());
 
-      if (msg.type === 'ping') {
-        await redis.setex(`viewer:${ws.targetUsername}:${ws.viewerId}`, 30, '1');
-        ws.send(JSON.stringify({ type: 'pong' }));
-        return;
-      }
+        if (msg.type === 'ping') {
+          await redis.setex(`viewer:${ws.targetUsername}:${ws.viewerId}`, 30, '1');
+          ws.send(JSON.stringify({ type: 'pong' }));
+          return;
+        }
 
-      if (msg.type === 'message') {
-        if (!ws.chatUser || !ws.personalChannel) return;
+        if (msg.type === 'message') {
+          if (!ws.chatUser || !ws.personalChannel) return;
 
-        const message = (msg.message as string).trim();
-        const msgObj = {
-          user: {
-            id: ws.chatUser.id,
-            username: ws.chatUser.username,
-            pfpUrl: ws.chatUser.pfpUrl,
-            displayName: ws.chatUser.displayName,
-            isBot: ws.chatUser.isBot || false,
-          },
-          message,
-        };
+          const message = (msg.message as string).trim();
+          const msgObj = {
+            user: {
+              id: ws.chatUser.id,
+              username: ws.chatUser.username,
+              pfpUrl: ws.chatUser.pfpUrl,
+              displayName: ws.chatUser.displayName,
+              isBot: ws.chatUser.isBot || false,
+            },
+            message,
+          };
 
-        const redisObj = {
-          user: msgObj.user,
-          message: msgObj.message,
-          type: 'message',
-        };
+          const redisObj = {
+            user: msgObj.user,
+            message: msgObj.message,
+            type: 'message',
+          };
 
-        const redisStr = JSON.stringify(redisObj);
-        const msgStr = JSON.stringify(msgObj);
+          const redisStr = JSON.stringify(redisObj);
+          const msgStr = JSON.stringify(msgObj);
 
-        const channelKey = `chat:history:${ws.targetUsername}`;
-        await redis.zadd(channelKey, Date.now(), redisStr);
-        await redis.zremrangebyrank(channelKey, 0, -MESSAGE_HISTORY_SIZE - 1);
-        await redis.expire(channelKey, MESSAGE_TTL);
+          const channelKey = `chat:history:${ws.targetUsername}`;
+          await redis.zadd(channelKey, Date.now(), redisStr);
+          await redis.zremrangebyrank(channelKey, 0, -MESSAGE_HISTORY_SIZE - 1);
+          await redis.expire(channelKey, MESSAGE_TTL);
 
-        ws.wss.clients.forEach((c) => {
-          const client = c as ModifiedWebSocket;
-          if (client.readyState === client.OPEN && client.targetUsername === ws.targetUsername) {
-            c.send(msgStr);
-          }
-        });
-      }
-      if (msg.type === 'emojiMsg') {
-        const emojis = msg.emojis as string[];
-        const emojiMap: Record<string, string> = {};
-
-        await Promise.all(
-          emojis.map(async (emoji) => {
-            let url = await redis.hget('emojis', emoji);
-
-            if (!url) {
-              url = await redis.hget(`emojis:${emoji}`, 'url');
+          ws.wss.clients.forEach((c) => {
+            const client = c as ModifiedWebSocket;
+            if (client.readyState === client.OPEN && client.targetUsername === ws.targetUsername) {
+              c.send(msgStr);
             }
-            if (!url) {
-              url = await redis.hget(`emoji:${emoji}`, 'url');
-            }
+          });
+        }
+        if (msg.type === 'emojiMsg') {
+          const emojis = msg.emojis as string[];
+          const emojiMap: Record<string, string> = {};
 
-            emojiMap[emoji] = url ?? '';
-          })
-        );
+          await Promise.all(
+            emojis.map(async (emoji) => {
+              let url = await redis.hget('emojis', emoji);
 
-        ws.send(
-          JSON.stringify({
-            type: 'emojiMsgResponse',
-            emojis: emojiMap,
-          })
-        );
-      }
-      if (msg.type === 'emojiSearch') {
-        console.log('emoji search request:', msg);
-        const searchTerm = msg.searchTerm as string;
+              if (!url) {
+                url = await redis.hget(`emojis:${emoji}`, 'url');
+              }
+              if (!url) {
+                url = await redis.hget(`emoji:${emoji}`, 'url');
+              }
 
-        const emojis = await redis.hgetall('emojis');
-        const emojiKeys = Object.keys(emojis);
-        const idxs = uf.filter(emojiKeys, searchTerm);
-        console.log(`Emoji search for "${searchTerm}" found ${idxs?.length || 0} results.`);
-
-        if (idxs && idxs.length > 0) {
-          const results: string[] = [];
-
-          if (idxs.length <= 150) {
-            const info = uf.info(idxs, emojiKeys, searchTerm);
-            const order = uf.sort(info, emojiKeys, searchTerm);
-            for (let i = 0; i < order.length && i < 10; i++) {
-              results.push(emojiKeys[idxs[order[i]]]);
-            }
-          } else {
-            for (let i = 0; i < idxs.length && i < 10; i++) {
-              results.push(emojiKeys[idxs[i]]);
-            }
-          }
-
-          ws.send(
-            JSON.stringify({
-              type: 'emojiSearchResponse',
-              results: results,
+              emojiMap[emoji] = url ?? '';
             })
           );
-          console.log(`Sending emoji search results: ${results.join(', ')}`);
-        } else {
+
           ws.send(
             JSON.stringify({
-              type: 'emojiSearchResponse',
-              results: [],
+              type: 'emojiMsgResponse',
+              emojis: emojiMap,
             })
           );
         }
+        if (msg.type === 'emojiSearch') {
+          console.log('emoji search request:', msg);
+          const searchTerm = msg.searchTerm as string;
+
+          const emojis = await redis.hgetall('emojis');
+          const emojiKeys = Object.keys(emojis);
+          const idxs = uf.filter(emojiKeys, searchTerm);
+          console.log(`Emoji search for "${searchTerm}" found ${idxs?.length || 0} results.`);
+
+          if (idxs && idxs.length > 0) {
+            const results: string[] = [];
+
+            if (idxs.length <= 150) {
+              const info = uf.info(idxs, emojiKeys, searchTerm);
+              const order = uf.sort(info, emojiKeys, searchTerm);
+              for (let i = 0; i < order.length && i < 10; i++) {
+                results.push(emojiKeys[idxs[order[i]]]);
+              }
+            } else {
+              for (let i = 0; i < idxs.length && i < 10; i++) {
+                results.push(emojiKeys[idxs[i]]);
+              }
+            }
+
+            ws.send(
+              JSON.stringify({
+                type: 'emojiSearchResponse',
+                results: results,
+              })
+            );
+            console.log(`Sending emoji search results: ${results.join(', ')}`);
+          } else {
+            ws.send(
+              JSON.stringify({
+                type: 'emojiSearchResponse',
+                results: [],
+              })
+            );
+          }
+        }
+      } catch (e) {
+        console.error('Error processing message:', e);
       }
     },
   }))

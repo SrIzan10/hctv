@@ -1,5 +1,4 @@
 import { ChatClient } from './chat.js';
-import type { ChatMessage, MessageHandler } from './types.js';
 
 export class HctvSdk {
   private botToken: string;
@@ -7,12 +6,13 @@ export class HctvSdk {
 
   constructor(args: ConstructorArgs) {
     this.botToken = args.botToken;
-    this.chat = new ChatClient(args.botToken);
+    this.chat = new ChatClient(args.botToken, args.chatOptions);
   }
 }
 
 interface ConstructorArgs {
   botToken: string;
+  chatOptions?: import('./chat.js').ChatClientOptions;
 }
-export { ChatClient } from './chat.js';
-export type { ChatMessage, MessageHandler } from './types.js';
+export { ChatClient, type ChatClientOptions } from './chat.js';
+export type { ChatMessage, MessageHandler, SystemMessage, SystemMessageHandler, HistoryHandler } from './types.js';
