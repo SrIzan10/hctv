@@ -107,7 +107,9 @@ export default function OnboardingClient() {
                   name: 'username', 
                   label: 'Channel Username', 
                   type: 'text',
-                  placeholder: 'e.g., yourname or yourname-codes'
+                  placeholder: 'e.g., yourname or yourname-codes',
+                  maxChars: 20,
+                  inputFilter: /[^a-z0-9_-]/g,
                 },
               ]}
               schemaName="onboard"
@@ -119,7 +121,7 @@ export default function OnboardingClient() {
             <div className="mt-4 p-3 bg-muted/30 rounded-md">
               <p className="text-xs text-muted-foreground">
                 <strong>Username rules:</strong> Only lowercase letters (a-z), numbers (0-9), 
-                underscores (_), and dashes (-) are allowed. Must be unique across the platform.
+                underscores (_), and dashes (-) are allowed. Up to 20 characters. Must be unique across the platform.
               </p>
             </div>
           </CardContent>

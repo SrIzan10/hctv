@@ -7,9 +7,9 @@
     "build": "tsc --build"
   },
   "dependencies": {
-    "@hctv/auth": "*",
-    "@hctv/db": "*",
-    "@hctv/hono-ws": "*",
+    "@hctv/auth": "workspace:*",
+    "@hctv/db": "workspace:*",
+    "@hctv/hono-ws": "workspace:*",
     "@hono/node-server": "^1.14.0",
     "@hono/node-ws": "^1.1.0",
     "@leeoniya/ufuzzy": "^1.0.18",

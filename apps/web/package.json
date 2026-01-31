@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dd": "docker compose --file ../../dev/docker-compose.yml up -d",
-    "dev": "next dev --turbo",
+    "dev": "next dev --turbo -H 0.0.0.0",
     "donly": "docker compose --file ../../dev/docker-compose.yml up",
     "build": "next build",
     "start": "next start",
@@ -15,8 +15,8 @@
     "genMtxTypes": "bunx openapi-typescript https://github.com/bluenviron/mediamtx/raw/refs/tags/v1.15.5/api/openapi.yaml -o ./src/lib/types/mediamtx.d.ts"
   },
   "dependencies": {
-    "@hctv/auth": "*",
-    "@hctv/db": "*",
+    "@hctv/auth": "workspace:*",
+    "@hctv/db": "workspace:*",
     "@hookform/resolvers": "^3.9.1",
     "@lucia-auth/adapter-prisma": "^4.0.1",
     "@node-rs/argon2": "^2.0.2",
@@ -47,7 +47,9 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.0",
     "cmdk": "1.0.0",
+    "date-fns": "^4.1.0",
     "hls-video-element": "^1.5.0",
+    "hls.js": "^1.6.15",
     "lucia": "^3.2.2",
     "lucide-react": "^0.473.0",
     "media-chrome": "^4.8.0",
@@ -58,6 +60,7 @@
     "pg": "^8.14.1",
     "pg-boss": "^10.1.6",
     "react": "^19.2.3",
+    "react-day-picker": "^9.13.0",
     "react-dom": "^19.2.3",
     "react-hook-form": "^7.54.2",
     "rehype-raw": "^7.0.0",

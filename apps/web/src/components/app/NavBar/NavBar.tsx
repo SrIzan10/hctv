@@ -15,7 +15,7 @@ import { logout } from '@/lib/auth/actions';
 import { useSession } from '@/lib/providers/SessionProvider';
 import Link from 'next/link';
 import { ThemeSwitcher } from '../ThemeSwitcher/ThemeSwitcher';
-import { IdCard, Slack } from 'lucide-react';
+import { IdCard, Shield } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 
 export default function Navbar(props: Props) {
@@ -57,6 +57,17 @@ export default function Navbar(props: Props) {
                   <Link href={`/settings/bot`}>
                     <DropdownMenuItem className="cursor-pointer">Bot accounts</DropdownMenuItem>
                   </Link>
+                  {user.isAdmin && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <Link href={`/admin`}>
+                        <DropdownMenuItem className="cursor-pointer text-primary">
+                          <Shield className="w-4 h-4 mr-2" />
+                          Admin Panel
+                        </DropdownMenuItem>
+                      </Link>
+                    </>
+                  )}
                   <DropdownMenuSeparator />
                   <Link href={'https://docs.hackclub.tv'} target="_blank" rel="noreferrer">
                     <DropdownMenuItem className="cursor-pointer">API Docs</DropdownMenuItem>

@@ -27,6 +27,7 @@ function createCacheKey(options: UseUserListOptions): string {
   if (options.owned) params.push('owned')
   if (options.personal) params.push('personal')
   if (options.live) params.push('live')
+  if (options.username) params.push(`user-${options.username}`)
   
   return params.length > 0 
     ? `stream-info:${params.join('-')}` 
@@ -76,6 +77,8 @@ export interface UseUserListOptions {
   personal?: boolean
   /** Only fetch live channels */
   live?: boolean
+  /** Search for a specific user's streaminfo */
+  username?: string
   /** Refresh interval in milliseconds */
   refreshInterval?: number
   /** Cache time to live in milliseconds (default: 5 minutes) */
@@ -132,6 +135,7 @@ export function useUserList(options: UseUserListOptions = {}): UseUserListReturn
     owned = false, 
     personal = false, 
     live = false, 
+    username,
     refreshInterval = 30000,
     cacheTTL = 5 * 60 * 1000, // 5 minutes
     revalidateOnFocus = false,
@@ -151,8 +155,9 @@ export function useUserList(options: UseUserListOptions = {}): UseUserListReturn
     if (owned) searchParams.set('owned', 'true')
     if (personal) searchParams.set('personal', 'true')
     if (live) searchParams.set('live', 'true')
+    if (username) searchParams.set('username', username)
     return searchParams
-  }, [owned, personal, live])
+  }, [owned, personal, live, username])
 
   const queryString = params.toString()
   const url = `/api/stream/info${queryString ? `?${queryString}` : ''}`
@@ -325,6 +330,67 @@ export function usePersonalChannels(refreshInterval?: number): UseUserListReturn
   })
 }
 
+export interface UseUserStreamInfoReturn extends Omit<UseUserListReturn, 'channels'> {
+  /** The found stream info for the specific user */
+  streamInfo: StreamInfoResponse[0] | null
+  /** All matching channels (usually just one) */
+  channels: StreamInfoResponse
+}
+
+/** 
+ * Hook to fetch stream info for a specific user 
+ * Returns the first match if multiple channels exist for that user
+ */
+export function useUserStreamInfo(
+  username: string | undefined, 
+  refresh = true,
+  refreshInterval?: number,
+): UseUserStreamInfoReturn {
+  const result = useUserList({ 
+    username,
+    refreshInterval: refresh ? (refreshInterval ?? 15000) : undefined,
+    cacheTTL: 2 * 60 * 1000, // 2 minutes cache
+    revalidateOnFocus: true,
+    isPaused: !username, // Don't fetch if no username provided
+    errorRetryCount: 3,
+  })
+
+  return {
+    ...result,
+    streamInfo: result.channels[0] || null,
+  }
+}
+
+/** 
+ * Lazy version that doesn't automatically fetch - useful for on-demand lookups 
+ */
+export function useUserStreamInfoLazy(refreshInterval?: number) {
+  const result = useUserList({ 
+    refreshInterval: refreshInterval ?? 15000,
+    cacheTTL: 2 * 60 * 1000,
+    revalidateOnFocus: true,
+    isPaused: true, // Start paused
+    errorRetryCount: 3,
+  })
+
+  const lookupUser = useCallback(async (username: string) => {
+    if (!username) return null
+    
+    try {
+      const response = await enhancedFetcher(`/api/stream/info?username=${encodeURIComponent(username)}`)
+      return response[0] || null
+    } catch (error) {
+      console.error('[useUserStreamInfoLazy] Error looking up user:', error)
+      throw error
+    }
+  }, [])
+
+  return {
+    ...result,
+    lookupUser,
+  }
+}
+
 // Cache management utilities with proper error handling
 export const channelCacheUtils = {
   /** Clear all channel caches */
@@ -379,6 +445,7 @@ export const channelCacheUtils = {
       if (options.owned) params.set('owned', 'true')
       if (options.personal) params.set('personal', 'true')
       if (options.live) params.set('live', 'true')
+      if (options.username) params.set('username', options.username)
       
       const queryString = params.toString()
       const url = `/api/stream/info${queryString ? `?${queryString}` : ''}`

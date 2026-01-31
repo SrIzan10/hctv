@@ -46,7 +46,6 @@ jobs:
           
           mkdir -p apps/web/src/lib/instrumentation/
           
-          export SLACK_TOKEN=${{ secrets.SLACK_TOKEN }}
           ./slack-import-emojis-bin default
 
           cp emojis.json apps/web/

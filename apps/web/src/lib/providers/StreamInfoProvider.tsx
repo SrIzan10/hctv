@@ -37,4 +37,9 @@ export function useStreams() {
   return context
 }
 
-export type StreamInfoResponse = (StreamInfo & { channel: Channel })[]
+export type StreamInfoResponse = (StreamInfo & {
+  channel: Channel & {
+    isRestricted?: boolean;
+    restrictionExpiresAt?: string | null;
+  };
+})[]

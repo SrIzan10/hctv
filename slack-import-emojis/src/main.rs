@@ -27,10 +27,6 @@ struct EmojiData {
 #[tokio::main]
 async fn main() {
   let args: Vec<String> = env::args().collect();
-  if std::env::var("SLACK_TOKEN").is_err() {
-    eprintln!("Error: SLACK_TOKEN environment variable is not set.");
-    return;
-  }
 
   let mut slack_emojis = slack_request()
     .await

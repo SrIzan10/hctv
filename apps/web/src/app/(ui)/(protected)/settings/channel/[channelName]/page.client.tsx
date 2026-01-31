@@ -53,7 +53,15 @@ import { ChannelSelect } from '@/components/app/ChannelSelect/ChannelSelect';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useConfirm } from '@omit/react-confirm-dialog';
-import { MEDIAMTX_INGEST_ROUTE } from '@/lib/env';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { getMediamtxClientEnvs } from '@/lib/utils/mediamtx/client';
+import type { MediaMTXRegion } from '@/lib/utils/mediamtx/regions';
 
 interface ChannelSettingsClientProps {
   channel: Channel & {
@@ -88,6 +96,7 @@ export default function ChannelSettingsClient({
   const [selTab, setSelTab] = useQueryState('tab', parseAsString.withDefault('general'));
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [region, setRegion] = useState<MediaMTXRegion>('eu');
   const channelList = useOwnedChannels();
   const router = useRouter();
 
@@ -137,7 +146,8 @@ export default function ChannelSettingsClient({
       toast.error('Stream key not available');
       return '';
     }
-    return `srt://${MEDIAMTX_INGEST_ROUTE}?streamid=publish:${channel.name}:thisusernameislongonpurposesoyoudontaccidentallyleakyourstreamkey:${streamKey}&pkt_size=1316`;
+    const { ingestRoute } = getMediamtxClientEnvs(region);
+    return `srt://${ingestRoute}?streamid=publish:${channel.name}:thisusernameislongonpurposesoyoudontaccidentallyleakyourstreamkey:${streamKey}&pkt_size=1316`;
   };
 
   const copyStreamUrl = async () => {
@@ -449,7 +459,18 @@ export default function ChannelSettingsClient({
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Stream URL (for OBS)</label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium">Stream URL (for OBS)</label>
+                      <Select value={region} onValueChange={(v) => setRegion(v as MediaMTXRegion)}>
+                        <SelectTrigger className="w-[180px] h-8">
+                          <SelectValue placeholder="Select region" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="eu">Europe 🇪🇺</SelectItem>
+                          <SelectItem value="asia">Singapore 🇸🇬</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <div className="flex items-center gap-2">
                       <div className="relative flex-1">
                         <input

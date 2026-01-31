@@ -10,9 +10,9 @@ export const hackClub = new OAuth2Client(
   process.env.HCID_REDIRECT_URI!
 );
 
-export const HCID_AUTH_URL = "https://account.hackclub.com/oauth/authorize";
-export const HCID_TOKEN_URL = "https://account.hackclub.com/oauth/token";
-export const HCID_USER_INFO_URL = "https://account.hackclub.com/api/v1/me";
+export const HCID_AUTH_URL = "https://auth.hackclub.com/oauth/authorize";
+export const HCID_TOKEN_URL = "https://auth.hackclub.com/oauth/token";
+export const HCID_USER_INFO_URL = "https://auth.hackclub.com/api/v1/me";
 
 export const lucia = new Lucia(adapter, {
   sessionCookie: {
@@ -31,6 +31,7 @@ export const lucia = new Lucia(adapter, {
       pfpUrl: attributes.pfpUrl,
       hasOnboarded: attributes.hasOnboarded,
       personalChannelId: attributes.personalChannelId,
+      isAdmin: attributes.isAdmin,
     };
   },
 });
@@ -48,4 +49,5 @@ interface DatabaseUserAttributes {
   pfpUrl: string;
   hasOnboarded: boolean;
   personalChannelId: string | null;
+  isAdmin: boolean;
 }

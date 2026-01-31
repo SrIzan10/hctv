@@ -18,6 +18,7 @@ import {
   resolveStreamInfo,
   resolveUserFromPersonalChannelName,
 } from '../auth/resolve';
+import { can, canAccessBot } from '../auth/abac';
 import { genIdenticonUpload } from '../utils/genIdenticonUpload';
 import { generateStreamKey } from '../db/streamKey';
 
@@ -42,9 +43,7 @@ export async function editStreamInfo(prev: any, formData: FormData) {
     return { success: false, error: 'Channel not found' };
   }
 
-  const isBroadcaster =
-    channelInfo.ownerId === user.id || channelInfo.managers.some((m) => m.id === user.id);
-  if (!isBroadcaster) {
+  if (!can(user, 'update', 'streamInfo', { channel: channelInfo })) {
     return { success: false, error: 'Unauthorized' };
   }
 
@@ -104,15 +103,6 @@ export async function onboard(prev: any, formData: FormData) {
   await initializeStreamInfo(createdChannel.id);
 
   await generateStreamKey(createdChannel.id, createdChannel.name);
-
-  if (process.env.NODE_ENV === 'production') {
-    await fetch(process.env.WELCOME_WORKFLOW_URL!, {
-      method: 'POST',
-      body: JSON.stringify({
-        username: zod.data.username,
-      }),
-    });
-  }
 
   return { success: true };
 }
@@ -202,10 +192,7 @@ export async function updateChannelSettings(prev: any, formData: FormData) {
     return { success: false, error: 'Channel not found' };
   }
 
-  const isOwner = channel.ownerId === user.id;
-  const isManager = channel.managers.some((manager) => manager.id === user.id);
-
-  if (!isOwner && !isManager) {
+  if (!can(user, 'update', 'channel', { channel })) {
     return { success: false, error: 'Unauthorized' };
   }
 
@@ -242,7 +229,7 @@ export async function addChannelManager(channelId: string, userChannel: string) 
     return { success: false, error: 'Channel not found OR is personal.' };
   }
 
-  if (channel.ownerId !== user.id) {
+  if (!can(user, 'manage', 'channel', { channel })) {
     return { success: false, error: 'Only channel owners can add managers' };
   }
 
@@ -286,7 +273,7 @@ export async function removeChannelManager(channelId: string, userId: string) {
     return { success: false, error: 'Channel not found' };
   }
 
-  if (channel.ownerId !== user.id) {
+  if (!can(user, 'manage', 'channel', { channel })) {
     return { success: false, error: 'Only channel owners can remove managers' };
   }
 
@@ -355,12 +342,8 @@ export async function deleteChannel(channelId: string) {
     return { success: false, error: 'Channel not found' };
   }
 
-  if (channel.ownerId !== user.id) {
-    return { success: false, error: 'Only channel owners can delete channels' };
-  }
-
-  if (channel.personalFor) {
-    return { success: false, error: 'Cannot delete personal channels' };
+  if (!can(user, 'delete', 'channel', { channel })) {
+    return { success: false, error: 'Only channel owners can delete channels (personal channels cannot be deleted)' };
   }
 
   await prisma.channel.delete({
@@ -416,7 +399,7 @@ export async function editBot(prev: any, formData: FormData) {
   if (!bot) {
     return { success: false, error: 'Bot not found' };
   }
-  if (bot.ownerId !== user.id) {
+  if (!can(user, 'update', 'bot', { bot })) {
     return { success: false, error: 'Unauthorized' };
   }
   if (bot.slug !== zod.data.slug) {

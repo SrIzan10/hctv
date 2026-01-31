@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "ws": "^8.17.0",
-    "@hctv/db": "*"
+    "@hctv/db": "workspace:*"
   },
   "peerDependencies": {
     "@hono/node-server": "^1.11.1",

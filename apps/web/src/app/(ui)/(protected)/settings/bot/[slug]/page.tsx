@@ -1,5 +1,6 @@
 import { getBotBySlug } from '@/lib/db/resolve';
 import { validateRequest } from '@/lib/auth/validate';
+import { can } from '@/lib/auth/abac';
 import { redirect } from 'next/navigation';
 import Image from 'next/image';
 import { GeneralSettings } from '@/app/(ui)/(protected)/settings/bot/[slug]/gensettings';
@@ -12,7 +13,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   const { slug } = await params;
   const bot = await getBotBySlug(slug);
 
-  if (!bot || bot.ownerId !== user?.id) {
+  if (!user || !bot || !can(user, 'update', 'bot', { bot })) {
     redirect('/settings/bot');
   }
 
