@@ -23,7 +23,7 @@ export default defineConfig({
         starlightTypeDoc({
           entryPoints: ['../../packages/sdk/src/index.ts'],
           tsconfig: '../../packages/sdk/tsconfig.json',
-          output: 'sdk-typedoc',
+          output: 'typedoc-sdk',
           sidebar: {
             label: 'SDK Reference',
           },
