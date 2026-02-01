@@ -248,11 +248,6 @@ export default function ChatPanel(props: Props) {
     <div
       className={`${props.isObsPanel ? 'w-full text-white' : 'md:border-l border-border bg-mantle w-[350px] max-w-[350px]'} flex flex-col h-full`}
     >
-      {!props.isObsPanel && (
-        <div className="px-4 py-3 border-b border-border">
-          <h2 className="font-semibold text-sm text-foreground">Live Chat</h2>
-        </div>
-      )}
       <div
         ref={scrollRef}
         className={`flex-1 px-4 py-2 ${props.isObsPanel ? 'scrollbar-hide' : 'scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent'} overflow-y-auto overflow-x-hidden`}

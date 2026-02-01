@@ -45,8 +45,9 @@ model Channel {
   description String @default("A hctv channel")
   pfpUrl      String
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  nameLastChanged DateTime?
 
   personalFor User? @relation("PersonalChannel")
 

@@ -50,3 +50,8 @@ export const editBotSchema = createBotSchema.and(
     from: z.string().min(1),
   })
 );
+
+export const changeUsernameSchema = z.object({
+  channelId: z.string().min(1),
+  newUsername: username,
+});
