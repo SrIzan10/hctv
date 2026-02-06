@@ -3,7 +3,6 @@ import { getRedisConnection } from '@hctv/db';
 import { promisify } from 'node:util';
 import { existsSync } from 'node:fs';
 import { exec as execCallback } from 'node:child_process';
-import { MEDIAMTX_URL } from '@/lib/env';
 import { getMediamtxClientEnvs } from '@/lib/utils/mediamtx/client';
 const pExec = promisify(execCallback);
 
@@ -28,7 +27,7 @@ export async function registerThumbnailWorker(): Promise<void> {
       try {
         // this is totally unnecessary, but i'll keep it for security purposes.
         const name = job.data.name.replace(/[^a-zA-Z0-9]/g, '_');
-        const server = job.data.server || 'default';
+        const server = job.data.server || 'hq';
         const srvValues = getMediamtxClientEnvs(server);
         
         const m3u8location = `${srvValues.publicUrl}/${name}/index.m3u8`;

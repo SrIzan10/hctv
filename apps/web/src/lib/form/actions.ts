@@ -19,7 +19,7 @@ import {
   resolveStreamInfo,
   resolveUserFromPersonalChannelName,
 } from '../auth/resolve';
-import { can, canAccessBot } from '../auth/abac';
+import { can } from '../auth/abac';
 import { genIdenticonUpload } from '../utils/genIdenticonUpload';
 import { generateStreamKey } from '../db/streamKey';
 

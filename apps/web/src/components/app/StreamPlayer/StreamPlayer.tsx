@@ -13,7 +13,6 @@ import {
 } from 'media-chrome/react';
 import HlsVideo from 'hls-video-element/react';
 import { useSession } from '@/lib/providers/SessionProvider';
-import { MEDIAMTX_URL } from '@/lib/env';
 import { useUserStreamInfo } from '@/lib/hooks/useUserList';
 import { getMediamtxClientEnvs } from '@/lib/utils/mediamtx/client';
 

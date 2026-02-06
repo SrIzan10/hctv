@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     console.log(
       'Mediamtx publish auth request:',
       JSON.stringify(body, null, 2)
-    )
+    );
   }
   const parsed = schema.safeParse(body);
 
