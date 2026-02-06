@@ -1,0 +1,60 @@
+services:
+  hctv:
+    container_name: hctv
+    depends_on:
+      postgres:
+        condition: service_healthy
+      pgbouncer:
+        condition: service_started
+    env_file:
+      - .env
+    restart: unless-stopped
+    image: srizan10/hclive
+  chat:
+    depends_on:
+      postgres:
+        condition: service_healthy
+      hctv:
+        condition: service_started
+    env_file:
+      - .env
+    restart: unless-stopped
+    image: srizan10/hclive-chat
+  postgres:
+    image: 'postgres:17-alpine'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: '${PG_PASS}'
+    restart: unless-stopped
+    volumes:
+      - 'hctv_pgdata:/var/lib/postgresql/data'
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'pg_isready -U postgres'
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  pgbouncer:
+    image: 'bitnamilegacy/pgbouncer:1'
+    environment:
+      - POSTGRESQL_HOST=postgres
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_USERNAME=postgres
+      - 'POSTGRESQL_PASSWORD=${PG_PASS}'
+      - PGBOUNCER_POOL_MODE=transaction
+      - PGBOUNCER_MAX_CLIENT_CONN=100
+      - PGBOUNCER_DEFAULT_POOL_SIZE=20
+    depends_on:
+      - postgres
+    restart: unless-stopped
+  redis:
+    image: 'redis:7.4-alpine'
+    volumes:
+      - 'hctv_redis:/data'
+  mediamtx:
+    image: 'bluenviron/mediamtx:latest'
+    ports:
+      - '8890:8890/udp'
+    volumes:
+      - './mediamtx.yml:/mediamtx.yml'
