@@ -98,7 +98,7 @@ export default function ChannelSettingsClient({
   const [selTab, setSelTab] = useQueryState('tab', parseAsString.withDefault('general'));
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [region, setRegion] = useState<MediaMTXRegion>('eu');
+  const [region, setRegion] = useState<MediaMTXRegion>('hq');
   const channelList = useOwnedChannels();
   const router = useRouter();
 
@@ -543,8 +543,7 @@ export default function ChannelSettingsClient({
                           <SelectValue placeholder="Select region" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="eu">Europe 🇪🇺</SelectItem>
-                          <SelectItem value="asia">Singapore 🇸🇬</SelectItem>
+                          <SelectItem value="hq">HQ Server A 🇺🇸</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

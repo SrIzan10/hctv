@@ -80,7 +80,7 @@ model StreamInfo {
   category  String
   startedAt DateTime
   isLive    Boolean
-  streamRegion String @default("eu")
+  streamRegion String @default("hq")
 
   channelId String
   channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)

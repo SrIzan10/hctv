@@ -5,15 +5,12 @@ export interface MediaMTXEnvs {
 }
 
 export const MEDIAMTX_SERVER_REGIONS: Record<MediaMTXRegion, MediaMTXEnvs> = {
-  eu: {
-    apiUrl: process.env.MEDIAMTX_API_EU!,
-  },
-  asia: {
-    apiUrl: process.env.MEDIAMTX_API_ASIA!,
+  hq: {
+    apiUrl: process.env.MEDIAMTX_API_HQ!,
   },
 };
 
-export function getMediamtxEnvs(region: MediaMTXRegion = 'eu'): MediaMTXEnvs {
+export function getMediamtxEnvs(region: MediaMTXRegion = 'hq'): MediaMTXEnvs {
   const envs = MEDIAMTX_SERVER_REGIONS[region];
 
   if (!envs) {

@@ -1,1 +1,1 @@
-export type MediaMTXRegion = 'eu' | 'asia';
+export type MediaMTXRegion = 'hq';

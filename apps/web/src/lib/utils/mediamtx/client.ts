@@ -8,19 +8,13 @@ export interface MediaMTXClientEnvs {
   string: string;
 }
 
-export function getMediamtxClientEnvs(region: MediaMTXRegion = 'eu'): MediaMTXClientEnvs {
+export function getMediamtxClientEnvs(region: MediaMTXRegion = 'hq'): MediaMTXClientEnvs {
   const envs: Record<MediaMTXRegion, MediaMTXClientEnvs> = {
-    eu: {
-      publicUrl: getEnv('NEXT_PUBLIC_MEDIAMTX_URL_EU')!,
-      ingestRoute: getEnv('NEXT_PUBLIC_MEDIAMTX_INGEST_ROUTE_EU')!,
-      emoji: '🇪🇺',
-      string: 'EU',
-    },
-    asia: {
-      publicUrl: getEnv('NEXT_PUBLIC_MEDIAMTX_URL_ASIA')!,
-      ingestRoute: getEnv('NEXT_PUBLIC_MEDIAMTX_INGEST_ROUTE_ASIA')!,
-      emoji: '🇸🇬',
-      string: 'Singapore'
+    hq: {
+      publicUrl: getEnv('NEXT_PUBLIC_MEDIAMTX_URL_HQ')!,
+      ingestRoute: getEnv('NEXT_PUBLIC_MEDIAMTX_INGEST_ROUTE_HQ')!,
+      emoji: '🇺🇸',
+      string: 'HQ Server A',
     },
   };
 
