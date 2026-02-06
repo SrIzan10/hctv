@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
       'Mediamtx publish auth request:',
       JSON.stringify(body, null, 2)
     );
-  }
+  };
   const parsed = schema.safeParse(body);
 
   if (!parsed.success) {
