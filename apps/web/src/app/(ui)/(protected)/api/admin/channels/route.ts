@@ -33,7 +33,6 @@ export async function GET(request: NextRequest) {
     },
     take: 50,
   });
-  console.log(channels)
   return Response.json(channels);
 }
 

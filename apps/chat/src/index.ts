@@ -181,12 +181,14 @@ app.get(
               isBot: ws.chatUser.isBot || false,
             },
             message,
+            msgId: `${crypto.randomUUID()}`
           };
 
           const redisObj = {
             user: msgObj.user,
             message: msgObj.message,
             type: 'message',
+            msgId: `${crypto.randomUUID()}`,
           };
 
           const redisStr = JSON.stringify(redisObj);

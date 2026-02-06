@@ -50,10 +50,6 @@ export async function initializeStreamInfo(channelId?: string) {
 
 export async function syncStream() {
   try {
-    if (!process.env.MEDIAMTX_API) {
-      console.error('MEDIAMTX_API environment variable is not set');
-      return;
-    }
     const regions = Object.keys(MEDIAMTX_SERVER_REGIONS) as Array<
       keyof typeof MEDIAMTX_SERVER_REGIONS
     >;
