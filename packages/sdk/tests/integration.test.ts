@@ -190,7 +190,7 @@ describe.skipIf(!BOT_TOKEN)('ChatClient Integration Tests', () => {
     }, 15000);
 
     it('should throw when sending message while disconnected', () => {
-      expect(() => client.sendMessage('test')).toThrow('Not connected to a channel');
+      expect(() => client.sendMessage('test')).toThrow('Not connected to any channel');
     });
   });
 });

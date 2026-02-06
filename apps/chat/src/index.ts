@@ -111,6 +111,12 @@ app.get(
         return;
       }
 
+      if (await prisma.channel.count({ where: { name: username } }) === 0) {
+        // channel doesn't exist
+        ws.close();
+        return;
+      }
+
       ws.targetUsername = username;
       ws.chatUser = chatUser;
       ws.personalChannel = personalChannel;

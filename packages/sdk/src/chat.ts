@@ -11,15 +11,22 @@ import type {
 const DEFAULT_BASE_URL = 'wss://hackclub.tv/api/stream/chat/ws';
 const PING_INTERVAL = 20000; // 20 seconds
 
+interface ChannelConnection {
+  ws: WebSocket;
+  pingInterval: ReturnType<typeof setInterval>;
+  messageHandlers: Set<MessageHandler>;
+  systemMessageHandlers: Set<SystemMessageHandler>;
+  historyHandlers: Set<HistoryHandler>;
+}
+
 export class ChatClient {
   private botToken: string;
   private baseUrl: string;
-  private ws: WebSocket | null = null;
-  private messageHandlers: Set<MessageHandler> = new Set();
-  private systemMessageHandlers: Set<SystemMessageHandler> = new Set();
-  private historyHandlers: Set<HistoryHandler> = new Set();
-  private channelName: string | null = null;
-  private pingInterval: ReturnType<typeof setInterval> | null = null;
+  private connections: Map<string, ChannelConnection> = new Map();
+  // Global handlers (receive messages from all channels)
+  private globalMessageHandlers: Set<MessageHandler> = new Set();
+  private globalSystemMessageHandlers: Set<SystemMessageHandler> = new Set();
+  private globalHistoryHandlers: Set<HistoryHandler> = new Set();
 
   constructor(botToken: string, options?: ChatClientOptions) {
     this.botToken = botToken;
@@ -27,65 +34,78 @@ export class ChatClient {
   }
 
   async connect(channelName: string): Promise<void> {
-    if (this.isConnected) {
-      return Promise.reject(new Error('already connected, please disconnect from it first'));
+    if (this.connections.has(channelName)) {
+      return Promise.reject(new Error(`already connected to channel: ${channelName}`));
     }
 
-    this.channelName = channelName;
     const wsUrl = `${this.baseUrl}/${channelName}?botAuth=${this.botToken}`;
-    
+
+    let ws: WebSocket;
     if (typeof process !== 'undefined' && process.versions?.node) {
       const { default: WebSocket } = await import('ws');
-      this.ws = new WebSocket(wsUrl) as any;
+      ws = new WebSocket(wsUrl) as any;
     } else {
-      this.ws = new WebSocket(wsUrl);
+      ws = new WebSocket(wsUrl);
     }
-    
-    return this.setupWebSocket(channelName);
+
+    const connection: ChannelConnection = {
+      ws,
+      pingInterval: null as any,
+      messageHandlers: new Set(),
+      systemMessageHandlers: new Set(),
+      historyHandlers: new Set(),
+    };
+
+    this.connections.set(channelName, connection);
+
+    return this.setupWebSocket(channelName, connection);
   }
 
-  private setupWebSocket(channelName: string): Promise<void> {
+  private setupWebSocket(channelName: string, connection: ChannelConnection): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.ws!.onopen = () => {
-        this.emit('system', {
+      connection.ws.onopen = () => {
+        const systemMsg: SystemMessage = {
           type: 'connected',
           channelName,
           message: 'Connected',
           timestamp: Date.now(),
-        });
-        this.startPingInterval();
+        };
+        this.emitSystem(systemMsg, connection);
+        this.startPingInterval(channelName, connection);
         resolve();
       };
 
-      this.ws!.onmessage = (event) => {
+      connection.ws.onmessage = (event) => {
         const data = JSON.parse(event.data.toString());
-        this.handleMessage(data, channelName);
+        this.handleMessage(data, channelName, connection);
       };
 
-      this.ws!.onerror = () => {
-        this.emit('system', {
+      connection.ws.onerror = () => {
+        const systemMsg: SystemMessage = {
           type: 'error',
           channelName,
           message: 'WebSocket error',
           timestamp: Date.now(),
-        });
+        };
+        this.emitSystem(systemMsg, connection);
         reject(new Error('WebSocket error'));
       };
 
-      this.ws!.onclose = () => {
-        this.stopPingInterval();
-        this.emit('system', {
+      connection.ws.onclose = () => {
+        this.stopPingInterval(connection);
+        const systemMsg: SystemMessage = {
           type: 'disconnected',
           channelName,
           message: 'Disconnected',
           timestamp: Date.now(),
-        });
-        this.ws = null;
+        };
+        this.emitSystem(systemMsg, connection);
+        this.connections.delete(channelName);
       };
     });
   }
 
-  private handleMessage(data: any, channelName: string): void {
+  private handleMessage(data: any, channelName: string, connection: ChannelConnection): void {
     // Handle pong response
     if (data.type === 'pong') {
       return;
@@ -96,7 +116,10 @@ export class ChatClient {
       const messages: ChatMessage[] = data.messages.map((msg: ServerChatMessage) =>
         this.parseServerMessage(msg, channelName)
       );
-      this.historyHandlers.forEach((handler) => handler(messages));
+      // Emit to channel-specific handlers
+      connection.historyHandlers.forEach((handler) => handler(messages));
+      // Emit to global handlers
+      this.globalHistoryHandlers.forEach((handler) => handler(messages));
       return;
     }
 
@@ -104,7 +127,7 @@ export class ChatClient {
     // Server sends: { user: { id, username, pfpUrl, displayName?, isBot }, message }
     if (data.user && typeof data.message === 'string') {
       const chatMessage = this.parseServerMessage(data, channelName);
-      this.emit('message', chatMessage);
+      this.emitMessage(chatMessage, connection);
       return;
     }
 
@@ -129,63 +152,139 @@ export class ChatClient {
     };
   }
 
-  private startPingInterval(): void {
-    this.pingInterval = setInterval(() => {
-      if (this.isConnected) {
-        this.ws!.send(JSON.stringify({ type: 'ping' }));
+  private startPingInterval(channelName: string, connection: ChannelConnection): void {
+    connection.pingInterval = setInterval(() => {
+      if (connection.ws.readyState === WebSocket.OPEN) {
+        connection.ws.send(JSON.stringify({ type: 'ping' }));
       }
     }, PING_INTERVAL);
   }
 
-  private stopPingInterval(): void {
-    if (this.pingInterval) {
-      clearInterval(this.pingInterval);
-      this.pingInterval = null;
+  private stopPingInterval(connection: ChannelConnection): void {
+    if (connection.pingInterval) {
+      clearInterval(connection.pingInterval);
     }
   }
 
-  disconnect(): void {
-    this.stopPingInterval();
-    this.ws?.close();
-    this.ws = null;
-    this.channelName = null;
-  }
-
-  sendMessage(message: string): void {
-    if (!this.isConnected) {
-      throw new Error('Not connected to a channel');
+  disconnect(channelName?: string): void {
+    if (channelName) {
+      // Disconnect specific channel
+      const connection = this.connections.get(channelName);
+      if (connection) {
+        this.stopPingInterval(connection);
+        connection.ws.close();
+        this.connections.delete(channelName);
+      }
+    } else {
+      // Disconnect all channels
+      for (const [name, connection] of this.connections) {
+        this.stopPingInterval(connection);
+        connection.ws.close();
+      }
+      this.connections.clear();
     }
-    this.ws!.send(JSON.stringify({ type: 'message', message }));
   }
 
-  onMessage(handler: MessageHandler): () => void {
-    this.messageHandlers.add(handler);
-    return () => this.messageHandlers.delete(handler);
+  sendMessage(message: string, channelName?: string): void {
+    if (channelName) {
+      // Send to specific channel
+      const connection = this.connections.get(channelName);
+      if (!connection || connection.ws.readyState !== WebSocket.OPEN) {
+        throw new Error(`Not connected to channel: ${channelName}`);
+      }
+      connection.ws.send(JSON.stringify({ type: 'message', message }));
+    } else {
+      // Send to first connected channel (backward compatibility)
+      const firstConnection = Array.from(this.connections.values())[0];
+      if (!firstConnection || firstConnection.ws.readyState !== WebSocket.OPEN) {
+        throw new Error('Not connected to any channel');
+      }
+      firstConnection.ws.send(JSON.stringify({ type: 'message', message }));
+    }
   }
 
-  onSystemMessage(handler: SystemMessageHandler): () => void {
-    this.systemMessageHandlers.add(handler);
-    return () => this.systemMessageHandlers.delete(handler);
+  onMessage(handler: MessageHandler, channelName?: string): () => void {
+    if (channelName) {
+      // Channel-specific handler
+      const connection = this.connections.get(channelName);
+      if (!connection) {
+        throw new Error(`Not connected to channel: ${channelName}`);
+      }
+      connection.messageHandlers.add(handler);
+      return () => connection.messageHandlers.delete(handler);
+    } else {
+      // Global handler (receives from all channels)
+      this.globalMessageHandlers.add(handler);
+      return () => this.globalMessageHandlers.delete(handler);
+    }
   }
 
-  onHistory(handler: HistoryHandler): () => void {
-    this.historyHandlers.add(handler);
-    return () => this.historyHandlers.delete(handler);
+  onSystemMessage(handler: SystemMessageHandler, channelName?: string): () => void {
+    if (channelName) {
+      // Channel-specific handler
+      const connection = this.connections.get(channelName);
+      if (!connection) {
+        throw new Error(`Not connected to channel: ${channelName}`);
+      }
+      connection.systemMessageHandlers.add(handler);
+      return () => connection.systemMessageHandlers.delete(handler);
+    } else {
+      // Global handler (receives from all channels)
+      this.globalSystemMessageHandlers.add(handler);
+      return () => this.globalSystemMessageHandlers.delete(handler);
+    }
   }
 
-  private emit(type: 'message', data: ChatMessage): void;
-  private emit(type: 'system', data: SystemMessage): void;
-  private emit(type: 'message' | 'system', data: ChatMessage | SystemMessage): void {
-    const handlers = type === 'message' ? this.messageHandlers : this.systemMessageHandlers;
-    handlers.forEach((handler) => handler(data as any));
+  onHistory(handler: HistoryHandler, channelName?: string): () => void {
+    if (channelName) {
+      // Channel-specific handler
+      const connection = this.connections.get(channelName);
+      if (!connection) {
+        throw new Error(`Not connected to channel: ${channelName}`);
+      }
+      connection.historyHandlers.add(handler);
+      return () => connection.historyHandlers.delete(handler);
+    } else {
+      // Global handler (receives from all channels)
+      this.globalHistoryHandlers.add(handler);
+      return () => this.globalHistoryHandlers.delete(handler);
+    }
+  }
+
+  private emitMessage(message: ChatMessage, connection: ChannelConnection): void {
+    // Emit to channel-specific handlers
+    connection.messageHandlers.forEach((handler) => handler(message));
+    // Emit to global handlers
+    this.globalMessageHandlers.forEach((handler) => handler(message));
+  }
+
+  private emitSystem(message: SystemMessage, connection: ChannelConnection): void {
+    // Emit to channel-specific handlers
+    connection.systemMessageHandlers.forEach((handler) => handler(message));
+    // Emit to global handlers
+    this.globalSystemMessageHandlers.forEach((handler) => handler(message));
+  }
+
+  isConnectedTo(channelName: string): boolean {
+    const connection = this.connections.get(channelName);
+    return connection ? connection.ws.readyState === WebSocket.OPEN : false;
+  }
+
+  get connectedChannels(): string[] {
+    return Array.from(this.connections.keys());
   }
 
   get isConnected(): boolean {
-    return this.ws?.readyState === WebSocket.OPEN;
+    return (
+      this.connections.size > 0 &&
+      Array.from(this.connections.values()).some((c) => c.ws.readyState === WebSocket.OPEN)
+    );
   }
 
   get currentChannel(): string | null {
-    return this.channelName;
+    // Return first connected channel for backward compatibility
+    const channels = Array.from(this.connections.keys());
+    return channels.length > 0 ? channels[0] : null;
   }
 }
 

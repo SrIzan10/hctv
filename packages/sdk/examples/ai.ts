@@ -9,7 +9,7 @@ if (!aiToken) {
   throw new Error('AI_TOKEN environment variable is required');
 }
 
-const sdk = new HctvSdk({ botToken: botToken })
+const sdk = new HctvSdk({ botToken })
 
 await sdk.chat.connect('bot-playground')
 console.log('connected to the chat!')

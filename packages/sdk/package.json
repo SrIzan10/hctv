@@ -4,7 +4,8 @@
   "scripts": {
     "test": "vitest run",
     "build": "tsup",
-    "dev": "tsup --watch"
+    "dev": "tsup --watch",
+    "example": "sh -c 'bun run examples/${0}.ts'"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

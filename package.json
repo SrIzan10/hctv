@@ -17,7 +17,9 @@
     "db:migrate": "pnpm --filter=@hctv/db db:migrate",
     "ui:add": "pnpm --filter=@hctv/web ui:add",
     "prisma": "pnpm --filter=@hctv/db prisma",
-    "r:rtmp": "docker compose -f dev/docker-compose.yml restart nginx-rtmp -t 0"
+    "r:rtmp": "docker compose -f dev/docker-compose.yml restart nginx-rtmp -t 0",
+    "sdk:test": "dotenvx run -f .env.sdk -- pnpm --filter=@hctv/sdk test",
+    "sdk:example": "dotenvx run -f .env.sdk -- pnpm --filter=@hctv/sdk example"
   },
   "devDependencies": {
     "prettier": "^3.6.2",

@@ -44,24 +44,29 @@ class MockWebSocket {
   }
 }
 
-let mockWebSocketInstance: MockWebSocket | null = null;
+let mockWebSocketInstances: MockWebSocket[] = [];
 
 vi.stubGlobal(
   'WebSocket',
   class extends MockWebSocket {
     constructor(url: string) {
       super(url);
-      mockWebSocketInstance = this;
+      mockWebSocketInstances.push(this);
     }
   }
 );
+
+// Helper to get mock instance by channel name
+function getMockInstance(channelName: string): MockWebSocket | undefined {
+  return mockWebSocketInstances.find((ws) => ws.url.includes(`/${channelName}`));
+}
 
 // Mock process to simulate browser environment (avoid Node.js ws import path)
 vi.stubGlobal('process', { versions: {} });
 
 describe('HctvSdk', () => {
   beforeEach(() => {
-    mockWebSocketInstance = null;
+    mockWebSocketInstances = [];
   });
 
   afterEach(() => {
@@ -89,7 +94,7 @@ describe('ChatClient', () => {
   let client: ChatClient;
 
   beforeEach(() => {
-    mockWebSocketInstance = null;
+    mockWebSocketInstances = [];
     client = new ChatClient('test-bot-token');
   });
 
@@ -118,15 +123,25 @@ describe('ChatClient', () => {
       await connectPromise;
 
       expect(client.isConnected).toBe(true);
-      expect(mockWebSocketInstance).not.toBeNull();
-      expect(mockWebSocketInstance?.url).toContain('/ws/testchannel');
+      const mockWs = getMockInstance('testchannel');
+      expect(mockWs).not.toBeUndefined();
+      expect(mockWs?.url).toContain('/ws/testchannel');
     });
 
-    it('should throw error when already connected', async () => {
+    it('should allow connecting to multiple channels', async () => {
+      await client.connect('channel1');
+      await client.connect('channel2');
+
+      expect(client.isConnectedTo('channel1')).toBe(true);
+      expect(client.isConnectedTo('channel2')).toBe(true);
+      expect(client.connectedChannels).toEqual(['channel1', 'channel2']);
+    });
+
+    it('should throw error when already connected to same channel', async () => {
       await client.connect('testchannel');
 
-      await expect(client.connect('anotherchannel')).rejects.toThrow(
-        'already connected, please disconnect from it first'
+      await expect(client.connect('testchannel')).rejects.toThrow(
+        'already connected to channel: testchannel'
       );
     });
 
@@ -146,14 +161,28 @@ describe('ChatClient', () => {
   });
 
   describe('disconnect', () => {
-    it('should disconnect from channel', async () => {
-      await client.connect('testchannel');
+    it('should disconnect from specific channel', async () => {
+      await client.connect('channel1');
+      await client.connect('channel2');
+
+      expect(client.isConnectedTo('channel1')).toBe(true);
+      expect(client.isConnectedTo('channel2')).toBe(true);
+
+      client.disconnect('channel1');
+
+      expect(client.isConnectedTo('channel1')).toBe(false);
+      expect(client.isConnectedTo('channel2')).toBe(true);
+    });
+
+    it('should disconnect from all channels when no channel specified', async () => {
+      await client.connect('channel1');
+      await client.connect('channel2');
       expect(client.isConnected).toBe(true);
 
       client.disconnect();
 
       expect(client.isConnected).toBe(false);
-      expect(client.currentChannel).toBeNull();
+      expect(client.connectedChannels.length).toBe(0);
     });
 
     it('should emit disconnected system message', async () => {
@@ -172,31 +201,52 @@ describe('ChatClient', () => {
   });
 
   describe('sendMessage', () => {
-    it('should send a message when connected', async () => {
+    it('should send a message to specific channel', async () => {
+      await client.connect('testchannel');
+
+      client.sendMessage('Hello, world!', 'testchannel');
+
+      const mockWs = getMockInstance('testchannel');
+      const messages = mockWs!.sentMessages;
+      const lastMsg = JSON.parse(messages[messages.length - 1]);
+      expect(lastMsg.type).toBe('message');
+      expect(lastMsg.message).toBe('Hello, world!');
+    });
+
+    it('should send to first channel when no channel specified', async () => {
       await client.connect('testchannel');
 
       client.sendMessage('Hello, world!');
 
-      const messages = mockWebSocketInstance!.sentMessages;
+      const mockWs = getMockInstance('testchannel');
+      const messages = mockWs!.sentMessages;
       const lastMsg = JSON.parse(messages[messages.length - 1]);
       expect(lastMsg.type).toBe('message');
       expect(lastMsg.message).toBe('Hello, world!');
     });
 
     it('should throw error when not connected', () => {
-      expect(() => client.sendMessage('test')).toThrow('Not connected to a channel');
+      expect(() => client.sendMessage('test')).toThrow('Not connected to any channel');
+    });
+
+    it('should throw error when channel not connected', async () => {
+      await client.connect('channel1');
+      expect(() => client.sendMessage('test', 'channel2')).toThrow(
+        'Not connected to channel: channel2'
+      );
     });
   });
 
   describe('onMessage', () => {
-    it('should call handler when message received (server format)', async () => {
+    it('should call global handler when message received', async () => {
       const messageHandler = vi.fn();
       client.onMessage(messageHandler);
 
       await client.connect('testchannel');
 
+      const mockWs = getMockInstance('testchannel');
       // Server format: { user: {...}, message: string }
-      mockWebSocketInstance?.simulateMessage({
+      mockWs?.simulateMessage({
         user: {
           id: 'user-123',
           username: 'testuser',
@@ -214,6 +264,80 @@ describe('ChatClient', () => {
       );
     });
 
+    it('should call channel-specific handler', async () => {
+      await client.connect('testchannel');
+
+      const channelHandler = vi.fn();
+      client.onMessage(channelHandler, 'testchannel');
+
+      const mockWs = getMockInstance('testchannel');
+      mockWs?.simulateMessage({
+        user: { id: '1', username: 'testuser', pfpUrl: '' },
+        message: 'Hello',
+      });
+
+      expect(channelHandler).toHaveBeenCalledWith(expect.objectContaining({ message: 'Hello' }));
+    });
+
+    it('should route messages to correct channel handler', async () => {
+      await client.connect('channel1');
+      await client.connect('channel2');
+
+      const handler1 = vi.fn();
+      const handler2 = vi.fn();
+      client.onMessage(handler1, 'channel1');
+      client.onMessage(handler2, 'channel2');
+
+      const mockWs1 = getMockInstance('channel1');
+      const mockWs2 = getMockInstance('channel2');
+
+      mockWs1?.simulateMessage({
+        user: { id: '1', username: 'user1', pfpUrl: '' },
+        message: 'Message to channel1',
+      });
+
+      mockWs2?.simulateMessage({
+        user: { id: '2', username: 'user2', pfpUrl: '' },
+        message: 'Message to channel2',
+      });
+
+      expect(handler1).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'Message to channel1', channelName: 'channel1' })
+      );
+      expect(handler2).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'Message to channel2', channelName: 'channel2' })
+      );
+    });
+
+    it('should call global handler for all channels', async () => {
+      const globalHandler = vi.fn();
+      client.onMessage(globalHandler);
+
+      await client.connect('channel1');
+      await client.connect('channel2');
+
+      const mockWs1 = getMockInstance('channel1');
+      const mockWs2 = getMockInstance('channel2');
+
+      mockWs1?.simulateMessage({
+        user: { id: '1', username: 'user1', pfpUrl: '' },
+        message: 'Message 1',
+      });
+
+      mockWs2?.simulateMessage({
+        user: { id: '2', username: 'user2', pfpUrl: '' },
+        message: 'Message 2',
+      });
+
+      expect(globalHandler).toHaveBeenCalledTimes(2);
+      expect(globalHandler).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'Message 1', channelName: 'channel1' })
+      );
+      expect(globalHandler).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'Message 2', channelName: 'channel2' })
+      );
+    });
+
     it('should return unsubscribe function', async () => {
       const messageHandler = vi.fn();
       const unsubscribe = client.onMessage(messageHandler);
@@ -222,7 +346,8 @@ describe('ChatClient', () => {
 
       unsubscribe();
 
-      mockWebSocketInstance?.simulateMessage({
+      const mockWs = getMockInstance('testchannel');
+      mockWs?.simulateMessage({
         user: { id: '1', username: 'testuser', pfpUrl: '' },
         message: 'Should not receive',
       });
@@ -239,7 +364,8 @@ describe('ChatClient', () => {
 
       await client.connect('testchannel');
 
-      mockWebSocketInstance?.simulateMessage({
+      const mockWs = getMockInstance('testchannel');
+      mockWs?.simulateMessage({
         user: { id: '1', username: 'testuser', pfpUrl: '' },
         message: 'test message',
       });
@@ -256,7 +382,7 @@ describe('ChatClient', () => {
 
       await client.connect('testchannel');
 
-      mockWebSocketInstance?.simulateMessage({
+      getMockInstance('testchannel')?.simulateMessage({
         type: 'history',
         messages: [
           {
@@ -287,7 +413,7 @@ describe('ChatClient', () => {
       await client.connect('testchannel');
       unsubscribe();
 
-      mockWebSocketInstance?.simulateMessage({
+      getMockInstance('testchannel')?.simulateMessage({
         type: 'history',
         messages: [],
       });
@@ -329,7 +455,7 @@ describe('ChatClient', () => {
 
       await client.connect('testchannel');
 
-      mockWebSocketInstance?.simulateMessage({
+      getMockInstance('testchannel')?.simulateMessage({
         user: {
           id: 'user-123',
           username: 'johndoe',
@@ -356,7 +482,7 @@ describe('ChatClient', () => {
 
       await client.connect('testchannel');
 
-      mockWebSocketInstance?.simulateMessage({
+      getMockInstance('testchannel')?.simulateMessage({
         user: {
           id: 'bot-123',
           username: 'mybot',
@@ -383,7 +509,7 @@ describe('ChatClient', () => {
 
       await client.connect('testchannel');
 
-      mockWebSocketInstance?.simulateMessage({
+      getMockInstance('testchannel')?.simulateMessage({
         type: 'pong',
       });
 
@@ -398,7 +524,7 @@ describe('ChatClient', () => {
 
       await client.connect('testchannel');
 
-      mockWebSocketInstance?.simulateMessage({
+      getMockInstance('testchannel')?.simulateMessage({
         type: 'emojiMsgResponse',
         emojis: {
           smile: 'https://example.com/emoji/smile.png',
@@ -414,7 +540,7 @@ describe('ChatClient', () => {
 
       await client.connect('testchannel');
 
-      mockWebSocketInstance?.simulateMessage({
+      getMockInstance('testchannel')?.simulateMessage({
         type: 'emojiSearchResponse',
         results: ['smile', 'smirk'],
       });
@@ -466,7 +592,7 @@ describe('ChatClient', () => {
 
       await new Promise((resolve) => setTimeout(resolve, 5));
 
-      mockWebSocketInstance?.simulateError(new Error('Connection failed'));
+      getMockInstance('testchannel')?.simulateError(new Error('Connection failed'));
 
       await expect(connectPromise).rejects.toBeDefined();
 
@@ -550,11 +676,164 @@ describe('SystemMessage type', () => {
   });
 });
 
+describe('Multi-channel support', () => {
+  let client: ChatClient;
+
+  beforeEach(() => {
+    mockWebSocketInstances = [];
+    client = new ChatClient('test-bot-token');
+  });
+
+  afterEach(() => {
+    client.disconnect();
+    vi.clearAllMocks();
+  });
+
+  it('should connect to multiple channels simultaneously', async () => {
+    await client.connect('channel1');
+    await client.connect('channel2');
+    await client.connect('channel3');
+
+    expect(client.connectedChannels).toEqual(['channel1', 'channel2', 'channel3']);
+    expect(client.isConnectedTo('channel1')).toBe(true);
+    expect(client.isConnectedTo('channel2')).toBe(true);
+    expect(client.isConnectedTo('channel3')).toBe(true);
+  });
+
+  it('should send messages to specific channels', async () => {
+    await client.connect('channel1');
+    await client.connect('channel2');
+
+    client.sendMessage('Message 1', 'channel1');
+    client.sendMessage('Message 2', 'channel2');
+
+    const mockWs1 = getMockInstance('channel1');
+    const mockWs2 = getMockInstance('channel2');
+
+    const msg1 = JSON.parse(mockWs1!.sentMessages[mockWs1!.sentMessages.length - 1]);
+    const msg2 = JSON.parse(mockWs2!.sentMessages[mockWs2!.sentMessages.length - 1]);
+
+    expect(msg1.message).toBe('Message 1');
+    expect(msg2.message).toBe('Message 2');
+  });
+
+  it('should route messages correctly with channel-specific handlers', async () => {
+    await client.connect('channel1');
+    await client.connect('channel2');
+
+    const handler1 = vi.fn();
+    const handler2 = vi.fn();
+
+    client.onMessage(handler1, 'channel1');
+    client.onMessage(handler2, 'channel2');
+
+    const mockWs1 = getMockInstance('channel1');
+    const mockWs2 = getMockInstance('channel2');
+
+    mockWs1?.simulateMessage({
+      user: { id: '1', username: 'user1', pfpUrl: '' },
+      message: 'Hello channel 1',
+    });
+
+    mockWs2?.simulateMessage({
+      user: { id: '2', username: 'user2', pfpUrl: '' },
+      message: 'Hello channel 2',
+    });
+
+    expect(handler1).toHaveBeenCalledTimes(1);
+    expect(handler1).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Hello channel 1',
+        channelName: 'channel1',
+      })
+    );
+
+    expect(handler2).toHaveBeenCalledTimes(1);
+    expect(handler2).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Hello channel 2',
+        channelName: 'channel2',
+      })
+    );
+  });
+
+  it('should support global handlers receiving from all channels', async () => {
+    const globalHandler = vi.fn();
+    client.onMessage(globalHandler);
+
+    await client.connect('channel1');
+    await client.connect('channel2');
+
+    const mockWs1 = getMockInstance('channel1');
+    const mockWs2 = getMockInstance('channel2');
+
+    mockWs1?.simulateMessage({
+      user: { id: '1', username: 'user1', pfpUrl: '' },
+      message: 'Message from channel 1',
+    });
+
+    mockWs2?.simulateMessage({
+      user: { id: '2', username: 'user2', pfpUrl: '' },
+      message: 'Message from channel 2',
+    });
+
+    expect(globalHandler).toHaveBeenCalledTimes(2);
+  });
+
+  it('should disconnect from specific channel without affecting others', async () => {
+    await client.connect('channel1');
+    await client.connect('channel2');
+    await client.connect('channel3');
+
+    client.disconnect('channel2');
+
+    expect(client.isConnectedTo('channel1')).toBe(true);
+    expect(client.isConnectedTo('channel2')).toBe(false);
+    expect(client.isConnectedTo('channel3')).toBe(true);
+    expect(client.connectedChannels).toEqual(['channel1', 'channel3']);
+  });
+
+  it('should handle history for multiple channels independently', async () => {
+    const historyHandler = vi.fn();
+    client.onHistory(historyHandler);
+
+    await client.connect('channel1');
+    await client.connect('channel2');
+
+    const mockWs1 = getMockInstance('channel1');
+    const mockWs2 = getMockInstance('channel2');
+
+    mockWs1?.simulateMessage({
+      type: 'history',
+      messages: [{ user: { id: '1', username: 'u1', pfpUrl: '' }, message: 'C1 History' }],
+    });
+
+    mockWs2?.simulateMessage({
+      type: 'history',
+      messages: [{ user: { id: '2', username: 'u2', pfpUrl: '' }, message: 'C2 History' }],
+    });
+
+    expect(historyHandler).toHaveBeenCalledTimes(2);
+  });
+
+  it('should maintain backward compatibility with single channel usage', async () => {
+    await client.connect('testchannel');
+
+    expect(client.isConnected).toBe(true);
+    expect(client.currentChannel).toBe('testchannel');
+
+    client.sendMessage('Test');
+
+    const mockWs = getMockInstance('testchannel');
+    expect(mockWs!.sentMessages.length).toBeGreaterThan(0);
+  });
+});
+
 describe('Edge cases', () => {
   let client: ChatClient;
 
   beforeEach(() => {
-    mockWebSocketInstance = null;
+    mockWebSocketInstances = [];
     client = new ChatClient('test-bot-token');
   });
 
@@ -569,7 +848,7 @@ describe('Edge cases', () => {
 
     await client.connect('testchannel');
 
-    mockWebSocketInstance?.simulateMessage({
+    getMockInstance('testchannel')?.simulateMessage({
       user: { id: '1', username: 'testuser', pfpUrl: '' },
       message: '',
     });
@@ -588,7 +867,7 @@ describe('Edge cases', () => {
     await client.connect('testchannel');
 
     const specialMessage = '🎉 Hello <script>alert("xss")</script> & "quotes" \'apostrophe\'';
-    mockWebSocketInstance?.simulateMessage({
+    getMockInstance('testchannel')?.simulateMessage({
       user: { id: '1', username: 'testuser', pfpUrl: '' },
       message: specialMessage,
     });
@@ -607,7 +886,7 @@ describe('Edge cases', () => {
     await client.connect('testchannel');
 
     const longMessage = 'a'.repeat(10000);
-    mockWebSocketInstance?.simulateMessage({
+    getMockInstance('testchannel')?.simulateMessage({
       user: { id: '1', username: 'testuser', pfpUrl: '' },
       message: longMessage,
     });
@@ -626,7 +905,7 @@ describe('Edge cases', () => {
     await client.connect('testchannel');
 
     for (let i = 0; i < 100; i++) {
-      mockWebSocketInstance?.simulateMessage({
+      getMockInstance('testchannel')?.simulateMessage({
         user: { id: '1', username: 'testuser', pfpUrl: '' },
         message: `Message ${i}`,
       });
