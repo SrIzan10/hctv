@@ -7,19 +7,20 @@ import {
   MediaLoadingIndicator,
   MediaControlBar,
   MediaPlayButton,
-  MediaSeekBackwardButton,
-  MediaSeekForwardButton,
   MediaMuteButton,
   MediaVolumeRange,
   MediaFullscreenButton,
 } from 'media-chrome/react';
 import HlsVideo from 'hls-video-element/react';
 import { useSession } from '@/lib/providers/SessionProvider';
-import { MEDIAMTX_URL } from '@/lib/env';
+import { useUserStreamInfo } from '@/lib/hooks/useUserList';
+import { getMediamtxClientEnvs } from '@/lib/utils/mediamtx/client';
 
 export default function StreamPlayer() {
   const { username } = useParams();
   const { session } = useSession();
+  const { streamInfo: userInfo } = useUserStreamInfo(username!.toString());
+  
   const videoRef = useRef(null);
 
   useEffect(() => {
@@ -35,10 +36,15 @@ export default function StreamPlayer() {
         },
         lowLatencyMode: true,
         debug: process.env.NODE_ENV === 'development',
+        backBufferLength: 90,
+        enableWorker: true,
+        maxLiveSyncPlaybackRate: 1.5,
+        liveSyncDurationCount: 2,
+        liveMaxLatencyDurationCount: 4,
       };
 
       // @ts-ignore
-      video.src = `${MEDIAMTX_URL}/${username}/index.m3u8`;
+      video.src = `${getMediamtxClientEnvs(userInfo?.streamRegion!).publicUrl}/${username}/index.m3u8`;
     }
 
     return () => {

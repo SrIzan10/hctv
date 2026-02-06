@@ -21,7 +21,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import {
   createBotSchema,
-  createChannelSchema, editBotSchema, onboardSchema, streamInfoEditSchema, updateChannelSettingsSchema
+  createChannelSchema,
+  changeUsernameSchema,
+  editBotSchema,
+  onboardSchema,
+  streamInfoEditSchema,
+  updateChannelSettingsSchema,
 } from '@/lib/form/zod';
 
 export const schemaDb = [
@@ -30,7 +35,8 @@ export const schemaDb = [
   { name: 'createChannel', zod: createChannelSchema },
   { name: 'updateChannelSettings', zod: updateChannelSettingsSchema },
   { name: 'createBot', zod: createBotSchema },
-  { name: 'editBot', zod: editBotSchema }
+  { name: 'editBot', zod: editBotSchema },
+  { name: 'changeUsername', zod: changeUsernameSchema },
 ] as const;
 
 export function UniversalForm<T extends z.ZodType>({
@@ -62,7 +68,7 @@ export function UniversalForm<T extends z.ZodType>({
   }, [fields, defaultValues]);
 
   type FormData = z.infer<T>;
-  
+
   const form = useForm<FormData>({
     resolver: zodResolver(schema as any),
     defaultValues: initialValues as FormData,
@@ -86,8 +92,8 @@ export function UniversalForm<T extends z.ZodType>({
             control={form.control}
             name={field.name as Path<FormData>}
             render={({ field: formField }) => (
-              <FormItem>
-                {(field.type !== 'hidden' || field.label) && <FormLabel>{field.label}</FormLabel>}
+              <FormItem className={field.type === 'hidden' ? 'hidden' : undefined}>
+                {field.type !== 'hidden' && field.label && <FormLabel>{field.label}</FormLabel>}
                 <FormControl>
                   {field.component ? (
                     field.component({ field: formField, ...field.componentProps })
@@ -97,23 +103,33 @@ export function UniversalForm<T extends z.ZodType>({
                       {...formField}
                       value={formField.value ?? ''}
                       rows={field.textAreaRows ?? 5}
+                      maxLength={field.maxChars}
                     />
                   ) : (
                     <Input
                       type={field.type || 'text'}
                       placeholder={field.placeholder}
                       {...formField}
+                      onChange={(e) => {
+                        if (field.inputFilter) {
+                          e.target.value = e.target.value.replace(field.inputFilter, '');
+                        }
+                        formField.onChange(e);
+                      }}
                       value={formField.value ?? ''}
+                      maxLength={field.maxChars}
                     />
                   )}
                 </FormControl>
-                {field.description && <FormDescription>{field.description}</FormDescription>}
-                <FormMessage />
+                {field.type !== 'hidden' && field.description && (
+                  <FormDescription>{field.description}</FormDescription>
+                )}
+                {field.type !== 'hidden' && <FormMessage />}
               </FormItem>
             )}
           />
         ))}
-        <div className={cn("flex gap-2 py-2", submitButtonDivClassname)}>
+        <div className={cn('flex gap-2 py-2', submitButtonDivClassname)}>
           {otherSubmitButton}
           <SubmitButton buttonText={submitText} className={submitClassname} />
         </div>

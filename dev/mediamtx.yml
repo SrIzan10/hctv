@@ -6,8 +6,13 @@ srt: yes
 srtAddress: :8890
 
 hls: yes
+hlsAddress: :8891
+hlsSegmentCount: 7
+hlsSegmentDuration: 500ms
+hlsPartDuration: 200ms
+hlsMuxerCloseAfter: 5s
 
 authMethod: http
-authHTTPAddress: http://192.168.1.47:3000/api/mediamtx/publish
+authHTTPAddress: http://host.docker.internal:3000/api/mediamtx/publish
 
 api: yes

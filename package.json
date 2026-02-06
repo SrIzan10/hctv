@@ -14,14 +14,16 @@
     "docker:web": "dotenvx run -f .env.docker -- docker buildx build --platform linux/amd64 -f apps/web/Dockerfile . --secret id=TURBO_TOKEN,env=TURBO_TOKEN --secret id=TURBO_TEAM,env=TURBO_TEAM --no-cache",
     "docker:chat": "dotenvx run -f .env.docker -- docker buildx build --platform linux/amd64 -f apps/chat/Dockerfile . --secret id=TURBO_TOKEN,env=TURBO_TOKEN --secret id=TURBO_TEAM,env=TURBO_TEAM --no-cache",
     "act": "act --secret-file .env.ci",
-    "db:migrate": "yarn workspace @hctv/db db:migrate",
-    "ui:add": "yarn workspace @hctv/web ui:add",
-    "prisma": "yarn workspace @hctv/db prisma",
-    "r:rtmp": "docker compose -f dev/docker-compose.yml restart nginx-rtmp -t 0"
+    "db:migrate": "pnpm --filter=@hctv/db db:migrate",
+    "ui:add": "pnpm --filter=@hctv/web ui:add",
+    "prisma": "pnpm --filter=@hctv/db prisma",
+    "r:rtmp": "docker compose -f dev/docker-compose.yml restart nginx-rtmp -t 0",
+    "sdk:test": "dotenvx run -f .env.sdk -- pnpm --filter=@hctv/sdk test",
+    "sdk:example": "dotenvx run -f .env.sdk -- pnpm --filter=@hctv/sdk example"
   },
   "devDependencies": {
     "prettier": "^3.6.2",
     "turbo": "^2.4.4"
   },
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+  "packageManager": "pnpm@10.6.5"
 }

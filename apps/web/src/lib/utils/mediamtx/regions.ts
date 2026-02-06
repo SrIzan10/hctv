@@ -1,0 +1,1 @@
+export type MediaMTXRegion = 'hq';

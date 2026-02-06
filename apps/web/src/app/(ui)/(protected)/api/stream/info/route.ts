@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
   const shouldGetOwned = searchParams.get('owned') === 'true';
   const allPersonalChannels = searchParams.get('personal') === 'true';
   const isLive = searchParams.get('live') === 'true';
+  const username = searchParams.get('username');
   const { user } = await validateRequest();
 
   if ((shouldGetOwned || allPersonalChannels) && !user) {
@@ -17,6 +18,10 @@ export async function GET(request: NextRequest) {
 
   const where: Prisma.StreamInfoWhereInput = {};
   const channelConditions: Prisma.ChannelWhereInput[] = [];
+
+  if (username) {
+    where.username = username;
+  }
 
   if (shouldGetOwned && user) {
     channelConditions.push({ ownerId: user.id });
@@ -46,6 +51,12 @@ export async function GET(request: NextRequest) {
       channel: {
         include: {
           personalFor: true,
+          restriction: {
+            select: {
+              id: true,
+              expiresAt: true,
+            },
+          },
         }
       },
     },
@@ -58,6 +69,22 @@ export async function GET(request: NextRequest) {
     }
     // @ts-ignore
     delete obj.channel.obsChatGrantToken;
+
+    if (obj.channel.restriction) {
+      const isExpired = obj.channel.restriction.expiresAt &&
+        new Date(obj.channel.restriction.expiresAt) < new Date();
+      if (isExpired) {
+        // @ts-ignore
+        obj.channel.restriction = null;
+      } else {
+        // @ts-ignore
+        obj.channel.isRestricted = true;
+        // @ts-ignore
+        obj.channel.restrictionExpiresAt = obj.channel.restriction.expiresAt;
+        // @ts-ignore
+        delete obj.channel.restriction;
+      }
+    }
   });
 
   return Response.json(db);

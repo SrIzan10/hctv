@@ -1,10 +1,13 @@
 FROM node:lts-alpine AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
 
 FROM base AS builder
 RUN apk update
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
-RUN yarn global add turbo@^2
+RUN pnpm add -g turbo@^2
 COPY . .
 
 RUN turbo prune @hctv/chat --docker
@@ -16,10 +19,10 @@ WORKDIR /app
  
 # First install the dependencies
 COPY --from=builder /app/out/json/ .
-RUN yarn install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 COPY --from=builder /app/out/full/ .
-RUN --mount=type=secret,id=TURBO_TOKEN --mount=type=secret,id=TURBO_TEAM TURBO_TOKEN=$(cat /run/secrets/TURBO_TOKEN) TURBO_TEAM=$(cat /run/secrets/TURBO_TEAM) yarn turbo run build --concurrency=1
+RUN --mount=type=secret,id=TURBO_TOKEN --mount=type=secret,id=TURBO_TEAM TURBO_TOKEN=$(cat /run/secrets/TURBO_TOKEN) TURBO_TEAM=$(cat /run/secrets/TURBO_TEAM) pnpm turbo run build --concurrency=1
  
 FROM base AS runner
 WORKDIR /app

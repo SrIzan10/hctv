@@ -1,0 +1,1 @@
+UPDATE "StreamInfo" SET "streamRegion" = 'hq' WHERE "streamRegion" = 'eu';

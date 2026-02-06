@@ -111,6 +111,12 @@ app.get(
         return;
       }
 
+      if (await prisma.channel.count({ where: { name: username } }) === 0) {
+        // channel doesn't exist
+        ws.close();
+        return;
+      }
+
       ws.targetUsername = username;
       ws.chatUser = chatUser;
       ws.personalChannel = personalChannel;
@@ -175,12 +181,14 @@ app.get(
               isBot: ws.chatUser.isBot || false,
             },
             message,
+            msgId: `${crypto.randomUUID()}`
           };
 
           const redisObj = {
             user: msgObj.user,
             message: msgObj.message,
             type: 'message',
+            msgId: `${crypto.randomUUID()}`,
           };
 
           const redisStr = JSON.stringify(redisObj);

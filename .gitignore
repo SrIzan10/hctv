@@ -28,6 +28,7 @@ yarn-error.log*
 # local env files
 .env*.local
 .env* 
+!.env.example
 
 # vercel
 .vercel
@@ -48,3 +49,5 @@ slack-import-emojis/target
 **/*/emojis.json
 
 .idea
+
+/apps/docs/src/content/docs/typedoc-sdk

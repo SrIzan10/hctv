@@ -245,9 +245,14 @@ export default function ChatPanel(props: Props) {
   };
 
   return (
-    <div className={`${props.isObsPanel ? 'w-full text-white' : 'md:border bg-mantle w-[350px] max-w-[350px]'} flex flex-col h-full`}>
-      <div ref={scrollRef} className={`flex-1 p-4 ${props.isObsPanel ? 'scrollbar-hide' : ''} overflow-y-auto flex flex-col`}>
-        <div className="space-y-4 flex-1">
+    <div
+      className={`${props.isObsPanel ? 'w-full text-white' : 'md:border-l border-border bg-mantle w-[350px] max-w-[350px]'} flex flex-col h-full`}
+    >
+      <div
+        ref={scrollRef}
+        className={`flex-1 px-4 py-2 ${props.isObsPanel ? 'scrollbar-hide' : 'scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent'} overflow-y-auto overflow-x-hidden`}
+      >
+        <div className="space-y-1 min-h-full flex flex-col justify-end">
           {chatMessages.map((msg, i) => (
             <Message
               key={i}
@@ -260,8 +265,8 @@ export default function ChatPanel(props: Props) {
         </div>
       </div>
       {!props.isObsPanel && (
-        <div className="p-4 border-t relative">
-          <div className="flex space-x-2">
+        <div className="p-3 border-t border-border relative">
+          <div className="flex gap-2">
             <Textarea
               ref={textareaRef}
               value={message}
@@ -281,11 +286,16 @@ export default function ChatPanel(props: Props) {
               onClick={(e) => {
                 setCursorPosition(e.currentTarget.selectionStart || 0);
               }}
-              placeholder="Type a message"
-              className="flex-1 bg-transparent focus-visible:ring-offset-0 min-h-[40px] max-h-[120px] resize-none py-2"
+              placeholder="Send a message..."
+              className="flex-1 bg-background/50 border-border focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 min-h-[40px] max-h-[100px] resize-none py-2 text-sm"
               rows={1}
             />
-            <Button size="icon" className="text-black transition-colors" onClick={sendMessage}>
+            <Button
+              size="icon"
+              className="shrink-0 transition-colors"
+              onClick={sendMessage}
+              disabled={!message.trim()}
+            >
               <Send className="h-4 w-4" />
             </Button>
           </div>

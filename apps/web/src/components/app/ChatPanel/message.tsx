@@ -7,28 +7,26 @@ import { Bot } from 'lucide-react';
 export function Message({ user, message, type, emojiMap }: MessageProps) {
   if (type === 'systemMsg') {
     return (
-      <div className="flex items-center justify-center">
-        <span className="text-xs text-muted-foreground">{message}</span>
+      <div className="flex items-center justify-center py-1">
+        <span className="text-xs text-muted-foreground italic">{message}</span>
       </div>
     );
   }
 
   return (
-    <div className="flex">
-      <div lang="en" className="max-w-full break-all whitespace-pre-wrap hyphens-auto">
-        <p className="flex flex-wrap items-center">
-          <span className="font-bold mr-2 flex items-center">
-            {user?.isBot && (
-              <span className="text-xs text-muted-foreground flex mr-1">
-                {' '}
-                <Bot className="size-5" />
-              </span>
-            )}
-            {user?.displayName || user?.username}
-          </span>
-
+    <div className="group hover:bg-primary/5 rounded px-2 py-1 -mx-2 transition-colors">
+      <div className="flex items-start gap-2">
+        <span className="font-semibold text-primary shrink-0 flex items-center gap-1">
+          {user?.isBot && <Bot className="size-4 text-muted-foreground" />}
+          <span>{user?.displayName || user?.username}</span>
+        </span>
+        <span
+          lang="en"
+          className="text-foreground break-words overflow-wrap-anywhere min-w-0 flex-1"
+          style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}
+        >
           <EmojiRenderer text={message} emojiMap={emojiMap} />
-        </p>
+        </span>
       </div>
     </div>
   );
@@ -50,12 +48,8 @@ export function EmojiRenderer({ text, emojiMap }: EmojiRendererProps) {
             return (
               <TooltipProvider key={index}>
                 <Tooltip delayDuration={250}>
-                  <TooltipTrigger>
-                    <span
-                      key={index}
-                      className="inline-block align-middle"
-                      style={{ height: '1.2em' }}
-                    >
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center align-middle mx-0.5">
                       <Image
                         src={emojiUrl}
                         alt={part}
@@ -72,7 +66,11 @@ export function EmojiRenderer({ text, emojiMap }: EmojiRendererProps) {
           }
         }
 
-        return <span key={index}>{part}</span>;
+        // Preserve text as-is, handling whitespace properly
+        if (part) {
+          return <span key={index}>{part}</span>;
+        }
+        return null;
       })}
     </>
   );

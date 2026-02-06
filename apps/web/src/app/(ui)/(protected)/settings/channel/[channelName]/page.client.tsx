@@ -30,6 +30,7 @@ import {
   deleteChannel,
   toggleGlobalChannelNotifs,
   editStreamInfo,
+  changeUsername,
 } from '@/lib/form/actions';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
@@ -53,7 +54,15 @@ import { ChannelSelect } from '@/components/app/ChannelSelect/ChannelSelect';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useConfirm } from '@omit/react-confirm-dialog';
-import { MEDIAMTX_INGEST_ROUTE } from '@/lib/env';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { getMediamtxClientEnvs } from '@/lib/utils/mediamtx/client';
+import type { MediaMTXRegion } from '@/lib/utils/mediamtx/regions';
 
 interface ChannelSettingsClientProps {
   channel: Channel & {
@@ -66,6 +75,7 @@ interface ChannelSettingsClientProps {
     followers: (Follow & { user: { id: string; slack_id: string } })[];
     followerPersonalChannels: (Channel | null)[];
     is247: boolean;
+    nameLastChanged: Date | null;
   };
   isOwner: boolean;
   currentUser: User;
@@ -88,6 +98,7 @@ export default function ChannelSettingsClient({
   const [selTab, setSelTab] = useQueryState('tab', parseAsString.withDefault('general'));
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [region, setRegion] = useState<MediaMTXRegion>('hq');
   const channelList = useOwnedChannels();
   const router = useRouter();
 
@@ -102,6 +113,32 @@ export default function ChannelSettingsClient({
       toast.success('Channel settings updated successfully');
     }
   }, []);
+
+  const handleUsernameChangeComplete = useCallback(
+    (result: any) => {
+      if (result?.success && result?.newUsername) {
+        toast.success('Username changed successfully! Redirecting...');
+        router.push(`/settings/channel/${result.newUsername}?tab=${selTab}`);
+      }
+    },
+    [router, selTab]
+  );
+
+  const getUsernameChangeCooldownInfo = () => {
+    if (!channel.nameLastChanged) {
+      return { canChange: true, daysRemaining: 0 };
+    }
+    const daysSinceLastChange = Math.floor(
+      (Date.now() - new Date(channel.nameLastChanged).getTime()) / (1000 * 60 * 60 * 24)
+    );
+    const cooldownDays = 30;
+    if (daysSinceLastChange >= cooldownDays) {
+      return { canChange: true, daysRemaining: 0 };
+    }
+    return { canChange: false, daysRemaining: cooldownDays - daysSinceLastChange };
+  };
+
+  const cooldownInfo = getUsernameChangeCooldownInfo();
 
   const copyStreamKey = async () => {
     if (streamKey) {
@@ -137,7 +174,8 @@ export default function ChannelSettingsClient({
       toast.error('Stream key not available');
       return '';
     }
-    return `srt://${MEDIAMTX_INGEST_ROUTE}?streamid=publish:${channel.name}:thisusernameislongonpurposesoyoudontaccidentallyleakyourstreamkey:${streamKey}&pkt_size=1316`;
+    const { ingestRoute } = getMediamtxClientEnvs(region);
+    return `srt://${ingestRoute}?streamid=publish:${channel.name}:thisusernameislongonpurposesoyoudontaccidentallyleakyourstreamkey:${streamKey}&pkt_size=1316`;
   };
 
   const copyStreamUrl = async () => {
@@ -169,10 +207,10 @@ export default function ChannelSettingsClient({
             </div>
           </div>
         </div>
-        <div className='flex-1' />
+        <div className="flex-1" />
         <div>
           <ChannelSelect
-            channelList={channelList.channels.map(c => c.channel)}
+            channelList={channelList.channels.map((c) => c.channel)}
             value={channel.name}
             onSelect={(value) => {
               if (value === 'create') {
@@ -206,7 +244,7 @@ export default function ChannelSettingsClient({
             Notifications
           </TabsTrigger>
           <TabsTrigger value="utilities" className="flex items-center gap-2">
-            <Wrench className='size-4' />
+            <Wrench className="size-4" />
             Utilities
           </TabsTrigger>
         </TabsList>
@@ -232,7 +270,7 @@ export default function ChannelSettingsClient({
                       return (
                         <div className="space-y-4">
                           <input type="hidden" {...field} />
-                          
+
                           {field.value && (
                             <div className="flex items-center space-x-4">
                               <Avatar className="h-16 w-16">
@@ -241,7 +279,9 @@ export default function ChannelSettingsClient({
                               </Avatar>
                               <div className="flex-1">
                                 <p className="text-sm font-medium">Current profile picture</p>
-                                <p className="text-xs text-muted-foreground">Click &quot;Upload new image&quot; to replace</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Click &quot;Upload new image&quot; to replace
+                                </p>
                               </div>
                               <Button
                                 type="button"
@@ -256,14 +296,14 @@ export default function ChannelSettingsClient({
                               </Button>
                             </div>
                           )}
-                          
+
                           <div>
                             <UploadButton
                               endpoint="pfpUpload"
                               className="mt-2 ut-button:bg-mantle ut-button:text-mantle-foreground ut-allowed-content:text-muted-foreground/70"
                               content={{
-                                button: field.value ? "Upload new image" : "Upload profile picture",
-                                allowedContent: "Image (1MB max)"
+                                button: field.value ? 'Upload new image' : 'Upload profile picture',
+                                allowedContent: 'Image (1MB max)',
                               }}
                               onUploadBegin={() => {
                                 setIsUploading(true);
@@ -283,19 +323,15 @@ export default function ChannelSettingsClient({
                               }}
                               disabled={isUploading}
                             />
-                            
+
                             {isUploading && (
-                              <p className="mt-2 text-sm text-primary">
-                                Uploading...
-                              </p>
+                              <p className="mt-2 text-sm text-primary">Uploading...</p>
                             )}
-                            
+
                             {uploadError && (
-                              <p className="mt-2 text-sm text-red-600">
-                                {uploadError}
-                              </p>
+                              <p className="mt-2 text-sm text-red-600">{uploadError}</p>
                             )}
-                            
+
                             {!field.value && !isUploading && !uploadError && (
                               <p className="mt-2 text-sm text-muted-foreground">
                                 Upload a profile picture for your channel.
@@ -341,7 +377,8 @@ export default function ChannelSettingsClient({
                         <div>
                           <label className="text-sm font-medium">24/7 Channel</label>
                           <p className="text-xs text-muted-foreground">
-                            Mark this channel as always live. It will disable notifications on #hctv-streams.
+                            Mark this channel as always live. It will disable notifications on
+                            #hctv-streams.
                           </p>
                         </div>
                         <Switch
@@ -353,13 +390,55 @@ export default function ChannelSettingsClient({
                         <input type="hidden" {...field} value={field.value ? 'true' : 'false'} />
                       </div>
                     ),
-                  }
+                  },
                 ]}
                 schemaName="updateChannelSettings"
                 action={updateChannelSettings}
                 submitText="Save Changes"
                 onActionComplete={handleChannelSettingsActionComplete}
               />
+
+              <Separator />
+
+              {isPersonal && isOwner && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-semibold">Username</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Your username is how others find and mention you on hctv. You can change it once
+                    every 30 days.
+                  </p>
+                  {!cooldownInfo.canChange && (
+                    <div className="p-3 border border-accent/20 rounded-lg bg-accent/5">
+                      <p className="text-sm text-accent">
+                        You can change your username again in {cooldownInfo.daysRemaining} day
+                        {cooldownInfo.daysRemaining === 1 ? '' : 's'}.
+                      </p>
+                    </div>
+                  )}
+                  <UniversalForm
+                    fields={[
+                      { name: 'channelId', type: 'hidden', value: channel.id, label: 'Channel ID' },
+                      {
+                        name: 'newUsername',
+                        label: 'New Username',
+                        type: 'text',
+                        value: '',
+                        placeholder: channel.name,
+                        description:
+                          'Only lowercase letters, numbers, underscores, and dashes. Max 20 characters.',
+                        inputFilter: /[^a-z0-9_-]/g,
+                        maxChars: 20,
+                      },
+                    ]}
+                    schemaName="changeUsername"
+                    action={changeUsername}
+                    submitText="Change Username"
+                    onActionComplete={handleUsernameChangeComplete}
+                  />
+                </div>
+              )}
 
               {isOwner && !isPersonal && (
                 <>
@@ -431,7 +510,11 @@ export default function ChannelSettingsClient({
                           onClick={() => setKeyVisible(!keyVisible)}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                         >
-                          {keyVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {keyVisible ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
                         </button>
                       </div>
                       <Button onClick={regenerateStreamKey} variant="outline" size="smicon">
@@ -443,13 +526,27 @@ export default function ChannelSettingsClient({
                         onClick={copyStreamKey}
                         disabled={!streamKey}
                       >
-                        {copied.streamKey ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        {copied.streamKey ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
                       </Button>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Stream URL (for OBS)</label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium">Stream URL (for OBS)</label>
+                      <Select value={region} onValueChange={(v) => setRegion(v as MediaMTXRegion)}>
+                        <SelectTrigger className="w-[180px] h-8">
+                          <SelectValue placeholder="Select region" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="hq">HQ Server A 🇺🇸</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <div className="flex items-center gap-2">
                       <div className="relative flex-1">
                         <input
@@ -465,7 +562,11 @@ export default function ChannelSettingsClient({
                         onClick={copyStreamUrl}
                         disabled={!streamKey}
                       >
-                        {copied.streamUrl ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        {copied.streamUrl ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -473,7 +574,7 @@ export default function ChannelSettingsClient({
                 <p className="text-xs text-muted-foreground mt-2">
                   Need help getting started? Check out our{' '}
                   <Link
-                    href="https://docs.hackclub.tv/guides/start-stream/" 
+                    href="https://docs.hackclub.tv/guides/start-stream/"
                     className="text-primary hover:underline"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -595,12 +696,14 @@ export default function ChannelSettingsClient({
                               variant="outline"
                               size="sm"
                               onClick={async () => {
-                                if (await confirm({
-                                  title: 'Remove Manager',
-                                  description: `Are you sure you want to remove ${personalChannel?.name} as a manager? They will no longer be able to stream or moderate this channel.`,
-                                  confirmText: 'Remove',
-                                  cancelText: 'Cancel',
-                                })) {
+                                if (
+                                  await confirm({
+                                    title: 'Remove Manager',
+                                    description: `Are you sure you want to remove ${personalChannel?.name} as a manager? They will no longer be able to stream or moderate this channel.`,
+                                    confirmText: 'Remove',
+                                    cancelText: 'Cancel',
+                                  })
+                                ) {
                                   removeChannelManager(channel.id, manager.id);
                                 }
                               }}
@@ -706,7 +809,7 @@ export default function ChannelSettingsClient({
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Chat overlay</h3>
                   <p className="text-sm text-mantle-foreground mb-4">
-                    Add a 300x600 browser source with this and enjoy! 
+                    Add a 300x600 browser source with this and enjoy!
                   </p>
                   <div className="flex items-center gap-2">
                     <div className="relative flex-1">
