@@ -38,9 +38,10 @@ COPY --from=builder /app/out/json/ .
 RUN yarn install --frozen-lockfile
 
 COPY --from=builder /app/out/full/ .
-RUN --mount=type=secret,id=TURBO_TOKEN --mount=type=secret,id=TURBO_TEAM \
+RUN --mount=type=secret,id=TURBO_TOKEN --mount=type=secret,id=TURBO_TEAM --mount=type=secret,id=SENTRY_AUTH_TOKEN \
     COMMIT=$(cat /tmp/commit_hash 2>/dev/null || echo "unknown") && \
     TURBO_TOKEN=$(cat /run/secrets/TURBO_TOKEN) TURBO_TEAM=$(cat /run/secrets/TURBO_TEAM) \
+    SENTRY_AUTH_TOKEN=$(cat /run/secrets/SENTRY_AUTH_TOKEN) \
     commit=$COMMIT yarn turbo run build --env-mode=loose
  
 FROM base AS runner
