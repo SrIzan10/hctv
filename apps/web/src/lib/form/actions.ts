@@ -105,6 +105,15 @@ export async function onboard(prev: any, formData: FormData) {
 
   await generateStreamKey(createdChannel.id, createdChannel.name);
 
+  if (process.env.NODE_ENV === 'production' && process.env.WELCOME_WORKFLOW_URL) {
+    await fetch(process.env.WELCOME_WORKFLOW_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        username: zod.data.username,
+      }),
+    });
+  }
+
   return { success: true };
 }
 
