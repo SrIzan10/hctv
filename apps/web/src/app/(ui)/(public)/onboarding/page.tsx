@@ -4,7 +4,10 @@ import OnboardingClient from "./page.client";
 
 export default async function Page() {
   const { user } = await validateRequest();
-  if (user!.hasOnboarded) {
+  if (!user) {
+    return redirect('/');
+  }
+  if (user.hasOnboarded) {
     return redirect('/');
   }
   return <OnboardingClient />;

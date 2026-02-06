@@ -49,6 +49,10 @@ export async function initializeStreamInfo(channelId?: string) {
 
 export async function syncStream() {
   try {
+    if (!process.env.MEDIAMTX_API) {
+      console.error('MEDIAMTX_API environment variable is not set');
+      return;
+    }
     const response = await fetch(`${process.env.MEDIAMTX_API}/v3/paths/list?itemsPerPage=1000`);
 
     if (!response.ok) {
