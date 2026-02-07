@@ -60,10 +60,6 @@ RUN useradd --system --uid 1001 nextjs --create-home
 RUN mkdir -p /home/nextjs/.cache && \
     chown -R nextjs:nodejs /home/nextjs
 
-# Create corepack cache directory with proper permissions
-RUN mkdir -p /home/nextjs/.cache/node/corepack && \
-    chown -R nextjs:nodejs /home/nextjs/.cache
-
 # Copy Prisma files for migrations
 COPY --from=installer --chown=nextjs:nodejs /app/packages/db/prisma ./packages/db/prisma
 COPY --from=installer --chown=nextjs:nodejs /app/packages/db/generated ./packages/db/generated
@@ -74,8 +70,10 @@ COPY --from=installer /tmp/commit_hash /tmp/commit_hash
 RUN COMMIT_VALUE=$(cat /tmp/commit_hash 2>/dev/null || echo "unknown") && \
     echo "#!/bin/sh" > /usr/local/bin/start.sh && \
     echo "set -e" >> /usr/local/bin/start.sh && \
+    echo "export COREPACK_ENABLE_DOWNLOAD_PROMPT=0" >> /usr/local/bin/start.sh && \
+    echo "export HOME=/home/nextjs" >> /usr/local/bin/start.sh && \
     echo "echo 'Running database migrations...'" >> /usr/local/bin/start.sh && \
-    echo "pnpm prisma migrate deploy --schema=/app/packages/db/prisma/schema.prisma" >> /usr/local/bin/start.sh && \
+    echo "node /app/node_modules/.bin/prisma migrate deploy --schema=/app/packages/db/prisma/schema.prisma" >> /usr/local/bin/start.sh && \
     echo "cd /app" >> /usr/local/bin/start.sh && \
     echo "export commit=$COMMIT_VALUE" >> /usr/local/bin/start.sh && \
     echo "echo 'Starting Next.js application...'" >> /usr/local/bin/start.sh && \
