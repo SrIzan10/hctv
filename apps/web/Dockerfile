@@ -60,6 +60,10 @@ RUN useradd --system --uid 1001 nextjs --create-home
 RUN mkdir -p /home/nextjs/.cache && \
     chown -R nextjs:nodejs /home/nextjs
 
+# Copy monorepo config files for pnpm
+COPY --from=installer --chown=nextjs:nodejs /app/package.json ./package.json
+COPY --from=installer --chown=nextjs:nodejs /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+
 # Copy Prisma files for migrations
 COPY --from=installer --chown=nextjs:nodejs /app/packages/db/prisma ./packages/db/prisma
 COPY --from=installer --chown=nextjs:nodejs /app/packages/db/generated ./packages/db/generated
