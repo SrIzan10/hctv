@@ -73,7 +73,7 @@ RUN COMMIT_VALUE=$(cat /tmp/commit_hash 2>/dev/null || echo "unknown") && \
     echo "export COREPACK_ENABLE_DOWNLOAD_PROMPT=0" >> /usr/local/bin/start.sh && \
     echo "export HOME=/home/nextjs" >> /usr/local/bin/start.sh && \
     echo "echo 'Running database migrations...'" >> /usr/local/bin/start.sh && \
-    echo "node /app/node_modules/.bin/prisma migrate deploy --schema=/app/packages/db/prisma/schema.prisma" >> /usr/local/bin/start.sh && \
+    echo "cd /app && pnpm --filter=@hctv/db db:deploy" >> /usr/local/bin/start.sh && \
     echo "cd /app" >> /usr/local/bin/start.sh && \
     echo "export commit=$COMMIT_VALUE" >> /usr/local/bin/start.sh && \
     echo "echo 'Starting Next.js application...'" >> /usr/local/bin/start.sh && \
