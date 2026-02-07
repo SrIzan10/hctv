@@ -54,7 +54,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd --system --gid 1001 nodejs
-RUN useradd --system --uid 1001 nextjs
+RUN useradd --system --uid 1001 nextjs --create-home
+
+# Ensure home directory and cache directories have proper permissions
+RUN mkdir -p /home/nextjs/.cache && \
+    chown -R nextjs:nodejs /home/nextjs
 
 # Create corepack cache directory with proper permissions
 RUN mkdir -p /home/nextjs/.cache/node/corepack && \
