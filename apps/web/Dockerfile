@@ -56,6 +56,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN groupadd --system --gid 1001 nodejs
 RUN useradd --system --uid 1001 nextjs
 
+# Create corepack cache directory with proper permissions
+RUN mkdir -p /home/nextjs/.cache/node/corepack && \
+    chown -R nextjs:nodejs /home/nextjs/.cache
+
 # Copy Prisma files for migrations
 COPY --from=installer --chown=nextjs:nodejs /app/packages/db/prisma ./packages/db/prisma
 COPY --from=installer --chown=nextjs:nodejs /app/packages/db/generated ./packages/db/generated
