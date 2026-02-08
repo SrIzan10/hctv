@@ -10,9 +10,9 @@
   },
   "type": "module",
   "dependencies": {
-    "@prisma/client": "^6.5.0",
+    "@prisma/client": "6.5.0",
     "ioredis": "5.7.0",
-    "prisma": "^6.5.0"
+    "prisma": "6.5.0"
   },
   "scripts": {
     "db:generate": "prisma generate",
