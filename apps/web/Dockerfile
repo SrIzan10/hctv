@@ -34,11 +34,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /tmp/commit_hash /tmp/commit_hash
 WORKDIR /app
 
-# Ensure pnpm has a root manifest even if the prune output is missing it.
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
-COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
-
 # First install the dependencies (as they change less often)
 COPY --from=builder /app/out/json/ .
 RUN pnpm install --frozen-lockfile
