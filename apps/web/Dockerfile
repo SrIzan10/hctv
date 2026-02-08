@@ -64,6 +64,7 @@ RUN mkdir -p /home/nextjs/.cache && \
 COPY --from=installer --chown=nextjs:nodejs /app/packages/db/prisma ./packages/db/prisma
 COPY --from=installer --chown=nextjs:nodejs /app/packages/db/generated ./packages/db/generated
 COPY --from=installer --chown=nextjs:nodejs /app/packages/db/package.json ./packages/db/package.json
+COPY --from=installer --chown=nextjs:nodejs /app/packages/db/node_modules ./packages/db/node_modules
 
 COPY --from=installer /tmp/commit_hash /tmp/commit_hash
 RUN COMMIT_VALUE=$(cat /tmp/commit_hash 2>/dev/null || echo "unknown") && \
