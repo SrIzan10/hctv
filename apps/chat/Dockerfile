@@ -16,6 +16,11 @@ FROM base AS installer
 RUN apk update
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
+
+# Ensure pnpm has a root manifest even if the prune output is missing it.
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
  
 # First install the dependencies
 COPY --from=builder /app/out/json/ .
