@@ -60,12 +60,6 @@ RUN useradd --system --uid 1001 nextjs --create-home
 RUN mkdir -p /home/nextjs/.cache && \
     chown -R nextjs:nodejs /home/nextjs
 
-# Copy Prisma files for migrations
-COPY --from=installer --chown=nextjs:nodejs /app/packages/db/prisma ./packages/db/prisma
-COPY --from=installer --chown=nextjs:nodejs /app/packages/db/generated ./packages/db/generated
-COPY --from=installer --chown=nextjs:nodejs /app/packages/db/package.json ./packages/db/package.json
-COPY --from=installer --chown=nextjs:nodejs /app/packages/db/node_modules ./packages/db/node_modules
-
 COPY --from=installer /tmp/commit_hash /tmp/commit_hash
 RUN COMMIT_VALUE=$(cat /tmp/commit_hash 2>/dev/null || echo "unknown") && \
     echo "#!/bin/sh" > /usr/local/bin/start.sh && \
@@ -73,7 +67,8 @@ RUN COMMIT_VALUE=$(cat /tmp/commit_hash 2>/dev/null || echo "unknown") && \
     echo "export COREPACK_ENABLE_DOWNLOAD_PROMPT=0" >> /usr/local/bin/start.sh && \
     echo "export HOME=/home/nextjs" >> /usr/local/bin/start.sh && \
     echo "echo 'Running database migrations...'" >> /usr/local/bin/start.sh && \
-    echo "pnpm --filter=@hctv/db db:deploy" >> /usr/local/bin/start.sh && \
+    echo "cd /app/packages/db && npx prisma migrate deploy" >> /usr/local/bin/start.sh && \
+    echo "cd /app" >> /usr/local/bin/start.sh && \
     echo "export commit=$COMMIT_VALUE" >> /usr/local/bin/start.sh && \
     echo "echo 'Starting Next.js application...'" >> /usr/local/bin/start.sh && \
     echo "exec node apps/web/server.js" >> /usr/local/bin/start.sh && \
@@ -88,8 +83,10 @@ COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/we
 COPY --from=installer --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 COPY --chown=nextjs:nodejs apps/web/emojis.json .
 
-COPY --from=installer --chown=nextjs:nodejs /app/node_modules ./node_modules
-COPY --from=installer --chown=nextjs:nodejs /app/package.json ./package.json
-COPY --from=installer --chown=nextjs:nodejs /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+# Copy Prisma files for migrations AFTER standalone to avoid being overwritten
+COPY --from=installer --chown=nextjs:nodejs /app/packages/db/prisma ./packages/db/prisma
+COPY --from=installer --chown=nextjs:nodejs /app/packages/db/generated ./packages/db/generated
+COPY --from=installer --chown=nextjs:nodejs /app/packages/db/package.json ./packages/db/package.json
+COPY --from=installer --chown=nextjs:nodejs /app/packages/db/node_modules ./packages/db/node_modules
 
 CMD ["/usr/local/bin/start.sh"]
