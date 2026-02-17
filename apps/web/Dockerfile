@@ -1,4 +1,4 @@
-FROM node:lts-slim AS base
+FROM node:22-slim AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
@@ -38,6 +38,9 @@ WORKDIR /app
 COPY --from=builder /app/out/json/ .
 RUN pnpm install --frozen-lockfile
 
+# Build a real, non-symlinked Prisma CLI copy for runtime migrations.
+RUN mkdir -p /opt/prisma-cli && cp -RL /app/packages/db/node_modules/prisma /opt/prisma-cli/prisma
+
 COPY --from=builder /app/out/full/ .
 RUN --mount=type=secret,id=TURBO_TOKEN --mount=type=secret,id=TURBO_TEAM --mount=type=secret,id=SENTRY_AUTH_TOKEN \
     COMMIT=$(cat /tmp/commit_hash 2>/dev/null || echo "unknown") && \
@@ -60,9 +63,6 @@ RUN useradd --system --uid 1001 nextjs --create-home
 RUN mkdir -p /home/nextjs/.cache && \
     chown -R nextjs:nodejs /home/nextjs
 
-# Install prisma CLI globally for running migrations (avoids pnpm symlink issues)
-RUN pnpm add -g prisma@6.5.0
-
 COPY --from=installer /tmp/commit_hash /tmp/commit_hash
 RUN COMMIT_VALUE=$(cat /tmp/commit_hash 2>/dev/null || echo "unknown") && \
     echo "#!/bin/sh" > /usr/local/bin/start.sh && \
@@ -70,7 +70,7 @@ RUN COMMIT_VALUE=$(cat /tmp/commit_hash 2>/dev/null || echo "unknown") && \
     echo "export COREPACK_ENABLE_DOWNLOAD_PROMPT=0" >> /usr/local/bin/start.sh && \
     echo "export HOME=/home/nextjs" >> /usr/local/bin/start.sh && \
     echo "echo 'Running database migrations...'" >> /usr/local/bin/start.sh && \
-    echo "cd /app/packages/db && prisma migrate deploy" >> /usr/local/bin/start.sh && \
+    echo "node /opt/prisma-cli/prisma/build/index.js migrate deploy --schema /app/packages/db/prisma/schema.prisma" >> /usr/local/bin/start.sh && \
     echo "cd /app" >> /usr/local/bin/start.sh && \
     echo "export commit=$COMMIT_VALUE" >> /usr/local/bin/start.sh && \
     echo "echo 'Starting Next.js application...'" >> /usr/local/bin/start.sh && \
@@ -88,5 +88,6 @@ COPY --chown=nextjs:nodejs apps/web/emojis.json .
 
 # Copy Prisma schema and migrations for prisma migrate deploy
 COPY --from=installer --chown=nextjs:nodejs /app/packages/db/prisma ./packages/db/prisma
+COPY --from=installer --chown=nextjs:nodejs /opt/prisma-cli ./opt/prisma-cli
 
 CMD ["/usr/local/bin/start.sh"]
