@@ -8,7 +8,9 @@ services:
         condition: service_started
     env_file:
       - .env
-    image: srizan10/hclive
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
   chat:
     depends_on:
       postgres:
@@ -17,7 +19,9 @@ services:
         condition: service_started
     env_file:
       - .env
-    image: srizan10/hclive-chat
+    build:
+      context: .
+      dockerfile: apps/chat/Dockerfile
   postgres:
     image: 'postgres:17-alpine'
     environment:
