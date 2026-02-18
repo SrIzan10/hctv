@@ -24,6 +24,8 @@ services:
       dockerfile: apps/chat/Dockerfile
   postgres:
     image: 'postgres:17-alpine'
+    ports:
+      - '6767:5432'
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: '${PG_PASS}'
