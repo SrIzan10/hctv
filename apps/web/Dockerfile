@@ -24,6 +24,7 @@ RUN turbo prune @hctv/web --docker
 FROM base AS installer
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
+    curl \
     libvips-dev \
     python3 \
     make \
@@ -42,6 +43,23 @@ RUN pnpm install --frozen-lockfile
 RUN mkdir -p /opt/prisma-cli && cp -RL /app/packages/db/node_modules/prisma /opt/prisma-cli/prisma
 
 COPY --from=builder /app/out/full/ .
+
+# Generate latest emojis.json during image build.
+RUN ARCH=$(dpkg --print-architecture) && \
+    if [ "$ARCH" = "amd64" ]; then EMOJI_ARCH="x86_64"; \
+    elif [ "$ARCH" = "arm64" ]; then EMOJI_ARCH="aarch64"; \
+    else EMOJI_ARCH=""; fi && \
+    RELEASE_JSON=$(curl -fsSL https://api.github.com/repos/srizan10/hctv/releases/latest || true) && \
+    RELEASE_URL=$(printf '%s' "$RELEASE_JSON" | grep "browser_download_url.*slack-import-emojis-linux-${EMOJI_ARCH}" | cut -d '"' -f 4 || true) && \
+    if [ -n "$RELEASE_URL" ] && \
+      curl -fsSL -o /tmp/slack-import-emojis-bin "$RELEASE_URL" && \
+      chmod +x /tmp/slack-import-emojis-bin && \
+      /tmp/slack-import-emojis-bin default; then \
+      cp /app/emojis.json /app/apps/web/emojis.json; \
+    else \
+      cp /app/apps/web/src/lib/instrumentation/emojis.json /app/apps/web/emojis.json; \
+    fi
+
 RUN --mount=type=secret,id=TURBO_TOKEN --mount=type=secret,id=TURBO_TEAM --mount=type=secret,id=SENTRY_AUTH_TOKEN \
     COMMIT=$(cat /tmp/commit_hash 2>/dev/null || echo "unknown") && \
     TURBO_TOKEN=$(cat /run/secrets/TURBO_TOKEN) TURBO_TEAM=$(cat /run/secrets/TURBO_TEAM) \
@@ -84,7 +102,7 @@ USER nextjs
 COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
 COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=installer --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
-COPY --chown=nextjs:nodejs apps/web/emojis.json .
+COPY --from=installer --chown=nextjs:nodejs /app/apps/web/emojis.json ./emojis.json
 
 # Copy Prisma schema and migrations for prisma migrate deploy
 COPY --from=installer --chown=nextjs:nodejs /app/packages/db/prisma ./packages/db/prisma
