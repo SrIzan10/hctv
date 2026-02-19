@@ -1,6 +1,6 @@
 {
   "name": "@hctv/sdk",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "scripts": {
     "test": "vitest run",
     "build": "tsup",
@@ -23,6 +23,9 @@
     "LICENSE",
     "package.json"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": "https://github.com/SrIzan10/ts-lib-boilerplate.git",
   "author": "Izan Gil <npm@srizan.dev>",
   "license": "MIT",
