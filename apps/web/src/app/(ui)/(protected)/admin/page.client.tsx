@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   ShieldMinus,
   X,
+  ClipboardList,
 } from 'lucide-react';
 import {
   Dialog,
@@ -49,6 +50,8 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
   const [channels, setChannels] = useState<ChannelWithRestriction[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [channelsLoading, setChannelsLoading] = useState(false);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
 
   const [banDialogOpen, setBanDialogOpen] = useState(false);
   const [restrictDialogOpen, setRestrictDialogOpen] = useState(false);
@@ -85,10 +88,25 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
     }
   }, []);
 
+  const fetchAuditLogs = useCallback(async () => {
+    setAuditLoading(true);
+    try {
+      const res = await fetch('/api/admin/audit?take=200');
+      if (res.ok) {
+        setAuditLogs(await res.json());
+      }
+    } catch {
+      toast.error('Failed to fetch audit logs');
+    } finally {
+      setAuditLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchUsers('');
     fetchChannels('');
-  }, [fetchUsers, fetchChannels]);
+    fetchAuditLogs();
+  }, [fetchUsers, fetchChannels, fetchAuditLogs]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -132,6 +150,7 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
       if (res.ok) {
         toast.success('User banned successfully');
         fetchUsers(userSearch);
+        fetchAuditLogs();
         setBanDialogOpen(false);
         resetDialogState();
       } else {
@@ -157,6 +176,7 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
       if (res.ok) {
         toast.success('User unbanned successfully');
         fetchUsers(userSearch);
+        fetchAuditLogs();
       } else {
         toast.error('Failed to unban user');
       }
@@ -186,6 +206,7 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
       if (res.ok) {
         toast.success('Channel restricted successfully');
         fetchChannels(channelSearch);
+        fetchAuditLogs();
         setRestrictDialogOpen(false);
         resetDialogState();
       } else {
@@ -211,6 +232,7 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
       if (res.ok) {
         toast.success('Channel unrestricted successfully');
         fetchChannels(channelSearch);
+        fetchAuditLogs();
       } else {
         toast.error('Failed to unrestrict channel');
       }
@@ -233,6 +255,7 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
       if (res.ok) {
         toast.success('User promoted to admin');
         fetchUsers(userSearch);
+        fetchAuditLogs();
       } else {
         const err = await res.text();
         toast.error(err || 'Failed to promote user');
@@ -256,6 +279,7 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
       if (res.ok) {
         toast.success('User demoted from admin');
         fetchUsers(userSearch);
+        fetchAuditLogs();
       } else {
         const err = await res.text();
         toast.error(err || 'Failed to demote user');
@@ -268,14 +292,12 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
   return (
     <div className="container max-w-6xl mx-auto py-6 px-4">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          Admin Panel
-        </h1>
+        <h1 className="text-3xl font-bold flex items-center gap-2">Admin Panel</h1>
         <p className="text-muted-foreground">Manage users and channels on the platform</p>
       </div>
 
       <Tabs defaultValue="users" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Users
@@ -283,6 +305,10 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
           <TabsTrigger value="channels" className="flex items-center gap-2">
             <Tv className="h-4 w-4" />
             Channels
+          </TabsTrigger>
+          <TabsTrigger value="audit" className="flex items-center gap-2">
+            <ClipboardList className="h-4 w-4" />
+            Audit Log
           </TabsTrigger>
         </TabsList>
 
@@ -340,18 +366,14 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="font-medium">
-                                {user.personalChannel?.name}
-                              </p>
+                              <p className="font-medium">{user.personalChannel?.name}</p>
                               <p className="text-sm text-muted-foreground">{user.email}</p>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            {user.isAdmin && (
-                              <Badge variant="default">Admin</Badge>
-                            )}
+                            {user.isAdmin && <Badge variant="default">Admin</Badge>}
                             {user.ban ? (
                               <Badge variant="destructive" className="flex items-center gap-1">
                                 <Ban className="h-3 w-3" />
@@ -478,14 +500,14 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
                           <div className="flex items-center gap-3">
                             <Avatar className="h-10 w-10">
                               <AvatarImage src={channel.pfpUrl} />
-                              <AvatarFallback>
-                                {channel.name[0]?.toUpperCase()}
-                              </AvatarFallback>
+                              <AvatarFallback>{channel.name[0]?.toUpperCase()}</AvatarFallback>
                             </Avatar>
                             <div>
                               <p className="font-medium">{channel.name}</p>
                               {channel.personalFor && (
-                                <Badge variant="outline" className="text-xs">Personal</Badge>
+                                <Badge variant="outline" className="text-xs">
+                                  Personal
+                                </Badge>
                               )}
                             </div>
                           </div>
@@ -512,7 +534,9 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
                             <div className="text-xs text-muted-foreground mt-1">
                               <p>Reason: {channel.restriction.reason}</p>
                               {channel.restriction.expiresAt && (
-                                <p>Expires: {format(new Date(channel.restriction.expiresAt), 'PPP')}</p>
+                                <p>
+                                  Expires: {format(new Date(channel.restriction.expiresAt), 'PPP')}
+                                </p>
                               )}
                             </div>
                           )}
@@ -549,12 +573,81 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="audit">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <CardTitle>Audit Log</CardTitle>
+                  <CardDescription>
+                    Organization-wide moderation and admin actions across all admins.
+                  </CardDescription>
+                </div>
+                <Button variant="outline" size="sm" onClick={fetchAuditLogs}>
+                  Refresh
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Time</TableHead>
+                    <TableHead>Actor</TableHead>
+                    <TableHead>Source</TableHead>
+                    <TableHead>Action</TableHead>
+                    <TableHead>Target</TableHead>
+                    <TableHead>Reason</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {auditLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8">
+                        Loading...
+                      </TableCell>
+                    </TableRow>
+                  ) : auditLogs.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8">
+                        No audit logs yet
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    auditLogs.map((log) => (
+                      <TableRow key={`${log.source}-${log.id}`}>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {format(new Date(log.createdAt), 'PPP p')}
+                        </TableCell>
+                        <TableCell>{log.actor}</TableCell>
+                        <TableCell>
+                          <Badge variant={log.source === 'chat' ? 'secondary' : 'outline'}>
+                            {log.source}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <code className="text-xs">{log.action}</code>
+                        </TableCell>
+                        <TableCell>{log.target ?? '-'}</TableCell>
+                        <TableCell className="text-muted-foreground">{log.reason ?? '-'}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
-      <Dialog open={banDialogOpen} onOpenChange={(open) => {
-        setBanDialogOpen(open);
-        if (!open) resetDialogState();
-      }}>
+      <Dialog
+        open={banDialogOpen}
+        onOpenChange={(open) => {
+          setBanDialogOpen(open);
+          if (!open) resetDialogState();
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Ban User</DialogTitle>
@@ -575,9 +668,7 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
             </div>
             <div>
               <label className="text-sm font-medium">Expires (optional)</label>
-              <p className="text-xs text-muted-foreground mb-2">
-                Leave empty for a permanent ban
-              </p>
+              <p className="text-xs text-muted-foreground mb-2">Leave empty for a permanent ban</p>
               <div className="flex gap-2">
                 <Popover>
                   <PopoverTrigger asChild>
@@ -626,22 +717,21 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
                   </PopoverContent>
                 </Popover>
                 {expiresAt && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setExpiresAt(undefined)}
-                  >
-                    <X className='w-4 h-4' />
+                  <Button variant="ghost" size="icon" onClick={() => setExpiresAt(undefined)}>
+                    <X className="w-4 h-4" />
                   </Button>
                 )}
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setBanDialogOpen(false);
-              resetDialogState();
-            }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setBanDialogOpen(false);
+                resetDialogState();
+              }}
+            >
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleBanUser}>
@@ -651,10 +741,13 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
         </DialogContent>
       </Dialog>
 
-      <Dialog open={restrictDialogOpen} onOpenChange={(open) => {
-        setRestrictDialogOpen(open);
-        if (!open) resetDialogState();
-      }}>
+      <Dialog
+        open={restrictDialogOpen}
+        onOpenChange={(open) => {
+          setRestrictDialogOpen(open);
+          if (!open) resetDialogState();
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Restrict Channel</DialogTitle>
@@ -726,22 +819,21 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
                   </PopoverContent>
                 </Popover>
                 {expiresAt && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setExpiresAt(undefined)}
-                  >
-                    <X className='w-4 h-4' />
+                  <Button variant="ghost" size="icon" onClick={() => setExpiresAt(undefined)}>
+                    <X className="w-4 h-4" />
                   </Button>
                 )}
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setRestrictDialogOpen(false);
-              resetDialogState();
-            }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setRestrictDialogOpen(false);
+                resetDialogState();
+              }}
+            >
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleRestrictChannel}>
@@ -786,7 +878,18 @@ interface ChannelWithRestriction {
   } | null;
 }
 
+interface AuditLog {
+  id: string;
+  source: 'platform' | 'chat';
+  action: string;
+  createdAt: string;
+  actor: string;
+  target: string | null;
+  reason: string | null;
+  details?: unknown;
+  channelName?: string;
+}
+
 interface AdminPanelClientProps {
   currentUser: User;
 }
-

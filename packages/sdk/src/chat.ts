@@ -1,8 +1,15 @@
 // most code here has been written by claude opus 4.5
 import type {
+  ChatAccessHandler,
+  ChatAccessState,
   ChatMessage,
   HistoryHandler,
   MessageHandler,
+  ModerationCommand,
+  ModerationError,
+  ModerationErrorHandler,
+  ModerationEvent,
+  ModerationEventHandler,
   ServerChatMessage,
   SystemMessage,
   SystemMessageHandler,
@@ -17,6 +24,9 @@ interface ChannelConnection {
   messageHandlers: Set<MessageHandler>;
   systemMessageHandlers: Set<SystemMessageHandler>;
   historyHandlers: Set<HistoryHandler>;
+  moderationErrorHandlers: Set<ModerationErrorHandler>;
+  moderationEventHandlers: Set<ModerationEventHandler>;
+  chatAccessHandlers: Set<ChatAccessHandler>;
 }
 
 export class ChatClient {
@@ -27,6 +37,9 @@ export class ChatClient {
   private globalMessageHandlers: Set<MessageHandler> = new Set();
   private globalSystemMessageHandlers: Set<SystemMessageHandler> = new Set();
   private globalHistoryHandlers: Set<HistoryHandler> = new Set();
+  private globalModerationErrorHandlers: Set<ModerationErrorHandler> = new Set();
+  private globalModerationEventHandlers: Set<ModerationEventHandler> = new Set();
+  private globalChatAccessHandlers: Set<ChatAccessHandler> = new Set();
 
   constructor(botToken: string, options?: ChatClientOptions) {
     this.botToken = botToken;
@@ -54,6 +67,9 @@ export class ChatClient {
       messageHandlers: new Set(),
       systemMessageHandlers: new Set(),
       historyHandlers: new Set(),
+      moderationErrorHandlers: new Set(),
+      moderationEventHandlers: new Set(),
+      chatAccessHandlers: new Set(),
     };
 
     this.connections.set(channelName, connection);
@@ -131,6 +147,46 @@ export class ChatClient {
       return;
     }
 
+    if (data.type === 'chatAccess') {
+      const access: ChatAccessState = {
+        canSend: Boolean(data.canSend),
+        restriction: data.restriction ?? null,
+      };
+      this.emitChatAccess(access, channelName, connection);
+      return;
+    }
+
+    if (data.type === 'moderationError') {
+      const error: ModerationError = {
+        code: data.code,
+        message: data.message,
+        restriction: data.restriction,
+      };
+      this.emitModerationError(error, channelName, connection);
+      return;
+    }
+
+    if (data.type === 'messageDeleted' && typeof data.msgId === 'string') {
+      const event: ModerationEvent = {
+        type: 'messageDeleted',
+        msgId: data.msgId,
+        channelName,
+      };
+      this.emitModerationEvent(event, connection);
+      return;
+    }
+
+    if (data.type === 'systemMsg' && typeof data.message === 'string') {
+      const systemMsg: SystemMessage = {
+        type: 'connected',
+        channelName,
+        message: data.message,
+        timestamp: Date.now(),
+      };
+      this.emitSystem(systemMsg, connection);
+      return;
+    }
+
     // Handle emoji responses
     if (data.type === 'emojiMsgResponse' || data.type === 'emojiSearchResponse') {
       // Could add emoji handlers in the future
@@ -141,6 +197,7 @@ export class ChatClient {
   private parseServerMessage(msg: ServerChatMessage, channelName: string): ChatMessage {
     return {
       id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      msgId: msg.msgId,
       channelName,
       username: msg.user.username,
       displayName: msg.user.displayName,
@@ -203,6 +260,59 @@ export class ChatClient {
     }
   }
 
+  sendModerationCommand(command: ModerationCommand, channelName: string): void {
+    const connection = this.connections.get(channelName);
+    if (!connection || connection.ws.readyState !== WebSocket.OPEN) {
+      throw new Error(`Not connected to channel: ${channelName}`);
+    }
+    connection.ws.send(JSON.stringify(command));
+  }
+
+  timeoutUser(
+    channelName: string,
+    targetUserId: string,
+    targetUsername: string,
+    durationSeconds = 300
+  ): void {
+    this.sendModerationCommand(
+      {
+        type: 'mod:timeoutUser',
+        targetUserId,
+        targetUsername,
+        durationSeconds,
+      },
+      channelName
+    );
+  }
+
+  banUser(
+    channelName: string,
+    targetUserId: string,
+    targetUsername: string,
+    reason?: string
+  ): void {
+    this.sendModerationCommand(
+      {
+        type: 'mod:banUser',
+        targetUserId,
+        targetUsername,
+        reason,
+      },
+      channelName
+    );
+  }
+
+  liftTimeout(channelName: string, targetUserId: string, targetUsername: string): void {
+    this.sendModerationCommand(
+      {
+        type: 'mod:liftTimeout',
+        targetUserId,
+        targetUsername,
+      },
+      channelName
+    );
+  }
+
   onMessage(handler: MessageHandler, channelName?: string): () => void {
     if (channelName) {
       // Channel-specific handler
@@ -251,6 +361,48 @@ export class ChatClient {
     }
   }
 
+  onModerationError(handler: ModerationErrorHandler, channelName?: string): () => void {
+    if (channelName) {
+      const connection = this.connections.get(channelName);
+      if (!connection) {
+        throw new Error(`Not connected to channel: ${channelName}`);
+      }
+      connection.moderationErrorHandlers.add(handler);
+      return () => connection.moderationErrorHandlers.delete(handler);
+    }
+
+    this.globalModerationErrorHandlers.add(handler);
+    return () => this.globalModerationErrorHandlers.delete(handler);
+  }
+
+  onModerationEvent(handler: ModerationEventHandler, channelName?: string): () => void {
+    if (channelName) {
+      const connection = this.connections.get(channelName);
+      if (!connection) {
+        throw new Error(`Not connected to channel: ${channelName}`);
+      }
+      connection.moderationEventHandlers.add(handler);
+      return () => connection.moderationEventHandlers.delete(handler);
+    }
+
+    this.globalModerationEventHandlers.add(handler);
+    return () => this.globalModerationEventHandlers.delete(handler);
+  }
+
+  onChatAccess(handler: ChatAccessHandler, channelName?: string): () => void {
+    if (channelName) {
+      const connection = this.connections.get(channelName);
+      if (!connection) {
+        throw new Error(`Not connected to channel: ${channelName}`);
+      }
+      connection.chatAccessHandlers.add(handler);
+      return () => connection.chatAccessHandlers.delete(handler);
+    }
+
+    this.globalChatAccessHandlers.add(handler);
+    return () => this.globalChatAccessHandlers.delete(handler);
+  }
+
   private emitMessage(message: ChatMessage, connection: ChannelConnection): void {
     // Emit to channel-specific handlers
     connection.messageHandlers.forEach((handler) => handler(message));
@@ -263,6 +415,29 @@ export class ChatClient {
     connection.systemMessageHandlers.forEach((handler) => handler(message));
     // Emit to global handlers
     this.globalSystemMessageHandlers.forEach((handler) => handler(message));
+  }
+
+  private emitModerationError(
+    error: ModerationError,
+    channelName: string,
+    connection: ChannelConnection
+  ): void {
+    connection.moderationErrorHandlers.forEach((handler) => handler(error, channelName));
+    this.globalModerationErrorHandlers.forEach((handler) => handler(error, channelName));
+  }
+
+  private emitModerationEvent(event: ModerationEvent, connection: ChannelConnection): void {
+    connection.moderationEventHandlers.forEach((handler) => handler(event));
+    this.globalModerationEventHandlers.forEach((handler) => handler(event));
+  }
+
+  private emitChatAccess(
+    access: ChatAccessState,
+    channelName: string,
+    connection: ChannelConnection
+  ): void {
+    connection.chatAccessHandlers.forEach((handler) => handler(access, channelName));
+    this.globalChatAccessHandlers.forEach((handler) => handler(access, channelName));
   }
 
   isConnectedTo(channelName: string): boolean {

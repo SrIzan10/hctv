@@ -1,5 +1,6 @@
 export interface ChatMessage {
   id: string;
+  msgId?: string;
   channelName: string;
   username: string;
   displayName?: string;
@@ -27,9 +28,48 @@ export interface ServerChatMessage {
     isBot?: boolean;
   };
   message: string;
+  msgId?: string;
   type?: 'message' | 'systemMsg';
+}
+
+export interface ChatAccessState {
+  canSend: boolean;
+  restriction?: {
+    type: 'timeout' | 'ban';
+    reason?: string;
+    expiresAt?: string | null;
+  } | null;
+}
+
+export interface ModerationError {
+  code: string;
+  message: string;
+  restriction?: ChatAccessState['restriction'];
+}
+
+export interface ModerationEvent {
+  type: 'messageDeleted';
+  msgId: string;
+  channelName: string;
+}
+
+export interface ModerationCommand {
+  type:
+    | 'mod:deleteMessage'
+    | 'mod:timeoutUser'
+    | 'mod:banUser'
+    | 'mod:unbanUser'
+    | 'mod:liftTimeout';
+  msgId?: string;
+  targetUserId?: string;
+  targetUsername?: string;
+  durationSeconds?: number;
+  reason?: string;
 }
 
 export type MessageHandler = (message: ChatMessage) => void;
 export type SystemMessageHandler = (message: SystemMessage) => void;
 export type HistoryHandler = (messages: ChatMessage[]) => void;
+export type ChatAccessHandler = (state: ChatAccessState, channelName: string) => void;
+export type ModerationErrorHandler = (error: ModerationError, channelName: string) => void;
+export type ModerationEventHandler = (event: ModerationEvent) => void;

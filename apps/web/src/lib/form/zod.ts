@@ -39,6 +39,15 @@ export const updateChannelSettingsSchema = z.object({
   is247: z.boolean(),
 });
 
+export const updateChatModerationSchema = z.object({
+  channelId: z.string().min(1),
+  blockedTerms: z.string().max(5000).optional(),
+  slowModeSeconds: z.coerce.number().int().min(0).max(120),
+  maxMessageLength: z.coerce.number().int().min(50).max(2000),
+  rateLimitCount: z.coerce.number().int().min(3).max(30),
+  rateLimitWindowSeconds: z.coerce.number().int().min(5).max(60),
+});
+
 export const createBotSchema = z.object({
   name: z.string().min(1, { message: 'Name is required' }),
   slug: username.refine((val) => val !== 'settings', { message: 'This slug is reserved' }),

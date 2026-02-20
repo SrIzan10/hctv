@@ -21,6 +21,7 @@ import {
   Wrench,
   Eye,
   EyeOff,
+  MessageSquareWarning,
 } from 'lucide-react';
 import { UniversalForm } from '@/components/app/UniversalForm/UniversalForm';
 import {
@@ -31,10 +32,18 @@ import {
   toggleGlobalChannelNotifs,
   editStreamInfo,
   changeUsername,
+  updateChatModeration,
 } from '@/lib/form/actions';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import type { Channel, User, StreamInfo, StreamKey, Follow } from '@hctv/db';
+import type {
+  Channel,
+  User,
+  StreamInfo,
+  StreamKey,
+  Follow,
+  ChatModerationSettings,
+} from '@hctv/db';
 import {
   Dialog,
   DialogContent,
@@ -72,6 +81,7 @@ interface ChannelSettingsClientProps {
     managerPersonalChannels: (Channel | null)[];
     streamInfo: StreamInfo[];
     streamKey: StreamKey | null;
+    chatSettings: ChatModerationSettings | null;
     followers: (Follow & { user: { id: string; slack_id: string } })[];
     followerPersonalChannels: (Channel | null)[];
     is247: boolean;
@@ -111,6 +121,12 @@ export default function ChannelSettingsClient({
   const handleChannelSettingsActionComplete = useCallback((result: any) => {
     if (result?.success) {
       toast.success('Channel settings updated successfully');
+    }
+  }, []);
+
+  const handleModerationActionComplete = useCallback((result: any) => {
+    if (result?.success) {
+      toast.success('Moderation settings updated');
     }
   }, []);
 
@@ -224,7 +240,7 @@ export default function ChannelSettingsClient({
       </div>
 
       <Tabs className="w-full" value={selTab} onValueChange={setSelTab}>
-        <TabsList className={`grid w-full ${isPersonal ? 'grid-cols-4' : 'grid-cols-5'}`}>
+        <TabsList className={`grid w-full ${isPersonal ? 'grid-cols-5' : 'grid-cols-6'}`}>
           <TabsTrigger value="general" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             General
@@ -242,6 +258,10 @@ export default function ChannelSettingsClient({
           <TabsTrigger value="notifications" className="flex items-center gap-2">
             <Bell className="h-4 w-4" />
             Notifications
+          </TabsTrigger>
+          <TabsTrigger value="moderation" className="flex items-center gap-2">
+            <MessageSquareWarning className="h-4 w-4" />
+            Moderation
           </TabsTrigger>
           <TabsTrigger value="utilities" className="flex items-center gap-2">
             <Wrench className="size-4" />
@@ -795,6 +815,66 @@ export default function ChannelSettingsClient({
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="moderation">
+          <Card>
+            <CardHeader>
+              <CardTitle>Chat Moderation</CardTitle>
+              <CardDescription>
+                Configure rate limits, slow mode, and blocked words for this channel&apos;s live
+                chat.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <UniversalForm
+                fields={[
+                  { name: 'channelId', type: 'hidden', value: channel.id, label: 'Channel ID' },
+                  {
+                    name: 'slowModeSeconds',
+                    label: 'Slow mode (seconds)',
+                    type: 'number',
+                    value: channel.chatSettings?.slowModeSeconds ?? 0,
+                    description: 'Users can send one message per interval. Set 0 to disable.',
+                  },
+                  {
+                    name: 'maxMessageLength',
+                    label: 'Max message length',
+                    type: 'number',
+                    value: channel.chatSettings?.maxMessageLength ?? 400,
+                    description: 'Maximum allowed message length in characters.',
+                  },
+                  {
+                    name: 'rateLimitCount',
+                    label: 'Messages per window',
+                    type: 'number',
+                    value: channel.chatSettings?.rateLimitCount ?? 8,
+                    description: 'How many messages a user can send in the rate limit window.',
+                  },
+                  {
+                    name: 'rateLimitWindowSeconds',
+                    label: 'Rate window (seconds)',
+                    type: 'number',
+                    value: channel.chatSettings?.rateLimitWindowSeconds ?? 10,
+                    description: 'Window size used for spam protection.',
+                  },
+                  {
+                    name: 'blockedTerms',
+                    label: 'Blocked terms',
+                    value: (channel.chatSettings?.blockedTerms ?? []).join('\n'),
+                    textArea: true,
+                    textAreaRows: 8,
+                    description:
+                      'One term per line (or comma-separated). Messages containing these terms are blocked.',
+                  },
+                ]}
+                schemaName="updateChatModeration"
+                action={updateChatModeration}
+                submitText="Save moderation settings"
+                onActionComplete={handleModerationActionComplete}
+              />
             </CardContent>
           </Card>
         </TabsContent>

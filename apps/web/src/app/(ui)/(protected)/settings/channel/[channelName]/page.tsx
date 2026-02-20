@@ -24,6 +24,7 @@ export default async function ChannelSettingsPage({
       managers: true,
       streamInfo: true,
       streamKey: true,
+      chatSettings: true,
       followers: {
         include: {
           user: {

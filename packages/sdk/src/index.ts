@@ -15,4 +15,17 @@ interface ConstructorArgs {
   chatOptions?: import('./chat.js').ChatClientOptions;
 }
 export { ChatClient, type ChatClientOptions } from './chat.js';
-export type { ChatMessage, MessageHandler, SystemMessage, SystemMessageHandler, HistoryHandler } from './types.js';
+export type {
+  ChatAccessHandler,
+  ChatAccessState,
+  ChatMessage,
+  HistoryHandler,
+  MessageHandler,
+  ModerationCommand,
+  ModerationError,
+  ModerationErrorHandler,
+  ModerationEvent,
+  ModerationEventHandler,
+  SystemMessage,
+  SystemMessageHandler,
+} from './types.js';

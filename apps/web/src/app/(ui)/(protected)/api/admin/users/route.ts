@@ -1,5 +1,5 @@
 import { validateRequest } from '@/lib/auth/validate';
-import { prisma } from '@hctv/db';
+import { AdminAuditAction, prisma } from '@hctv/db';
 import { NextRequest } from 'next/server';
 
 export async function GET(request: NextRequest) {
@@ -78,11 +78,32 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    await prisma.adminAuditLog.create({
+      data: {
+        action: AdminAuditAction.USER_BANNED,
+        actorId: user.id,
+        targetUserId: userId,
+        reason,
+        details: {
+          expiresAt: expiresAt ?? null,
+        } as any,
+      },
+    });
+
     return Response.json({ success: true, message: 'User banned' });
   }
 
   if (action === 'unban') {
     await prisma.userBan.delete({ where: { userId } }).catch(() => {});
+
+    await prisma.adminAuditLog.create({
+      data: {
+        action: AdminAuditAction.USER_UNBANNED,
+        actorId: user.id,
+        targetUserId: userId,
+      },
+    });
+
     return Response.json({ success: true, message: 'User unbanned' });
   }
 
@@ -94,6 +115,14 @@ export async function POST(request: NextRequest) {
     await prisma.user.update({
       where: { id: userId },
       data: { isAdmin: true },
+    });
+
+    await prisma.adminAuditLog.create({
+      data: {
+        action: AdminAuditAction.USER_PROMOTED,
+        actorId: user.id,
+        targetUserId: userId,
+      },
     });
 
     return Response.json({ success: true, message: 'User promoted to admin' });
@@ -111,6 +140,14 @@ export async function POST(request: NextRequest) {
     await prisma.user.update({
       where: { id: userId },
       data: { isAdmin: false },
+    });
+
+    await prisma.adminAuditLog.create({
+      data: {
+        action: AdminAuditAction.USER_DEMOTED,
+        actorId: user.id,
+        targetUserId: userId,
+      },
     });
 
     return Response.json({ success: true, message: 'User demoted from admin' });

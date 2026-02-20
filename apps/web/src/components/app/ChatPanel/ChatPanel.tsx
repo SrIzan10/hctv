@@ -9,6 +9,7 @@ import { Message } from './message';
 import { useMap } from '@uidotdev/usehooks';
 import { EmojiSearch } from './EmojiSearch';
 import { useQueryState } from 'nuqs';
+import { toast } from 'sonner';
 
 export default function ChatPanel(props: Props) {
   const { username } = useParams();
@@ -21,6 +22,12 @@ export default function ChatPanel(props: Props) {
   const [emojisToReq, setEmojisToReq] = useState<string[]>([]);
   const [cursorPosition, setCursorPosition] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const [viewer, setViewer] = useState<{ id: string; username: string } | null>(null);
+  const [canModerate, setCanModerate] = useState(false);
+  const [chatAccess, setChatAccess] = useState<ChatAccessState>({
+    canSend: true,
+    restriction: null,
+  });
 
   useEffect(() => {
     console.log('Initializing WebSocket connection for user:', username);
@@ -47,6 +54,35 @@ export default function ChatPanel(props: Props) {
             ...messages,
             { message: 'Welcome to the chat!', type: 'systemMsg' },
           ]);
+          return;
+        }
+
+        if (data.type === 'session') {
+          setViewer(data.viewer ?? null);
+          setCanModerate(Boolean(data.permissions?.canModerate));
+          return;
+        }
+
+        if (data.type === 'chatAccess') {
+          setChatAccess({
+            canSend: Boolean(data.canSend),
+            restriction: data.restriction ?? null,
+          });
+          return;
+        }
+
+        if (data.type === 'systemMsg') {
+          setChatMessages((prev) => [...prev, { message: data.message, type: 'systemMsg' }]);
+          return;
+        }
+
+        if (data.type === 'messageDeleted') {
+          setChatMessages((prev) => prev.filter((message) => message.msgId !== data.msgId));
+          return;
+        }
+
+        if (data.type === 'moderationError') {
+          toast.error(data.message || 'Message blocked by moderation rules.');
           return;
         }
 
@@ -84,6 +120,14 @@ export default function ChatPanel(props: Props) {
   }, [chatMessages]);
 
   const sendMessage = () => {
+    if (!chatAccess.canSend) {
+      toast.error(
+        chatAccess.restriction?.type === 'timeout'
+          ? 'You are currently timed out in this chat.'
+          : 'You are currently banned from this chat.'
+      );
+      return;
+    }
     if (!message.trim()) return;
 
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
@@ -100,6 +144,15 @@ export default function ChatPanel(props: Props) {
         setMessage('');
       };
     }
+  };
+
+  const sendModerationCommand = (command: ChatModerationCommand) => {
+    if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
+      toast.error('Chat connection is offline.');
+      return;
+    }
+
+    socketRef.current.send(JSON.stringify(command));
   };
 
   useEffect(() => {
@@ -260,12 +313,23 @@ export default function ChatPanel(props: Props) {
               message={msg.message}
               type={msg.type}
               emojiMap={emojiMap}
+              msgId={msg.msgId}
+              canModerate={canModerate && Boolean(viewer?.id)}
+              viewerId={viewer?.id}
+              onModerationCommand={sendModerationCommand}
             />
           ))}
         </div>
       </div>
       {!props.isObsPanel && (
         <div className="p-3 border-t border-border relative">
+          {!chatAccess.canSend && (
+            <p className="mb-2 text-xs text-destructive">
+              {chatAccess.restriction?.type === 'timeout'
+                ? `Timed out${chatAccess.restriction.expiresAt ? ` until ${new Date(chatAccess.restriction.expiresAt).toLocaleTimeString()}` : ''}.`
+                : 'You are banned from sending messages in this chat.'}
+            </p>
+          )}
           <div className="flex gap-2">
             <Textarea
               ref={textareaRef}
@@ -289,12 +353,13 @@ export default function ChatPanel(props: Props) {
               placeholder="Send a message..."
               className="flex-1 bg-background/50 border-border focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 min-h-[40px] max-h-[100px] resize-none py-2 text-sm"
               rows={1}
+              disabled={!chatAccess.canSend}
             />
             <Button
               size="icon"
               className="shrink-0 transition-colors"
               onClick={sendMessage}
-              disabled={!message.trim()}
+              disabled={!message.trim() || !chatAccess.canSend}
             >
               <Send className="h-4 w-4" />
             </Button>
@@ -317,6 +382,32 @@ export interface ChatMessage {
   user?: User;
   message: string;
   type: 'message' | 'systemMsg';
+  msgId?: string;
+}
+
+export interface ChatModerationCommand {
+  type:
+    | 'mod:deleteMessage'
+    | 'mod:timeoutUser'
+    | 'mod:banUser'
+    | 'mod:unbanUser'
+    | 'mod:liftTimeout';
+  msgId?: string;
+  targetUserId?: string;
+  targetUsername?: string;
+  durationSeconds?: number;
+  reason?: string;
+}
+
+interface ChatAccessState {
+  canSend: boolean;
+  restriction: ChatRestriction | null;
+}
+
+interface ChatRestriction {
+  type: 'timeout' | 'ban';
+  reason?: string;
+  expiresAt?: string | null;
 }
 
 export interface User {

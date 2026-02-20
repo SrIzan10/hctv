@@ -1,5 +1,5 @@
 import { validateRequest } from '@/lib/auth/validate';
-import { prisma } from '@hctv/db';
+import { AdminAuditAction, prisma } from '@hctv/db';
 import { NextRequest } from 'next/server';
 
 export async function GET(request: NextRequest) {
@@ -14,16 +14,21 @@ export async function GET(request: NextRequest) {
   const channels = await prisma.channel.findMany({
     where: search
       ? {
-        OR: [
-          { name: { contains: search, mode: 'insensitive' } },
-          { description: { contains: search, mode: 'insensitive' } },
-        ],
-      }
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { description: { contains: search, mode: 'insensitive' } },
+          ],
+        }
       : undefined,
     include: {
       restriction: true,
       owner: {
-        select: { id: true, slack_id: true, pfpUrl: true, personalChannel: { select: { name: true } } },
+        select: {
+          id: true,
+          slack_id: true,
+          pfpUrl: true,
+          personalChannel: { select: { name: true } },
+        },
       },
       personalFor: {
         select: {
@@ -79,11 +84,36 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    await prisma.adminAuditLog.create({
+      data: {
+        action: AdminAuditAction.CHANNEL_RESTRICTED,
+        actorId: user.id,
+        targetChannel: channel.name,
+        reason,
+        details: {
+          channelId,
+          expiresAt: expiresAt ?? null,
+        } as any,
+      },
+    });
+
     return Response.json({ success: true, message: 'Channel restricted' });
   }
 
   if (action === 'unrestrict') {
-    await prisma.channelRestriction.delete({ where: { channelId } }).catch(() => { });
+    await prisma.channelRestriction.delete({ where: { channelId } }).catch(() => {});
+
+    await prisma.adminAuditLog.create({
+      data: {
+        action: AdminAuditAction.CHANNEL_UNRESTRICTED,
+        actorId: user.id,
+        targetChannel: channel.name,
+        details: {
+          channelId,
+        } as any,
+      },
+    });
+
     return Response.json({ success: true, message: 'Channel unrestricted' });
   }
 

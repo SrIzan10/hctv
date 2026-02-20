@@ -35,6 +35,11 @@ model User {
   followers       Follow[]     @relation("UserFollows")
   botAccounts     BotAccount[]
   ban             UserBan?
+  chatBans        ChatUserBan[]         @relation("ChatBannedUser")
+  issuedChatBans  ChatUserBan[]         @relation("ChatBannedBy")
+  chatModActions  ChatModerationEvent[] @relation("ChatModerationActor")
+  chatModTargets  ChatModerationEvent[] @relation("ChatModerationTarget")
+  adminAuditLogs  AdminAuditLog[]       @relation("AdminAuditActor")
 
   @@index([personalChannelId])
 }
@@ -60,6 +65,9 @@ model Channel {
   obsChatGrantToken String       @unique @default(cuid())
   is247             Boolean      @default(false)
   restriction       ChannelRestriction?
+  chatSettings      ChatModerationSettings?
+  chatBans          ChatUserBan[]
+  chatModEvents     ChatModerationEvent[]
 
   @@index([ownerId])
 }
@@ -168,4 +176,88 @@ model ChannelRestriction {
   expiresAt    DateTime?
 
   @@index([channelId])
+}
+
+model ChatModerationSettings {
+  id                     String   @id @default(cuid())
+  channel                Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  channelId              String   @unique
+  blockedTerms           String[] @default([])
+  slowModeSeconds        Int      @default(0)
+  maxMessageLength       Int      @default(400)
+  rateLimitCount         Int      @default(8)
+  rateLimitWindowSeconds Int      @default(10)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@index([channelId])
+}
+
+model ChatUserBan {
+  id         String   @id @default(cuid())
+  channel    Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  channelId  String
+  user       User     @relation("ChatBannedUser", fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  reason     String
+  bannedBy   User     @relation("ChatBannedBy", fields: [bannedById], references: [id], onDelete: Cascade)
+  bannedById String
+  expiresAt  DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([channelId, userId])
+  @@index([channelId, userId])
+  @@index([expiresAt])
+}
+
+model ChatModerationEvent {
+  id           String               @id @default(cuid())
+  channel      Channel              @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  channelId    String
+  action       ChatModerationAction
+  moderator    User                 @relation("ChatModerationActor", fields: [moderatorId], references: [id], onDelete: Cascade)
+  moderatorId  String
+  targetUser   User?                @relation("ChatModerationTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+  targetUserId String?
+  reason       String?
+  details      Json?
+  createdAt    DateTime             @default(now())
+
+  @@index([channelId, createdAt])
+  @@index([moderatorId])
+  @@index([targetUserId])
+}
+
+model AdminAuditLog {
+  id            String           @id @default(cuid())
+  action        AdminAuditAction
+  actor         User             @relation("AdminAuditActor", fields: [actorId], references: [id], onDelete: Cascade)
+  actorId       String
+  targetUserId  String?
+  targetChannel String?
+  reason        String?
+  details       Json?
+  createdAt     DateTime         @default(now())
+
+  @@index([actorId])
+  @@index([createdAt])
+  @@index([action, createdAt])
+}
+
+enum AdminAuditAction {
+  USER_BANNED
+  USER_UNBANNED
+  USER_PROMOTED
+  USER_DEMOTED
+  CHANNEL_RESTRICTED
+  CHANNEL_UNRESTRICTED
+}
+
+enum ChatModerationAction {
+  MESSAGE_BLOCKED
+  MESSAGE_DELETED
+  USER_TIMEOUT
+  USER_BANNED
+  USER_UNBANNED
 }
