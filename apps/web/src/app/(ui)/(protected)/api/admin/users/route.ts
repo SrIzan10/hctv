@@ -14,12 +14,13 @@ export async function GET(request: NextRequest) {
   const users = await prisma.user.findMany({
     where: search
       ? {
-        OR: [
-          { slack_id: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } },
-          { personalChannel: { name: { contains: search, mode: 'insensitive' } } },
-        ],
-      }
+          OR: [
+            { slack_id: { contains: search, mode: 'insensitive' } },
+            { email: { contains: search, mode: 'insensitive' } },
+            { personalChannel: { name: { contains: search, mode: 'insensitive' } } },
+          ],
+          hasOnboarded: true,
+        }
       : undefined,
     include: {
       ban: true,
@@ -81,7 +82,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (action === 'unban') {
-    await prisma.userBan.delete({ where: { userId } }).catch(() => { });
+    await prisma.userBan.delete({ where: { userId } }).catch(() => {});
     return Response.json({ success: true, message: 'User unbanned' });
   }
 
