@@ -48,7 +48,7 @@ export default async function Home() {
   }
 
   return (
-    <div className="p-4 md:p-6">
+    <div className="p-3 md:p-6">
       <StreamGrid liveStreams={liveStreams} offlineStreams={offlineStreams} />
     </div>
   );
