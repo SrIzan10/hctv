@@ -1,5 +1,4 @@
 import { validateRequest } from '@/lib/auth/validate';
-import { verifySameOrigin } from '@/lib/auth/csrf';
 import {
   AdminAuditAction,
   ChatModerationAction,
@@ -95,11 +94,6 @@ export async function POST(request: NextRequest) {
   const { user } = await validateRequest();
   if (!user?.isAdmin) {
     return new Response('Forbidden', { status: 403 });
-  }
-
-  const csrfError = verifySameOrigin(request);
-  if (csrfError) {
-    return csrfError;
   }
 
   let body: {
