@@ -1,10 +1,8 @@
 import LandingPage from '@/components/app/LandingPage/LandingPage';
-import { Card, CardContent } from '@/components/ui/card';
+import StreamGrid from '@/components/app/StreamGrid/StreamGrid';
 import ConfusedDino from '@/components/ui/confuseddino';
 import { validateRequest } from '@/lib/auth/validate';
 import { prisma } from '@hctv/db';
-import { Avatar, AvatarImage, AvatarFallback } from '@radix-ui/react-avatar';
-import Image from 'next/image';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
@@ -13,67 +11,45 @@ export default async function Home() {
   if (user && !user?.hasOnboarded) {
     redirect('/onboarding');
   }
-  const streams = await prisma.streamInfo.findMany({
-    where: {
-      isLive: true,
-    },
-    include: {
-      channel: true,
-    },
-  });
+
+  const [liveStreams, offlineStreams] = await Promise.all([
+    prisma.streamInfo.findMany({
+      where: { isLive: true },
+      include: { channel: true },
+    }),
+    prisma.streamInfo.findMany({
+      where: { isLive: false },
+      include: { channel: true },
+    }),
+  ]);
+
   if (!user) {
     return <LandingPage />;
   }
-  if (!streams.length) {
+
+  if (!liveStreams.length && !offlineStreams.length) {
     return (
-      <div className="flex justify-center items-center text-center flex-col pt-4 gap-2">
-        <h2>No streams found!</h2>
-        <p>...maybe start one?</p>
-        <ConfusedDino className='w-40 h-40' />
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-5 px-4 text-center">
+        <ConfusedDino className="h-28 w-28 opacity-80" />
+        <div className="space-y-1.5">
+          <h2 className="pb-0 text-2xl font-semibold tracking-tight">Nothing live right now</h2>
+          <p className="text-sm text-muted-foreground">
+            Nobody&apos;s streaming yet — why not be the first?
+          </p>
+        </div>
+        <Link
+          href="/settings/channel"
+          className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          Start streaming
+        </Link>
       </div>
     );
   }
 
   return (
-    <div className="p-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {streams.map((stream) => (
-          <Link href={`/${stream.username}`} key={stream.id}>
-            <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-              <CardContent className="p-0">
-                <div className="relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={`/api/stream/thumb/${stream.channel.name}`}
-                    width={512}
-                    height={512}
-                    alt={stream.title}
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="absolute bottom-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
-                    LIVE
-                  </div>
-                  <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
-                    {stream.viewers} viewers
-                  </div>
-                </div>
-                <div className="p-4">
-                  <div className="flex items-start">
-                    <Avatar className="h-10 w-10 mr-3">
-                      <AvatarImage src={stream.channel.pfpUrl} />
-                      <AvatarFallback>{stream.channel.name}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-semibold line-clamp-1">{stream.title}</h3>
-                      <p className="text-sm text-muted-foreground">{stream.category}</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
+    <div className="p-4 md:p-6">
+      <StreamGrid liveStreams={liveStreams} offlineStreams={offlineStreams} />
     </div>
   );
 }
