@@ -418,6 +418,8 @@ export interface User {
   pfpUrl: string;
   isBot: boolean;
   displayName?: string;
+  isPlatformAdmin?: boolean;
+  channelRole?: 'owner' | 'manager' | 'chatModerator' | 'botModerator' | null;
 }
 
 interface Props {

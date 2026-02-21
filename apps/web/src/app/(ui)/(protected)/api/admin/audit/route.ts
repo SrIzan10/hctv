@@ -17,7 +17,10 @@ export async function GET(request: NextRequest) {
       take,
       include: {
         actor: {
-          include: {
+          select: {
+            id: true,
+            isAdmin: true,
+            slack_id: true,
             personalChannel: {
               select: {
                 name: true,
@@ -33,11 +36,15 @@ export async function GET(request: NextRequest) {
       include: {
         channel: {
           select: {
+            id: true,
             name: true,
           },
         },
         moderator: {
-          include: {
+          select: {
+            id: true,
+            isAdmin: true,
+            slack_id: true,
             personalChannel: {
               select: {
                 name: true,
@@ -46,7 +53,10 @@ export async function GET(request: NextRequest) {
           },
         },
         targetUser: {
-          include: {
+          select: {
+            id: true,
+            isAdmin: true,
+            slack_id: true,
             personalChannel: {
               select: {
                 name: true,
@@ -84,6 +94,36 @@ export async function GET(request: NextRequest) {
       targetUser.personalChannel?.name ?? targetUser.slack_id,
     ])
   );
+  const targetUserAdminMap = new Map(
+    targetUsers.map((targetUser) => [targetUser.id, targetUser.isAdmin])
+  );
+
+  const actorIds = [
+    ...new Set([
+      ...adminLogs.map((log) => log.actorId),
+      ...chatLogs.map((log) => log.moderatorId),
+      ...chatLogs.map((log) => log.targetUserId).filter(Boolean),
+      ...targetUserIds,
+    ]),
+  ] as string[];
+
+  const modRoleUsers =
+    actorIds.length > 0
+      ? await prisma.user.findMany({
+          where: {
+            id: { in: actorIds },
+            OR: [
+              { ownedChannels: { some: {} } },
+              { managedChannels: { some: {} } },
+              { chatModeratedChannels: { some: {} } },
+            ],
+          },
+          select: {
+            id: true,
+          },
+        })
+      : [];
+  const channelModSet = new Set(modRoleUsers.map((user) => user.id));
 
   const normalizedAdminLogs = adminLogs.map((log) => ({
     id: log.id,
@@ -96,6 +136,16 @@ export async function GET(request: NextRequest) {
       (log.targetUserId ? (targetUserMap.get(log.targetUserId) ?? log.targetUserId) : null),
     reason: log.reason,
     details: log.details,
+    actorMeta: {
+      isPlatformAdmin: log.actor.isAdmin,
+      isChannelModerator: channelModSet.has(log.actorId),
+    },
+    targetMeta: log.targetUserId
+      ? {
+          isPlatformAdmin: Boolean(targetUserAdminMap.get(log.targetUserId)),
+          isChannelModerator: channelModSet.has(log.targetUserId),
+        }
+      : null,
   }));
 
   const normalizedChatLogs = chatLogs.map((log) => ({
@@ -108,6 +158,16 @@ export async function GET(request: NextRequest) {
     reason: log.reason,
     details: log.details,
     channelName: log.channel.name,
+    actorMeta: {
+      isPlatformAdmin: log.moderator.isAdmin,
+      isChannelModerator: true,
+    },
+    targetMeta: log.targetUser
+      ? {
+          isPlatformAdmin: log.targetUser.isAdmin,
+          isChannelModerator: channelModSet.has(log.targetUser.id),
+        }
+      : null,
   }));
 
   const logs = [...normalizedAdminLogs, ...normalizedChatLogs]

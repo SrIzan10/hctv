@@ -30,6 +30,7 @@ model User {
 
   ownedChannels   Channel[]    @relation("ChannelOwner")
   managedChannels Channel[]    @relation("ChannelManagers")
+  chatModeratedChannels Channel[] @relation("ChannelChatModerators")
   sessions        Session[]
   streams         StreamInfo[]
   followers       Follow[]     @relation("UserFollows")
@@ -62,6 +63,8 @@ model Channel {
   owner             User         @relation("ChannelOwner", fields: [ownerId], references: [id])
   ownerId           String
   managers          User[]       @relation("ChannelManagers")
+  chatModerators    User[]       @relation("ChannelChatModerators")
+  chatModeratorBots BotAccount[] @relation("ChannelChatBotModerators")
   streamInfo        StreamInfo[]
   followers         Follow[]     @relation("ChannelFollowers")
   streamKey         StreamKey?
@@ -138,6 +141,7 @@ model BotAccount {
   pfpUrl      String
   owner       User        @relation(fields: [ownerId], references: [id])
   ownerId     String
+  moderatingChannels Channel[] @relation("ChannelChatBotModerators")
   apiKeys     BotApiKey[]
 
   createdAt DateTime @default(now())

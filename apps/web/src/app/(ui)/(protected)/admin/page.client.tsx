@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
-import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,7 +32,9 @@ import {
   Shield,
   Activity,
   Hash,
+  ShieldAlert,
 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Dialog,
   DialogContent,
@@ -899,11 +900,53 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
                                     by{' '}
                                     <span className="font-medium text-foreground">{log.actor}</span>
                                   </span>
+                                  {log.actorMeta?.isChannelModerator && (
+                                    <TooltipProvider>
+                                      <Tooltip delayDuration={200}>
+                                        <TooltipTrigger asChild>
+                                          <Shield className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top">Channel Mod</TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  )}
+                                  {log.actorMeta?.isPlatformAdmin && (
+                                    <TooltipProvider>
+                                      <Tooltip delayDuration={200}>
+                                        <TooltipTrigger asChild>
+                                          <ShieldAlert className="h-3.5 w-3.5 text-destructive shrink-0" />
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top">Platform Admin</TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  )}
 
                                   {log.target && (
                                     <>
                                       <ArrowRight className="h-3 w-3 text-muted-foreground shrink-0" />
                                       <span className="text-xs font-medium">{log.target}</span>
+                                      {log.targetMeta?.isChannelModerator && (
+                                        <TooltipProvider>
+                                          <Tooltip delayDuration={200}>
+                                            <TooltipTrigger asChild>
+                                              <Shield className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                                            </TooltipTrigger>
+                                            <TooltipContent side="top">Channel Mod</TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                      )}
+                                      {log.targetMeta?.isPlatformAdmin && (
+                                        <TooltipProvider>
+                                          <Tooltip delayDuration={200}>
+                                            <TooltipTrigger asChild>
+                                              <ShieldAlert className="h-3.5 w-3.5 text-destructive shrink-0" />
+                                            </TooltipTrigger>
+                                            <TooltipContent side="top">
+                                              Platform Admin
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                      )}
                                     </>
                                   )}
 
@@ -1266,7 +1309,15 @@ interface AuditLog {
   action: string;
   createdAt: string;
   actor: string;
+  actorMeta?: {
+    isPlatformAdmin: boolean;
+    isChannelModerator: boolean;
+  };
   target: string | null;
+  targetMeta?: {
+    isPlatformAdmin: boolean;
+    isChannelModerator: boolean;
+  } | null;
   reason: string | null;
   details?: unknown;
   channelName?: string;

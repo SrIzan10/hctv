@@ -262,6 +262,174 @@ export async function addChannelManager(channelId: string, userChannel: string) 
       managers: {
         connect: { id: userDb.id },
       },
+      chatModerators: {
+        connect: { id: userDb.id },
+      },
+    },
+  });
+
+  revalidatePath(`/settings/channel/${channel.name}`);
+  return { success: true };
+}
+
+export async function addChatModerator(channelId: string, userChannel: string) {
+  const { user } = await validateRequest();
+  if (!user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const channel = await prisma.channel.findUnique({
+    where: { id: channelId },
+    include: { owner: true, managers: true, chatModerators: true },
+  });
+
+  if (!channel) {
+    return { success: false, error: 'Channel not found' };
+  }
+
+  if (!can(user, 'update', 'channel', { channel })) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const userDb = await resolveUserFromPersonalChannelName(userChannel);
+  if (!userDb) {
+    return { success: false, error: 'User not found' };
+  }
+
+  if (
+    channel.ownerId === userDb.id ||
+    channel.managers.some((manager) => manager.id === userDb.id)
+  ) {
+    return { success: false, error: 'This user is already a built-in moderator' };
+  }
+
+  if (channel.chatModerators.some((moderator) => moderator.id === userDb.id)) {
+    return { success: false, error: 'User is already a chat moderator' };
+  }
+
+  await prisma.channel.update({
+    where: { id: channelId },
+    data: {
+      chatModerators: {
+        connect: { id: userDb.id },
+      },
+    },
+  });
+
+  revalidatePath(`/settings/channel/${channel.name}`);
+  return { success: true };
+}
+
+export async function removeChatModerator(channelId: string, userId: string) {
+  const { user } = await validateRequest();
+  if (!user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const channel = await prisma.channel.findUnique({
+    where: { id: channelId },
+    include: { owner: true, managers: true },
+  });
+
+  if (!channel) {
+    return { success: false, error: 'Channel not found' };
+  }
+
+  if (!can(user, 'update', 'channel', { channel })) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  await prisma.channel.update({
+    where: { id: channelId },
+    data: {
+      chatModerators: {
+        disconnect: { id: userId },
+      },
+    },
+  });
+
+  revalidatePath(`/settings/channel/${channel.name}`);
+  return { success: true };
+}
+
+export async function addChatBotModerator(channelId: string, botId: string) {
+  const { user } = await validateRequest();
+  if (!user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const channel = await prisma.channel.findUnique({
+    where: { id: channelId },
+    include: { owner: true, managers: true, chatModeratorBots: true },
+  });
+
+  if (!channel) {
+    return { success: false, error: 'Channel not found' };
+  }
+
+  if (!can(user, 'update', 'channel', { channel })) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const bot = await prisma.botAccount.findUnique({
+    where: { id: botId },
+    select: { id: true, ownerId: true },
+  });
+
+  if (!bot) {
+    return { success: false, error: 'Bot not found' };
+  }
+
+  if (channel.chatModeratorBots.some((existingBot) => existingBot.id === bot.id)) {
+    return { success: false, error: 'Bot is already a chat moderator' };
+  }
+
+  const canUseBot =
+    bot.ownerId === channel.ownerId ||
+    channel.managers.some((manager) => manager.id === bot.ownerId);
+
+  if (!canUseBot) {
+    return { success: false, error: 'Bot owner must be a channel manager or owner' };
+  }
+
+  await prisma.channel.update({
+    where: { id: channelId },
+    data: {
+      chatModeratorBots: {
+        connect: { id: bot.id },
+      },
+    },
+  });
+
+  revalidatePath(`/settings/channel/${channel.name}`);
+  return { success: true };
+}
+
+export async function removeChatBotModerator(channelId: string, botId: string) {
+  const { user } = await validateRequest();
+  if (!user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const channel = await prisma.channel.findUnique({
+    where: { id: channelId },
+    include: { owner: true, managers: true },
+  });
+
+  if (!channel) {
+    return { success: false, error: 'Channel not found' };
+  }
+
+  if (!can(user, 'update', 'channel', { channel })) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  await prisma.channel.update({
+    where: { id: channelId },
+    data: {
+      chatModeratorBots: {
+        disconnect: { id: botId },
+      },
     },
   });
 
@@ -353,6 +521,9 @@ export async function removeChannelManager(channelId: string, userId: string) {
     where: { id: channelId },
     data: {
       managers: {
+        disconnect: { id: userId },
+      },
+      chatModerators: {
         disconnect: { id: userId },
       },
     },

@@ -22,12 +22,18 @@ import {
   Eye,
   EyeOff,
   MessageSquareWarning,
+  Bot,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { UniversalForm } from '@/components/app/UniversalForm/UniversalForm';
 import {
   updateChannelSettings,
   addChannelManager,
   removeChannelManager,
+  addChatModerator,
+  removeChatModerator,
+  addChatBotModerator,
+  removeChatBotModerator,
   deleteChannel,
   toggleGlobalChannelNotifs,
   editStreamInfo,
@@ -43,6 +49,7 @@ import type {
   StreamKey,
   Follow,
   ChatModerationSettings,
+  BotAccount,
 } from '@hctv/db';
 import {
   Dialog,
@@ -79,6 +86,10 @@ interface ChannelSettingsClientProps {
     ownerPersonalChannel: Channel | null;
     managers: User[];
     managerPersonalChannels: (Channel | null)[];
+    chatModerators: User[];
+    chatModeratorPersonalChannels: (Channel | null)[];
+    chatModeratorBots: BotAccount[];
+    teamBotAccounts: BotAccount[];
     streamInfo: StreamInfo[];
     streamKey: StreamKey | null;
     chatSettings: ChatModerationSettings | null;
@@ -671,7 +682,6 @@ export default function ChannelSettingsClient({
                   </div>
 
                   <div className="space-y-3">
-                    {/* Owner */}
                     <div className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10">
@@ -685,13 +695,9 @@ export default function ChannelSettingsClient({
                           <p className="text-sm text-mantle-foreground">Channel Owner</p>
                         </div>
                       </div>
-                      <Badge variant="default">
-                        <Shield className="h-3 w-3 mr-1" />
-                        Owner
-                      </Badge>
+                      <ChannelRoleBadges roles={['owner', 'chatModerator']} />
                     </div>
 
-                    {/* Managers */}
                     {channel.managers.map((manager) => {
                       const personalChannel = channel.managerPersonalChannels.find(
                         (c) => c?.ownerId === manager.id
@@ -711,26 +717,34 @@ export default function ChannelSettingsClient({
                               <p className="text-sm text-mantle-foreground">Manager</p>
                             </div>
                           </div>
-                          {isOwner && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={async () => {
-                                if (
-                                  await confirm({
-                                    title: 'Remove Manager',
-                                    description: `Are you sure you want to remove ${personalChannel?.name} as a manager? They will no longer be able to stream or moderate this channel.`,
-                                    confirmText: 'Remove',
-                                    cancelText: 'Cancel',
-                                  })
-                                ) {
-                                  removeChannelManager(channel.id, manager.id);
-                                }
-                              }}
-                            >
-                              <UserMinus className="h-4 w-4" />
-                            </Button>
-                          )}
+                          <div className="flex items-center gap-2">
+                            <ChannelRoleBadges
+                              roles={withPlatformAdmin(
+                                ['manager', 'chatModerator'] as const,
+                                manager.isAdmin
+                              )}
+                            />
+                            {isOwner && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={async () => {
+                                  if (
+                                    await confirm({
+                                      title: 'Remove Manager',
+                                      description: `Are you sure you want to remove ${personalChannel?.name} as a manager? They will no longer be able to stream or moderate this channel.`,
+                                      confirmText: 'Remove',
+                                      cancelText: 'Cancel',
+                                    })
+                                  ) {
+                                    removeChannelManager(channel.id, manager.id);
+                                  }
+                                }}
+                              >
+                                <UserMinus className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
@@ -828,7 +842,162 @@ export default function ChannelSettingsClient({
                 chat.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Moderators</h3>
+                  <div className="flex gap-2">
+                    <AddChatModeratorDialog
+                      channelId={channel.id}
+                      existingModerators={[
+                        channel.owner.id,
+                        ...channel.managers.map((manager) => manager.id),
+                        ...channel.chatModerators.map((moderator) => moderator.id),
+                      ]}
+                    />
+                    <AddChatBotModeratorDialog
+                      channelId={channel.id}
+                      teamBots={channel.teamBotAccounts}
+                      existingBotModerators={channel.chatModeratorBots.map((bot) => bot.id)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={channel.owner.pfpUrl} />
+                        <AvatarFallback>{channel.owner.slack_id[0]?.toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium">{channel.ownerPersonalChannel?.name}</p>
+                        <p className="text-sm text-mantle-foreground">Owner</p>
+                      </div>
+                    </div>
+                    <ChannelRoleBadges
+                      roles={withPlatformAdmin(
+                        ['owner', 'chatModerator'] as const,
+                        channel.owner.isAdmin
+                      )}
+                    />
+                  </div>
+
+                  {channel.managers.map((manager) => {
+                    const personalChannel = channel.managerPersonalChannels.find(
+                      (candidate) => candidate?.ownerId === manager.id
+                    );
+                    return (
+                      <div
+                        key={manager.id}
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={manager.pfpUrl} />
+                            <AvatarFallback>{personalChannel?.name}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">{personalChannel?.name}</p>
+                            <p className="text-sm text-mantle-foreground">Manager</p>
+                          </div>
+                        </div>
+                        <ChannelRoleBadges
+                          roles={withPlatformAdmin(
+                            ['manager', 'chatModerator'] as const,
+                            manager.isAdmin
+                          )}
+                        />
+                      </div>
+                    );
+                  })}
+
+                  {channel.chatModerators.map((moderator) => {
+                    const personalChannel = channel.chatModeratorPersonalChannels.find(
+                      (candidate) => candidate?.ownerId === moderator.id
+                    );
+                    return (
+                      <div
+                        key={moderator.id}
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={moderator.pfpUrl} />
+                            <AvatarFallback>{personalChannel?.name}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">{personalChannel?.name}</p>
+                            <p className="text-sm text-mantle-foreground">Chat moderator</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <ChannelRoleBadges
+                            roles={withPlatformAdmin(['chatModerator'] as const, moderator.isAdmin)}
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              toast.promise(removeChatModerator(channel.id, moderator.id), {
+                                loading: 'Removing moderator...',
+                                success: 'Moderator removed',
+                                error: 'Failed to remove moderator',
+                              });
+                            }}
+                          >
+                            <UserMinus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {channel.chatModeratorBots.map((botAccount) => (
+                    <div
+                      key={botAccount.id}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={botAccount.pfpUrl} />
+                          <AvatarFallback>{botAccount.slug[0]?.toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{botAccount.displayName}</p>
+                          <p className="text-sm text-mantle-foreground">@{botAccount.slug}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <ChannelRoleBadges roles={['botModerator']} />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            toast.promise(removeChatBotModerator(channel.id, botAccount.id), {
+                              loading: 'Removing bot moderator...',
+                              success: 'Bot moderator removed',
+                              error: 'Failed to remove bot moderator',
+                            });
+                          }}
+                        >
+                          <UserMinus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {channel.chatModerators.length === 0 &&
+                    channel.chatModeratorBots.length === 0 && (
+                      <p className="text-mantle-foreground text-center py-4">
+                        No extra chat moderators yet.
+                      </p>
+                    )}
+                </div>
+              </div>
+
+              <Separator />
+
               <UniversalForm
                 fields={[
                   { name: 'channelId', type: 'hidden', value: channel.id, label: 'Channel ID' },
@@ -914,6 +1083,74 @@ export default function ChannelSettingsClient({
   );
 }
 
+function RoleBadge({
+  icon: Icon,
+  label,
+  className,
+}: {
+  icon: LucideIcon;
+  label: string;
+  className: string;
+}) {
+  return (
+    <Badge variant="outline" className={className}>
+      <Icon className="h-3 w-3 mr-1" />
+      {label}
+    </Badge>
+  );
+}
+
+type ChannelRoleBadgeKey = 'owner' | 'manager' | 'chatModerator' | 'botModerator' | 'platformAdmin';
+
+const ROLE_BADGE_META: Record<
+  ChannelRoleBadgeKey,
+  { icon: LucideIcon; label: string; className: string }
+> = {
+  owner: {
+    icon: Shield,
+    label: 'Owner',
+    className: 'border-primary/30 bg-primary/10 text-primary',
+  },
+  manager: {
+    icon: Wrench,
+    label: 'Manager',
+    className: 'border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300',
+  },
+  chatModerator: {
+    icon: MessageSquareWarning,
+    label: 'Chat Mod',
+    className: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+  },
+  botModerator: {
+    icon: Bot,
+    label: 'Bot Mod',
+    className: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300',
+  },
+  platformAdmin: {
+    icon: Shield,
+    label: 'Platform Admin',
+    className: 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300',
+  },
+};
+
+const withPlatformAdmin = (
+  roles: readonly ChannelRoleBadgeKey[],
+  isPlatformAdmin?: boolean
+): ChannelRoleBadgeKey[] => (isPlatformAdmin ? [...roles, 'platformAdmin'] : [...roles]);
+
+function ChannelRoleBadges({ roles }: { roles: ChannelRoleBadgeKey[] }) {
+  return (
+    <div className="flex items-center gap-1.5 flex-wrap justify-end">
+      {[...new Set(roles)].map((role) => {
+        const meta = ROLE_BADGE_META[role];
+        return (
+          <RoleBadge key={role} icon={meta.icon} label={meta.label} className={meta.className} />
+        );
+      })}
+    </div>
+  );
+}
+
 function AddManagerDialog({
   channelId,
   existingManagers,
@@ -960,6 +1197,124 @@ function AddManagerDialog({
             }}
           >
             Add Manager
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AddChatModeratorDialog({
+  channelId,
+  existingModerators,
+}: {
+  channelId: string;
+  existingModerators: string[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [selectedChannel, setSelectedChannel] = useState('');
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline">
+          <UserPlus className="h-4 w-4 mr-2" />
+          Add User Moderator
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add chat moderator</DialogTitle>
+          <DialogDescription>
+            Choose a user who should be able to moderate this channel&apos;s chat.
+          </DialogDescription>
+        </DialogHeader>
+        <UserCombobox
+          onValueChange={(value) => {
+            setSelectedChannel(value);
+          }}
+          filter={existingModerators}
+          value={selectedChannel}
+          modal
+        />
+        <DialogFooter>
+          <Button
+            disabled={!selectedChannel}
+            onClick={() => {
+              toast.promise(addChatModerator(channelId, selectedChannel), {
+                loading: 'Adding moderator...',
+                success: 'Moderator added',
+                error: 'Failed to add moderator',
+              });
+              setOpen(false);
+              setSelectedChannel('');
+            }}
+          >
+            Add Moderator
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AddChatBotModeratorDialog({
+  channelId,
+  teamBots,
+  existingBotModerators,
+}: {
+  channelId: string;
+  teamBots: BotAccount[];
+  existingBotModerators: string[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [selectedBotId, setSelectedBotId] = useState('');
+
+  const availableBots = teamBots.filter(
+    (botAccount) => !existingBotModerators.includes(botAccount.id)
+  );
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline">
+          <Bot className="h-4 w-4 mr-2" />
+          Add Bot Moderator
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add bot moderator</DialogTitle>
+          <DialogDescription>
+            Bots can delete messages, timeout users, and ban users in chat.
+          </DialogDescription>
+        </DialogHeader>
+        <Select value={selectedBotId} onValueChange={setSelectedBotId}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select bot" />
+          </SelectTrigger>
+          <SelectContent>
+            {availableBots.map((botAccount) => (
+              <SelectItem key={botAccount.id} value={botAccount.id}>
+                {botAccount.displayName} (@{botAccount.slug})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <DialogFooter>
+          <Button
+            disabled={!selectedBotId}
+            onClick={() => {
+              toast.promise(addChatBotModerator(channelId, selectedBotId), {
+                loading: 'Adding bot moderator...',
+                success: 'Bot moderator added',
+                error: 'Failed to add bot moderator',
+              });
+              setOpen(false);
+              setSelectedBotId('');
+            }}
+          >
+            Add Bot
           </Button>
         </DialogFooter>
       </DialogContent>

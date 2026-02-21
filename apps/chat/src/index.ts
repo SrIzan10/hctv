@@ -290,6 +290,9 @@ app.get(
             pfpUrl: botAccount.botAccount.pfpUrl,
             displayName: botAccount.botAccount.displayName,
             isBot: true,
+            moderatorUserId: botAccount.botAccount.ownerId,
+            isPlatformAdmin: false,
+            channelRole: null,
           };
 
           personalChannel = {
@@ -309,6 +312,9 @@ app.get(
               username: userChannel.name,
               pfpUrl: session.user.pfpUrl,
               isBot: false,
+              moderatorUserId: session.user.id,
+              isPlatformAdmin: Boolean(session.user.isAdmin),
+              channelRole: null,
             };
             personalChannel = userChannel;
           }
@@ -343,6 +349,16 @@ app.get(
               id: true,
             },
           },
+          chatModerators: {
+            select: {
+              id: true,
+            },
+          },
+          chatModeratorBots: {
+            select: {
+              id: true,
+            },
+          },
         },
       });
 
@@ -351,11 +367,41 @@ app.get(
         return;
       }
 
+      let channelRole: ChatUser['channelRole'] = null;
+      const activeChatUser = chatUser;
+      if (activeChatUser) {
+        if (activeChatUser.isBot) {
+          if (channel.chatModeratorBots.some((bot) => bot.id === activeChatUser.id)) {
+            channelRole = 'botModerator';
+          }
+        } else if (channel.ownerId === activeChatUser.id) {
+          channelRole = 'owner';
+        } else if (channel.managers.some((manager) => manager.id === activeChatUser.id)) {
+          channelRole = 'manager';
+        } else if (channel.chatModerators.some((moderator) => moderator.id === activeChatUser.id)) {
+          channelRole = 'chatModerator';
+        }
+      }
+
+      if (chatUser) {
+        const moderatorUser = await prisma.user.findUnique({
+          where: { id: chatUser.moderatorUserId },
+          select: { isAdmin: true },
+        });
+
+        chatUser = {
+          ...chatUser,
+          isPlatformAdmin: Boolean(moderatorUser?.isAdmin),
+          channelRole,
+        };
+      }
+
       const isModerator = Boolean(
         chatUser &&
-        !chatUser.isBot &&
-        (channel.ownerId === chatUser.id ||
-          channel.managers.some((manager) => manager.id === chatUser.id))
+        (chatUser.channelRole === 'owner' ||
+          chatUser.channelRole === 'manager' ||
+          chatUser.channelRole === 'chatModerator' ||
+          chatUser.channelRole === 'botModerator')
       );
 
       const moderationSettings = await getCachedModerationSettings(channel.id);
@@ -485,7 +531,7 @@ app.get(
           await logModerationEvent({
             action: ChatModerationAction.MESSAGE_DELETED,
             channelId: socketState.channelId,
-            moderatorId: socketState.chatUser.id,
+            moderatorId: socketState.chatUser.moderatorUserId,
             reason: 'Message deleted by moderator',
             details: { msgId },
           });
@@ -510,9 +556,11 @@ app.get(
             return;
           }
 
+          const actingModeratorUserId = socketState.chatUser.moderatorUserId;
+
           const targetUserId = typeof msg.targetUserId === 'string' ? msg.targetUserId : '';
 
-          if (!targetUserId || targetUserId === socketState.chatUser.id) {
+          if (!targetUserId || targetUserId === actingModeratorUserId) {
             socket.send(
               JSON.stringify({
                 type: 'moderationError',
@@ -542,10 +590,14 @@ app.get(
           }
 
           const actingUserRecord = await prisma.user.findUnique({
-            where: { id: socketState.chatUser.id },
+            where: { id: actingModeratorUserId },
             select: { isAdmin: true },
           });
-          if (targetUserRecord.isAdmin && !actingUserRecord?.isAdmin) {
+          if (
+            process.env.NODE_ENV === 'production' &&
+            targetUserRecord.isAdmin &&
+            !actingUserRecord?.isAdmin
+          ) {
             socket.send(
               JSON.stringify({
                 type: 'moderationError',
@@ -569,7 +621,7 @@ app.get(
             await logModerationEvent({
               action: ChatModerationAction.USER_UNBANNED,
               channelId: socketState.channelId,
-              moderatorId: socketState.chatUser.id,
+              moderatorId: actingModeratorUserId,
               targetUserId,
               reason: 'User unbanned in chat',
             });
@@ -610,12 +662,12 @@ app.get(
             create: {
               channelId: socketState.channelId,
               userId: targetUserId,
-              bannedById: socketState.chatUser.id,
+              bannedById: actingModeratorUserId,
               reason,
               expiresAt,
             },
             update: {
-              bannedById: socketState.chatUser.id,
+              bannedById: actingModeratorUserId,
               reason,
               expiresAt,
             },
@@ -627,7 +679,7 @@ app.get(
                 ? ChatModerationAction.USER_TIMEOUT
                 : ChatModerationAction.USER_BANNED,
             channelId: socketState.channelId,
-            moderatorId: socketState.chatUser.id,
+            moderatorId: actingModeratorUserId,
             targetUserId,
             reason,
             details: durationSeconds ? { durationSeconds } : undefined,
@@ -770,6 +822,8 @@ app.get(
               pfpUrl: chatUser.pfpUrl,
               displayName: chatUser.displayName,
               isBot: chatUser.isBot || false,
+              isPlatformAdmin: chatUser.isPlatformAdmin,
+              channelRole: chatUser.channelRole,
             },
             message,
             msgId,
@@ -878,6 +932,9 @@ interface ChatUser {
   pfpUrl: string;
   displayName?: string;
   isBot: boolean;
+  moderatorUserId: string;
+  isPlatformAdmin: boolean;
+  channelRole: 'owner' | 'manager' | 'chatModerator' | 'botModerator' | null;
 }
 
 interface ChatModerationSettingsShape {

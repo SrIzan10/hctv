@@ -1,10 +1,24 @@
 'use client';
 
 import { ChatModerationCommand, User } from './ChatPanel';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Ban, Bot, Clock3, EllipsisVertical, Eraser, Flag, UserRoundCheck } from 'lucide-react';
+import {
+  Ban,
+  Bot,
+  Clock3,
+  Crown,
+  EllipsisVertical,
+  Eraser,
+  Flag,
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  UserRoundCheck,
+  Wrench,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -22,6 +36,112 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+
+type ChannelRole = NonNullable<User['channelRole']>;
+
+const ROLE_META: Record<ChannelRole, { label: string; icon: LucideIcon; className: string }> = {
+  owner: { label: 'Owner', icon: Crown, className: 'text-amber-500' },
+  manager: { label: 'Manager', icon: Wrench, className: 'text-violet-500' },
+  chatModerator: { label: 'Chat Mod', icon: Shield, className: 'text-emerald-500' },
+  botModerator: { label: 'Bot Mod', icon: ShieldCheck, className: 'text-cyan-500' },
+};
+
+function TooltipIcon({
+  icon: Icon,
+  label,
+  className,
+}: {
+  icon: LucideIcon;
+  label: string;
+  className?: string;
+}) {
+  return (
+    <Tooltip delayDuration={200}>
+      <TooltipTrigger asChild>
+        <Icon className={cn('size-3.5 shrink-0', className)} />
+      </TooltipTrigger>
+      <TooltipContent side="top">{label}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+function UsernameRow({ user, displayName }: { user?: User; displayName?: string }) {
+  const role = user?.channelRole ? ROLE_META[user.channelRole] : null;
+
+  return (
+    <TooltipProvider>
+      <span className="font-semibold text-primary shrink-0 flex items-center gap-1">
+        {user?.isBot && <TooltipIcon icon={Bot} label="Bot" className="text-muted-foreground" />}
+        {role && <TooltipIcon icon={role.icon} label={role.label} className={role.className} />}
+        {user?.isPlatformAdmin && (
+          <TooltipIcon icon={ShieldAlert} label="Platform Admin" className="text-destructive" />
+        )}
+        <span>{displayName}</span>
+        <span className="font-normal text-muted-foreground select-none">:</span>
+      </span>
+    </TooltipProvider>
+  );
+}
+
+function ReportDialog({
+  open,
+  onOpenChange,
+  displayName,
+  message,
+  reportReason,
+  onReasonChange,
+  onSubmit,
+  isSubmitting,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  displayName?: string;
+  message: string;
+  reportReason: string;
+  onReasonChange: (value: string) => void;
+  onSubmit: () => void;
+  isSubmitting: boolean;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Report message</DialogTitle>
+          <DialogDescription>
+            Message against Hack Club's Code of Conduct? Let us know!
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="text-sm text-muted-foreground rounded-md border p-3 bg-muted/30">
+            <p className="font-medium text-foreground mb-1">Reported user</p>
+            <p>{displayName}</p>
+            <p className="mt-2">{message}</p>
+          </div>
+          <div>
+            <label className="text-sm font-medium">Reason</label>
+            <Textarea
+              value={reportReason}
+              onChange={(e) => onReasonChange(e.target.value)}
+              placeholder="Describe why this should be reviewed (harassment, hate speech, spam, threats, etc)."
+              rows={5}
+              className="mt-2"
+            />
+            <p className="text-xs text-muted-foreground mt-1">Minimum 10 characters.</p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+            Cancel
+          </Button>
+          <Button onClick={onSubmit} disabled={isSubmitting || reportReason.trim().length < 10}>
+            Submit report
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export function Message({
   user,
@@ -37,6 +157,7 @@ export function Message({
   const [reportOpen, setReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const displayName = user?.displayName || user?.username;
 
   if (type === 'systemMsg') {
     return (
@@ -46,12 +167,8 @@ export function Message({
     );
   }
 
-  const hasTargetUser = type === 'message' && Boolean(user?.id);
-
   const submitReport = async () => {
-    if (!user?.id || !viewerId || viewerId === user.id) {
-      return;
-    }
+    if (!user?.id || !viewerId || viewerId === user.id) return;
 
     const reason = reportReason.trim();
     if (reason.length < 10) {
@@ -61,24 +178,21 @@ export function Message({
 
     setIsSubmittingReport(true);
     try {
-      const response = await fetch('/api/stream/chat/report', {
+      const res = await fetch('/api/stream/chat/report', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           channelName,
           targetUserId: user.id,
-          targetUsername: user.displayName || user.username,
+          targetUsername: displayName,
           msgId,
           message,
           reason,
         }),
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        toast.error(errorText || 'Failed to submit report.');
+      if (!res.ok) {
+        toast.error((await res.text()) || 'Failed to submit report.');
         return;
       }
 
@@ -92,22 +206,24 @@ export function Message({
     }
   };
 
+  const handleReportOpenChange = (open: boolean) => {
+    setReportOpen(open);
+    if (!open) setReportReason('');
+  };
+
   return (
     <>
       <div className="group hover:bg-primary/5 rounded px-2 py-1 -mx-2 transition-colors">
-        <div className="flex items-start gap-2">
-          <span className="font-semibold text-primary shrink-0 flex items-center gap-1">
-            {user?.isBot && <Bot className="size-4 text-muted-foreground" />}
-            <span>{user?.displayName || user?.username}</span>
-          </span>
+        <div className="flex items-start gap-1.5">
+          <UsernameRow user={user} displayName={displayName} />
           <span
             lang="en"
-            className="text-foreground break-words overflow-wrap-anywhere min-w-0 flex-1"
+            className="text-foreground min-w-0 flex-1"
             style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}
           >
             <EmojiRenderer text={message} emojiMap={emojiMap} />
           </span>
-          {hasTargetUser && user ? (
+          {type === 'message' && user?.id && (
             <MessageActionsMenu
               user={user}
               msgId={msgId}
@@ -116,63 +232,19 @@ export function Message({
               onModerationCommand={onModerationCommand}
               onOpenReport={() => setReportOpen(true)}
             />
-          ) : null}
+          )}
         </div>
       </div>
-
-      <Dialog
+      <ReportDialog
         open={reportOpen}
-        onOpenChange={(open) => {
-          setReportOpen(open);
-          if (!open) {
-            setReportReason('');
-          }
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Report message</DialogTitle>
-            <DialogDescription>
-              Tell us what happened. Your report helps moderators review abusive behavior.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-3">
-            <div className="text-sm text-muted-foreground rounded-md border p-3 bg-muted/30">
-              <p className="font-medium text-foreground mb-1">Reported user</p>
-              <p>{user?.displayName || user?.username}</p>
-              <p className="mt-2">{message}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Reason</label>
-              <Textarea
-                value={reportReason}
-                onChange={(event) => setReportReason(event.target.value)}
-                placeholder="Describe why this should be reviewed (harassment, hate speech, spam, threats, etc)."
-                rows={5}
-                className="mt-2"
-              />
-              <p className="text-xs text-muted-foreground mt-1">Minimum 10 characters.</p>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setReportOpen(false)}
-              disabled={isSubmittingReport}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={submitReport}
-              disabled={isSubmittingReport || reportReason.trim().length < 10}
-            >
-              Submit report
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        onOpenChange={handleReportOpenChange}
+        displayName={displayName}
+        message={message}
+        reportReason={reportReason}
+        onReasonChange={setReportReason}
+        onSubmit={submitReport}
+        isSubmitting={isSubmittingReport}
+      />
     </>
   );
 }
@@ -192,11 +264,21 @@ function MessageActionsMenu({
   onModerationCommand?: (command: ChatModerationCommand) => void;
   onOpenReport: () => void;
 }) {
-  if (!viewerId || !user.id || user.id === viewerId) {
-    return null;
-  }
+  if (!viewerId || !user.id || user.id === viewerId) return null;
 
-  const canModerateTarget = Boolean(canModerate && onModerationCommand);
+  const displayName = user.displayName || user.username;
+  const canMod = Boolean(canModerate && onModerationCommand);
+
+  const runModeration = (command: ChatModerationCommand) => onModerationCommand?.(command);
+
+  const timeout = (durationSeconds: number) =>
+    runModeration({
+      type: 'mod:timeoutUser',
+      targetUserId: user.id,
+      targetUsername: displayName,
+      durationSeconds,
+      reason: 'Timed out by moderator',
+    });
 
   return (
     <DropdownMenu>
@@ -210,120 +292,82 @@ function MessageActionsMenu({
           <Flag className="mr-2 h-4 w-4" />
           Report user
         </DropdownMenuItem>
-
-        {canModerateTarget ? (
+        {canMod && (
           <>
             <DropdownMenuItem
-              onClick={() => {
-                if (!msgId) return;
-                onModerationCommand?.({ type: 'mod:deleteMessage', msgId });
-              }}
+              onClick={() => msgId && runModeration({ type: 'mod:deleteMessage', msgId })}
             >
               <Eraser className="mr-2 h-4 w-4" />
               Delete message
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                onModerationCommand?.({
-                  type: 'mod:timeoutUser',
-                  targetUserId: user.id,
-                  targetUsername: user.displayName || user.username,
-                  durationSeconds: 300,
-                  reason: 'Timed out by moderator',
-                });
-              }}
-            >
+            <DropdownMenuItem onClick={() => timeout(300)}>
               <Clock3 className="mr-2 h-4 w-4" />
               Timeout 5 min
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                onModerationCommand?.({
-                  type: 'mod:timeoutUser',
-                  targetUserId: user.id,
-                  targetUsername: user.displayName || user.username,
-                  durationSeconds: 3600,
-                  reason: 'Timed out by moderator',
-                });
-              }}
-            >
+            <DropdownMenuItem onClick={() => timeout(3600)}>
               <Clock3 className="mr-2 h-4 w-4" />
               Timeout 1 hour
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive"
-              onClick={() => {
-                onModerationCommand?.({
+              onClick={() =>
+                runModeration({
                   type: 'mod:banUser',
                   targetUserId: user.id,
-                  targetUsername: user.displayName || user.username,
+                  targetUsername: displayName,
                   reason: 'Banned by moderator',
-                });
-              }}
+                })
+              }
             >
               <Ban className="mr-2 h-4 w-4" />
               Ban user
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => {
-                onModerationCommand?.({
+              onClick={() =>
+                runModeration({
                   type: 'mod:liftTimeout',
                   targetUserId: user.id,
-                  targetUsername: user.displayName || user.username,
-                });
-              }}
+                  targetUsername: displayName,
+                })
+              }
             >
               <UserRoundCheck className="mr-2 h-4 w-4" />
               Lift timeout/ban
             </DropdownMenuItem>
           </>
-        ) : null}
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
 
-export function EmojiRenderer({ text, emojiMap }: EmojiRendererProps) {
+export function EmojiRenderer({ text, emojiMap }: { text: string; emojiMap: Map<string, string> }) {
   if (!text) return null;
 
-  const parts = text.split(/(:[\w\-+]+:)/g);
-
   return (
-    <>
-      {parts.map((part, index) => {
-        if (part.match(/^:[\w\-+]+:$/)) {
-          const emojiName = part.replaceAll(':', '');
-          const emojiUrl = emojiMap.get(emojiName);
-
-          if (emojiUrl) {
-            return (
-              <TooltipProvider key={index}>
-                <Tooltip delayDuration={250}>
+    <TooltipProvider>
+      <>
+        {text.split(/(:[\w\-+]+:)/g).map((part, i) => {
+          if (part.match(/^:[\w\-+]+:$/)) {
+            const name = part.replaceAll(':', '');
+            const url = emojiMap.get(name);
+            if (url) {
+              return (
+                <Tooltip key={i} delayDuration={250}>
                   <TooltipTrigger asChild>
                     <span className="inline-flex items-center align-middle mx-0.5">
-                      <Image
-                        src={emojiUrl}
-                        alt={part}
-                        width={20}
-                        height={20}
-                        className="inline-block"
-                      />
+                      <Image src={url} alt={part} width={20} height={20} className="inline-block" />
                     </span>
                   </TooltipTrigger>
                   <TooltipContent>{part}</TooltipContent>
                 </Tooltip>
-              </TooltipProvider>
-            );
+              );
+            }
           }
-        }
-
-        // Preserve text as-is, handling whitespace properly
-        if (part) {
-          return <span key={index}>{part}</span>;
-        }
-        return null;
-      })}
-    </>
+          return part ? <span key={i}>{part}</span> : null;
+        })}
+      </>
+    </TooltipProvider>
   );
 }
 
@@ -337,9 +381,4 @@ interface MessageProps {
   viewerId?: string;
   channelName: string;
   onModerationCommand?: (command: ChatModerationCommand) => void;
-}
-
-interface EmojiRendererProps {
-  text: string;
-  emojiMap: Map<string, string>;
 }
