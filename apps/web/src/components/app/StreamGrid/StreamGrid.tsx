@@ -107,7 +107,7 @@ export default function StreamGrid({ liveStreams, offlineStreams }: StreamGridPr
                 {offlineStreams.map((stream) => (
                   <CarouselItem
                     key={stream.id}
-                    className="basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/6 xl:basis-1/8"
+                    className="flex justify-center basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/6 xl:basis-1/8"
                   >
                     <OfflineCard stream={stream} />
                   </CarouselItem>
@@ -170,7 +170,7 @@ function StreamCard({ stream }: { stream: StreamWithChannel }) {
 
 function OfflineCard({ stream }: { stream: StreamWithChannel }) {
   return (
-    <Link href={`/${stream.username}`} className="group block">
+    <Link href={`/${stream.username}`} className="group inline-flex">
       <div className="flex flex-col items-center gap-1.5 rounded-lg p-2 transition-colors duration-150 hover:bg-muted/50 md:gap-2 md:p-3">
         <div className="relative">
           <Avatar className="h-12 w-12 ring-2 ring-border transition-colors duration-150 group-hover:ring-border/60 md:h-16 md:w-16">
@@ -181,7 +181,7 @@ function OfflineCard({ stream }: { stream: StreamWithChannel }) {
           </Avatar>
           <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background bg-muted-foreground/40 md:h-3.5 md:w-3.5" />
         </div>
-        <p className="w-full truncate text-center text-[10px] font-medium md:text-xs">
+        <p className="max-w-20 truncate text-center text-[10px] font-medium md:text-xs">
           {stream.channel.name}
         </p>
       </div>
