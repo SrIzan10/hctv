@@ -44,7 +44,7 @@ export default function StreamGrid({ liveStreams, offlineStreams }: StreamGridPr
       {sortedLiveStreams.length > 0 && (
         <section>
           <SectionHeading label="Live now" count={sortedLiveStreams.length} />
-          <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-3 xl:grid-cols-4">
             {sortedLiveStreams.map((stream) => (
               <StreamCard key={stream.id} stream={stream} />
             ))}
@@ -61,7 +61,7 @@ export default function StreamGrid({ liveStreams, offlineStreams }: StreamGridPr
                 {offlineStreams.map((stream) => (
                   <CarouselItem
                     key={stream.id}
-                    className="flex basis-[88px] justify-center sm:basis-[96px] md:basis-[108px] lg:basis-[120px]"
+                    className="flex basis-[74px] justify-center sm:basis-[82px] md:basis-[90px] lg:basis-[100px]"
                   >
                     <OfflineCard stream={stream} />
                   </CarouselItem>
@@ -79,13 +79,13 @@ export default function StreamGrid({ liveStreams, offlineStreams }: StreamGridPr
 
 function StreamCard({ stream }: { stream: StreamWithChannel }) {
   return (
-    <Link href={`/${stream.username}`} className="group block">
+    <Link href={`/${stream.username}`} className="group block w-full max-w-sm">
       <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm transition-shadow duration-200 group-hover:shadow-md">
         <div className="relative aspect-video overflow-hidden bg-muted">
           <img
             src={`/api/stream/thumb/${stream.channel.name}`}
             alt={stream.title}
-            className="h-full w-full object-cover"
+            className="absolute inset-0 object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
           <div className="absolute bottom-1.5 left-1.5 md:bottom-2 md:left-2">
@@ -125,19 +125,17 @@ function StreamCard({ stream }: { stream: StreamWithChannel }) {
 function OfflineCard({ stream }: { stream: StreamWithChannel }) {
   return (
     <Link href={`/${stream.username}`} className="group inline-flex">
-      <div className="flex flex-col items-center gap-1.5 rounded-lg p-2 transition-colors duration-150 hover:bg-muted/50 md:gap-2 md:p-3">
+      <div className="flex w-[70px] flex-col items-center gap-1 rounded-lg p-1.5 transition-colors duration-150 hover:bg-muted/50 sm:w-[78px] md:w-[86px] md:gap-1.5 md:p-2">
         <div className="relative">
-          <Avatar className="h-12 w-12 ring-2 ring-border transition-colors duration-150 group-hover:ring-border/60 md:h-16 md:w-16">
+          <Avatar className="h-9 w-9 ring-2 ring-border transition-colors duration-150 group-hover:ring-border/60 sm:h-10 sm:w-10 md:h-11 md:w-11">
             <AvatarImage src={stream.channel.pfpUrl} alt={stream.channel.name} />
-            <AvatarFallback className="text-base font-semibold md:text-lg">
+            <AvatarFallback className="text-xs font-semibold">
               {stream.channel.name.slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background bg-muted-foreground/40 md:h-3.5 md:w-3.5" />
+          <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-muted-foreground/40" />
         </div>
-        <p className="max-w-20 truncate text-center text-[10px] font-medium md:text-xs">
-          {stream.channel.name}
-        </p>
+        <p className="w-full truncate text-center text-[10px] font-medium">{stream.channel.name}</p>
       </div>
     </Link>
   );
