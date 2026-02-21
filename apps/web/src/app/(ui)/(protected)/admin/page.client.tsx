@@ -528,7 +528,7 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
                 <h1 className="text-lg font-bold tracking-tight pb-0 mb-0">Admin Panel</h1>
                 <p className="text-xs text-muted-foreground">
                   Signed in as{' '}
-                  <span className="font-medium text-foreground">{currentUser.slack_id}</span>
+                  <span className="font-medium text-foreground">{currentUser.email}</span>
                 </p>
               </div>
             </div>
