@@ -1,4 +1,5 @@
 import { validateRequest } from '@/lib/auth/validate';
+import { verifySameOrigin } from '@/lib/auth/csrf';
 import { AdminAuditAction, prisma } from '@hctv/db';
 import { NextRequest } from 'next/server';
 
@@ -47,16 +48,39 @@ export async function POST(request: NextRequest) {
     return new Response('Forbidden', { status: 403 });
   }
 
-  const body = await request.json();
-  const { channelId, action, reason, expiresAt } = body as {
+  const csrfError = verifySameOrigin(request);
+  if (csrfError) {
+    return csrfError;
+  }
+
+  let body: {
     channelId: string;
     action: 'restrict' | 'unrestrict';
     reason?: string;
     expiresAt?: string;
   };
 
+  try {
+    body = await request.json();
+  } catch {
+    return new Response('Invalid JSON body', { status: 400 });
+  }
+
+  const { channelId, action, reason, expiresAt } = body;
+
   if (!channelId || !action) {
     return new Response('Missing required fields', { status: 400 });
+  }
+
+  let expiresAtDate: Date | null = null;
+  if (expiresAt !== undefined && expiresAt !== null && expiresAt !== '') {
+    expiresAtDate = new Date(expiresAt);
+    if (isNaN(expiresAtDate.getTime())) {
+      return new Response('Invalid expiresAt date', { status: 400 });
+    }
+    if (expiresAtDate <= new Date()) {
+      return new Response('expiresAt must be a future date', { status: 400 });
+    }
   }
 
   const channel = await prisma.channel.findUnique({ where: { id: channelId } });
@@ -74,13 +98,13 @@ export async function POST(request: NextRequest) {
       update: {
         reason,
         restrictedBy: user.id,
-        expiresAt: expiresAt ? new Date(expiresAt) : null,
+        expiresAt: expiresAtDate,
       },
       create: {
         channelId,
         reason,
         restrictedBy: user.id,
-        expiresAt: expiresAt ? new Date(expiresAt) : null,
+        expiresAt: expiresAtDate,
       },
     });
 
@@ -92,7 +116,7 @@ export async function POST(request: NextRequest) {
         reason,
         details: {
           channelId,
-          expiresAt: expiresAt ?? null,
+          expiresAt: expiresAtDate?.toISOString() ?? null,
         } as any,
       },
     });
@@ -101,7 +125,10 @@ export async function POST(request: NextRequest) {
   }
 
   if (action === 'unrestrict') {
-    await prisma.channelRestriction.delete({ where: { channelId } }).catch(() => {});
+    const deleted = await prisma.channelRestriction.deleteMany({ where: { channelId } });
+    if (deleted.count === 0) {
+      return new Response('Channel does not have an active restriction', { status: 400 });
+    }
 
     await prisma.adminAuditLog.create({
       data: {

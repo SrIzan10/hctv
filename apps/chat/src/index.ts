@@ -416,8 +416,7 @@ app.get(
     async onClose(evt, ws) {
       const socket = ws as unknown as ChatSocket;
       const socketState = resolveSocketState(socket);
-      // if prematurely exiting due to authentication issues
-      console.log('client disconnected');
+      if (process.env.NODE_ENV !== 'production') console.log('client disconnected');
       if (!socketState.targetUsername) return;
 
       const streamInfo = await prisma.streamInfo.findUnique({
@@ -512,8 +511,6 @@ app.get(
           }
 
           const targetUserId = typeof msg.targetUserId === 'string' ? msg.targetUserId : '';
-          const targetUsername =
-            typeof msg.targetUsername === 'string' ? msg.targetUsername : 'that user';
 
           if (!targetUserId || targetUserId === socketState.chatUser.id) {
             socket.send(
@@ -526,8 +523,14 @@ app.get(
             return;
           }
 
-          const targetUserExists = await prisma.user.count({ where: { id: targetUserId } });
-          if (targetUserExists === 0) {
+          const targetUserRecord = await prisma.user.findUnique({
+            where: { id: targetUserId },
+            select: {
+              isAdmin: true,
+              personalChannel: { select: { name: true } },
+            },
+          });
+          if (!targetUserRecord) {
             socket.send(
               JSON.stringify({
                 type: 'moderationError',
@@ -537,6 +540,23 @@ app.get(
             );
             return;
           }
+
+          const actingUserRecord = await prisma.user.findUnique({
+            where: { id: socketState.chatUser.id },
+            select: { isAdmin: true },
+          });
+          if (targetUserRecord.isAdmin && !actingUserRecord?.isAdmin) {
+            socket.send(
+              JSON.stringify({
+                type: 'moderationError',
+                code: 'FORBIDDEN',
+                message: 'Platform admins cannot be moderated via chat commands.',
+              })
+            );
+            return;
+          }
+
+          const resolvedTargetUsername = targetUserRecord.personalChannel?.name ?? 'that user';
 
           if (msg.type === 'mod:unbanUser' || msg.type === 'mod:liftTimeout') {
             await prisma.chatUserBan.deleteMany({
@@ -563,7 +583,7 @@ app.get(
 
             broadcastToChannel(socketState.targetUsername, socket, {
               type: 'systemMsg',
-              message: `${targetUsername} can chat again.`,
+              message: `${resolvedTargetUsername} can chat again.`,
             });
             return;
           }
@@ -624,8 +644,8 @@ app.get(
             type: 'systemMsg',
             message:
               msg.type === 'mod:timeoutUser'
-                ? `${targetUsername} was timed out for ${durationSeconds}s.`
-                : `${targetUsername} was banned.`,
+                ? `${resolvedTargetUsername} was timed out for ${durationSeconds}s.`
+                : `${resolvedTargetUsername} was banned.`,
           });
 
           return;
@@ -793,13 +813,16 @@ app.get(
           );
         }
         if (msg.type === 'emojiSearch') {
-          console.log('emoji search request:', msg);
-          const searchTerm = msg.searchTerm as string;
+          const rawSearchTerm = (msg.searchTerm as string)?.trim() ?? '';
+          if (!rawSearchTerm || rawSearchTerm.length > 50) {
+            ws.send(JSON.stringify({ type: 'emojiSearchResponse', results: [] }));
+            return;
+          }
+          const searchTerm = rawSearchTerm;
 
           const emojis = await redis.hgetall('emojis');
           const emojiKeys = Object.keys(emojis);
           const idxs = uf.filter(emojiKeys, searchTerm);
-          console.log(`Emoji search for "${searchTerm}" found ${idxs?.length || 0} results.`);
 
           if (idxs && idxs.length > 0) {
             const results: string[] = [];
@@ -822,7 +845,6 @@ app.get(
                 results: results,
               })
             );
-            console.log(`Sending emoji search results: ${results.join(', ')}`);
           } else {
             ws.send(
               JSON.stringify({
