@@ -40,6 +40,9 @@ model User {
   chatModActions  ChatModerationEvent[] @relation("ChatModerationActor")
   chatModTargets  ChatModerationEvent[] @relation("ChatModerationTarget")
   adminAuditLogs  AdminAuditLog[]       @relation("AdminAuditActor")
+  chatReportsMade ChatUserReport[]      @relation("ChatReportReporter")
+  chatReportsSeen ChatUserReport[]      @relation("ChatReportTarget")
+  chatReportsHandled ChatUserReport[]    @relation("ChatReportHandler")
 
   @@index([personalChannelId])
 }
@@ -68,6 +71,7 @@ model Channel {
   chatSettings      ChatModerationSettings?
   chatBans          ChatUserBan[]
   chatModEvents     ChatModerationEvent[]
+  chatReports       ChatUserReport[]
 
   @@index([ownerId])
 }
@@ -245,6 +249,51 @@ model AdminAuditLog {
   @@index([action, createdAt])
 }
 
+model ChatUserReport {
+  id                  String           @id @default(cuid())
+  channel             Channel          @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  channelId           String
+  reporter            User             @relation("ChatReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reporterId          String
+  targetUser          User?            @relation("ChatReportTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+  targetUserId        String?
+  targetUsername      String?
+  reportedMessage     String?
+  reportedMessageId   String?
+  reason              String
+  status              ChatReportStatus @default(OPEN)
+  handledBy           User?            @relation("ChatReportHandler", fields: [handledById], references: [id], onDelete: SetNull)
+  handledById         String?
+  handledAt           DateTime?
+  handlingNote        String?
+  lastAction          ChatReportAction?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  @@index([channelId, createdAt])
+  @@index([reporterId, createdAt])
+  @@index([status, createdAt])
+  @@index([handledById, handledAt])
+}
+
+enum ChatReportStatus {
+  OPEN
+  REVIEWED
+  DISMISSED
+}
+
+enum ChatReportAction {
+  REVIEW
+  DISMISS
+  DELETE_REPORTED_MESSAGE
+  TIMEOUT_10M
+  TIMEOUT_1H
+  BAN_CHAT
+  LIFT_CHAT_BAN
+  BAN_PLATFORM
+  UNBAN_PLATFORM
+}
+
 enum AdminAuditAction {
   USER_BANNED
   USER_UNBANNED
@@ -252,6 +301,9 @@ enum AdminAuditAction {
   USER_DEMOTED
   CHANNEL_RESTRICTED
   CHANNEL_UNRESTRICTED
+  REPORT_REVIEWED
+  REPORT_DISMISSED
+  REPORT_ENFORCEMENT
 }
 
 enum ChatModerationAction {

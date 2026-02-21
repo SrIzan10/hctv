@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 
 export default function ChatPanel(props: Props) {
   const { username } = useParams();
+  const channelName = (Array.isArray(username) ? username[0] : username) ?? '';
   const [grant, setGrant] = useQueryState('grant');
   const [message, setMessage] = useState('');
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -34,7 +35,7 @@ export default function ChatPanel(props: Props) {
     const socket = new WebSocket(
       `ws${window.location.protocol === 'https:' ? 's' : ''}://${
         window.location.host
-      }/api/stream/chat/ws/${username}?grant=${grant}`
+      }/api/stream/chat/ws/${channelName}?grant=${grant}`
     );
     socketRef.current = socket;
 
@@ -108,7 +109,7 @@ export default function ChatPanel(props: Props) {
     return () => {
       socket.close();
     };
-  }, [username]);
+  }, [channelName]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -137,7 +138,7 @@ export default function ChatPanel(props: Props) {
       const socket = new WebSocket(
         `ws${window.location.protocol === 'https:' ? 's' : ''}://${
           window.location.host
-        }/api/stream/chat/ws/${username}?grant=${grant}`
+        }/api/stream/chat/ws/${channelName}?grant=${grant}`
       );
       socket.onopen = () => {
         socket.send(JSON.stringify({ type: 'message', message }));
@@ -199,7 +200,7 @@ export default function ChatPanel(props: Props) {
       const socket = new WebSocket(
         `ws${window.location.protocol === 'https:' ? 's' : ''}://${
           window.location.host
-        }/api/stream/chat/ws/${username}?grant=${grant}`
+        }/api/stream/chat/ws/${channelName}?grant=${grant}`
       );
 
       socket.onopen = () => {
@@ -262,7 +263,7 @@ export default function ChatPanel(props: Props) {
         setEmojisToReq([]);
       };
     }
-  }, [emojisToReq, emojiMap, username]);
+  }, [emojisToReq, emojiMap, channelName]);
 
   const handleEmojiSelect = (emojiName: string) => {
     if (!textareaRef.current) return;
@@ -316,6 +317,7 @@ export default function ChatPanel(props: Props) {
               msgId={msg.msgId}
               canModerate={canModerate && Boolean(viewer?.id)}
               viewerId={viewer?.id}
+              channelName={channelName}
               onModerationCommand={sendModerationCommand}
             />
           ))}

@@ -22,6 +22,8 @@ import {
   ShieldMinus,
   X,
   ClipboardList,
+  Flag,
+  Link as LinkIcon,
 } from 'lucide-react';
 import {
   Dialog,
@@ -42,16 +44,28 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { parseAsString, useQueryState } from 'nuqs';
+import { useRouter } from 'next/navigation';
+
+const ADMIN_TABS = ['users', 'channels', 'audit', 'reports'] as const;
+type AdminTab = (typeof ADMIN_TABS)[number];
 
 export default function AdminPanelClient({ currentUser }: AdminPanelClientProps) {
+  const router = useRouter();
+  const [tabParam, setTabParam] = useQueryState('tab', parseAsString.withDefault('users'));
+  const [reportIdParam, setReportIdParam] = useQueryState('reportId');
   const [userSearch, setUserSearch] = useState('');
   const [channelSearch, setChannelSearch] = useState('');
+  const [activeTab, setActiveTab] = useState<AdminTab>('users');
   const [users, setUsers] = useState<UserWithBan[]>([]);
   const [channels, setChannels] = useState<ChannelWithRestriction[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [channelsLoading, setChannelsLoading] = useState(false);
   const [auditLoading, setAuditLoading] = useState(false);
+  const [reportsLoading, setReportsLoading] = useState(false);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [reports, setReports] = useState<ChatReport[]>([]);
+  const [highlightReportId, setHighlightReportId] = useState<string | null>(null);
 
   const [banDialogOpen, setBanDialogOpen] = useState(false);
   const [restrictDialogOpen, setRestrictDialogOpen] = useState(false);
@@ -102,11 +116,59 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
     }
   }, []);
 
+  const fetchReports = useCallback(async (reportId?: string) => {
+    setReportsLoading(true);
+    try {
+      const query = new URLSearchParams({ take: '200' });
+      if (reportId) {
+        query.set('reportId', reportId);
+      }
+      const res = await fetch(`/api/admin/reports?${query.toString()}`);
+      if (res.ok) {
+        const data = (await res.json()) as { reports: ChatReport[]; reportId?: string | null };
+        setReports(data.reports);
+      }
+    } catch {
+      toast.error('Failed to fetch reports');
+    } finally {
+      setReportsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (tabParam && ADMIN_TABS.includes(tabParam as AdminTab)) {
+      setActiveTab(tabParam as AdminTab);
+    }
+
+    if (reportIdParam) {
+      setActiveTab('reports');
+      setHighlightReportId(reportIdParam);
+    } else {
+      setHighlightReportId(null);
+    }
+  }, [reportIdParam, tabParam]);
+
   useEffect(() => {
     fetchUsers('');
     fetchChannels('');
     fetchAuditLogs();
-  }, [fetchUsers, fetchChannels, fetchAuditLogs]);
+    fetchReports(reportIdParam ?? undefined);
+  }, [fetchUsers, fetchChannels, fetchAuditLogs, fetchReports, reportIdParam]);
+
+  useEffect(() => {
+    if (!highlightReportId || activeTab !== 'reports') {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      const target = document.getElementById(`report-row-${highlightReportId}`);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [highlightReportId, activeTab, reports]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -296,8 +358,20 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
         <p className="text-muted-foreground">Manage users and channels on the platform</p>
       </div>
 
-      <Tabs defaultValue="users" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs
+        value={activeTab}
+        onValueChange={async (nextTab) => {
+          const tab = nextTab as AdminTab;
+          setActiveTab(tab);
+          await setTabParam(tab);
+          if (tab !== 'reports') {
+            await setReportIdParam(null);
+            setHighlightReportId(null);
+          }
+        }}
+        className="w-full"
+      >
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Users
@@ -309,6 +383,10 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
           <TabsTrigger value="audit" className="flex items-center gap-2">
             <ClipboardList className="h-4 w-4" />
             Audit Log
+          </TabsTrigger>
+          <TabsTrigger value="reports" className="flex items-center gap-2">
+            <Flag className="h-4 w-4" />
+            Reports
           </TabsTrigger>
         </TabsList>
 
@@ -639,6 +717,103 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="reports">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <CardTitle>Chat Reports</CardTitle>
+                  <CardDescription>
+                    User-submitted chat reports. Use report deep links to jump directly to a report.
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fetchReports(reportIdParam ?? undefined)}
+                >
+                  Refresh
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Time</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Channel</TableHead>
+                    <TableHead>Reporter</TableHead>
+                    <TableHead>Target</TableHead>
+                    <TableHead>Reason</TableHead>
+                    <TableHead>Last Action</TableHead>
+                    <TableHead>Handled By</TableHead>
+                    <TableHead>Case</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {reportsLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={9} className="text-center py-8">
+                        Loading...
+                      </TableCell>
+                    </TableRow>
+                  ) : reports.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={9} className="text-center py-8">
+                        No reports yet
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    reports.map((report) => {
+                      return (
+                        <TableRow
+                          key={report.id}
+                          id={`report-row-${report.id}`}
+                          className={cn(
+                            highlightReportId === report.id
+                              ? 'bg-primary/10 border-l-2 border-primary'
+                              : undefined
+                          )}
+                        >
+                          <TableCell className="text-xs text-muted-foreground">
+                            {format(new Date(report.createdAt), 'PPP p')}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={report.status === 'OPEN' ? 'destructive' : 'secondary'}>
+                              {report.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{report.channelName}</TableCell>
+                          <TableCell>{report.reporter}</TableCell>
+                          <TableCell>{report.target}</TableCell>
+                          <TableCell className="max-w-[280px] truncate" title={report.reason}>
+                            {report.reason}
+                          </TableCell>
+                          <TableCell>
+                            <code className="text-xs">{report.lastAction ?? '-'}</code>
+                          </TableCell>
+                          <TableCell>{report.handledBy ?? '-'}</TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => router.push(`/admin/reports/${report.id}`)}
+                            >
+                              <LinkIcon className="h-4 w-4 mr-1" />
+                              Open Case
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       <Dialog
@@ -888,6 +1063,33 @@ interface AuditLog {
   reason: string | null;
   details?: unknown;
   channelName?: string;
+}
+
+interface ChatReport {
+  id: string;
+  status: 'OPEN' | 'REVIEWED' | 'DISMISSED';
+  reason: string;
+  reportedMessage: string | null;
+  reportedMessageId: string | null;
+  targetUsername: string | null;
+  channelName: string;
+  createdAt: string;
+  handledAt: string | null;
+  handlingNote: string | null;
+  lastAction:
+    | 'REVIEW'
+    | 'DISMISS'
+    | 'DELETE_REPORTED_MESSAGE'
+    | 'TIMEOUT_10M'
+    | 'TIMEOUT_1H'
+    | 'BAN_CHAT'
+    | 'LIFT_CHAT_BAN'
+    | 'BAN_PLATFORM'
+    | 'UNBAN_PLATFORM'
+    | null;
+  reporter: string;
+  target: string;
+  handledBy: string | null;
 }
 
 interface AdminPanelClientProps {
