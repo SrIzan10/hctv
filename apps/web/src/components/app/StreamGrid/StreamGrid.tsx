@@ -21,12 +21,11 @@ interface StreamGridProps {
 }
 
 export default function StreamGrid({ liveStreams, offlineStreams }: StreamGridProps) {
-  const sorted = [...liveStreams].sort((a, b) => b.viewers - a.viewers);
-  const [featured, ...rest] = sorted;
+  const sortedLiveStreams = [...liveStreams].sort((a, b) => b.viewers - a.viewers);
 
   return (
     <div className="space-y-8 md:space-y-10">
-      {!featured && (
+      {sortedLiveStreams.length === 0 && (
         <div className="flex flex-col items-center gap-4 py-10 text-center">
           <ConfusedDino className="h-24 w-24 opacity-70" />
           <div className="space-y-1">
@@ -42,56 +41,11 @@ export default function StreamGrid({ liveStreams, offlineStreams }: StreamGridPr
         </div>
       )}
 
-      {featured && (
+      {sortedLiveStreams.length > 0 && (
         <section>
-          <SectionHeading label="Featured" />
-          <Link href={`/${featured.username}`} className="group block w-full md:max-w-2xl">
-            <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-shadow duration-200 group-hover:shadow-md">
-              <div className="relative aspect-video overflow-hidden bg-muted">
-                <img
-                  src={`/api/stream/thumb/${featured.channel.name}`}
-                  alt={featured.title}
-                  className="h-full w-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-                <div className="absolute bottom-2 left-2 flex items-center gap-1.5 md:bottom-3 md:left-3 md:gap-2">
-                  <LiveBadge />
-                  {featured.category && (
-                    <span className="rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm md:px-2.5 md:text-xs">
-                      {featured.category}
-                    </span>
-                  )}
-                </div>
-                <div className="absolute bottom-2 right-2 md:bottom-3 md:right-3">
-                  <ViewerCount count={featured.viewers} />
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 md:gap-4 md:p-4">
-                <Avatar className="h-9 w-9 shrink-0 ring-2 ring-primary/30 md:h-10 md:w-10">
-                  <AvatarImage src={featured.channel.pfpUrl} alt={featured.channel.name} />
-                  <AvatarFallback className="text-sm font-semibold">
-                    {featured.channel.name.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold leading-snug md:text-base">
-                    {featured.title}
-                  </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground md:text-sm">
-                    {featured.channel.name}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Link>
-        </section>
-      )}
-
-      {rest.length > 0 && (
-        <section>
-          <SectionHeading label="Live now" count={rest.length} />
+          <SectionHeading label="Live now" count={sortedLiveStreams.length} />
           <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-3 xl:grid-cols-4">
-            {rest.map((stream) => (
+            {sortedLiveStreams.map((stream) => (
               <StreamCard key={stream.id} stream={stream} />
             ))}
           </div>
@@ -107,7 +61,7 @@ export default function StreamGrid({ liveStreams, offlineStreams }: StreamGridPr
                 {offlineStreams.map((stream) => (
                   <CarouselItem
                     key={stream.id}
-                    className="flex justify-center basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/6 xl:basis-1/8"
+                    className="flex basis-[88px] justify-center sm:basis-[96px] md:basis-[108px] lg:basis-[120px]"
                   >
                     <OfflineCard stream={stream} />
                   </CarouselItem>
