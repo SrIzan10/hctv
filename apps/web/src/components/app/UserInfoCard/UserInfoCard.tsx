@@ -2,6 +2,7 @@ import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import type { StreamInfo, Channel } from '@hctv/db';
 import FollowButton from './follow';
 import FollowCountText from './followCount';
+import StreamUptime from './streamUptime';
 import ViewerCount from './viewerCount';
 import { Preview } from '@/components/ui/channel-desc-fancy-area/preview';
 
@@ -21,6 +22,7 @@ export default function UserInfoCard(props: Props) {
         </div>
         <div className="flex items-center space-x-4">
           <ViewerCount />
+          <StreamUptime />
           <FollowButton channel={props.streamInfo.username} />
         </div>
       </div>
