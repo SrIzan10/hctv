@@ -9,7 +9,7 @@ The chat system is powered by a websocket server. Please read the entire page be
 
 ## Connection and messages
 
-The websocket server is located at `wss://hackclub.tv/api/chat/ws/:username`, where `:username` is the channel you want to connect to.
+The websocket server is located at `wss://hackclub.tv/api/stream/chat/ws/:username`, where `:username` is the channel you want to connect to.
 
 You'll need to provide authentication, which can be done by providing an `auth_session` cookie, just like the REST API.
 
@@ -21,6 +21,7 @@ Bot accounts are now supported. You can choose to connect as a bot by providing 
 **Security Note:** When using the `?botAuth=` query parameter, be aware that query parameters may be logged in server logs, and/or proxy logs. Use the `Authorization` header method whenever possible. The query parameter method should only be used when connecting from an environment where headers cannot be set.
 
 It is highly advised to use a bot account for any automated task, and to implement anything pointed out in this page.
+
 </Aside>
 
 Once connected, you must implement a subroutine in your code to send ping messages every about 5 seconds. This is because of Cloudflare limitations.
@@ -78,6 +79,109 @@ Messages are sent and received in JSON format. The following message types are s
       ]
     }
     ```
+
+## Moderation messages
+
+Chat moderation is available over the same websocket connection when the connected account is a channel moderator.
+
+- `mod:deleteMessage`: delete a message from chat history.
+  - sent by client:
+    ```json
+    {
+      "type": "mod:deleteMessage",
+      "msgId": "chat_message_id"
+    }
+    ```
+  - received by clients in the same channel:
+    ```json
+    {
+      "type": "messageDeleted",
+      "msgId": "chat_message_id"
+    }
+    ```
+- `mod:timeoutUser`: temporarily remove a user's ability to send messages.
+  - sent by client:
+    ```json
+    {
+      "type": "mod:timeoutUser",
+      "targetUserId": "user_id",
+      "targetUsername": "username",
+      "durationSeconds": 300,
+      "reason": "optional reason"
+    }
+    ```
+- `mod:banUser`: ban a user from chat indefinitely.
+  - sent by client:
+    ```json
+    {
+      "type": "mod:banUser",
+      "targetUserId": "user_id",
+      "targetUsername": "username",
+      "reason": "optional reason"
+    }
+    ```
+- `mod:liftTimeout` and `mod:unbanUser`: remove an existing timeout/ban.
+  - sent by client:
+    ```json
+    {
+      "type": "mod:unbanUser",
+      "targetUserId": "user_id",
+      "targetUsername": "username"
+    }
+    ```
+- `chatAccess`: tells a user whether they can currently send messages.
+  - received by client:
+    ```json
+    {
+      "type": "chatAccess",
+      "canSend": false,
+      "restriction": {
+        "type": "timeout",
+        "reason": "spamming",
+        "expiresAt": "2026-02-21T10:00:00.000Z"
+      }
+    }
+    ```
+- `moderationError`: returned when a moderation action is rejected.
+  - received by client:
+    ```json
+    {
+      "type": "moderationError",
+      "code": "INVALID_TARGET",
+      "message": "Invalid moderation target."
+    }
+    ```
+
+## SDK moderation usage (`@hctv/sdk`)
+
+If you're building bots, you can call moderation helpers directly:
+
+```ts
+import { HctvSdk } from '@hctv/sdk';
+
+const sdk = new HctvSdk({ botToken: process.env.HCTV_BOT_TOKEN! });
+await sdk.chat.connect('channel-name');
+
+sdk.chat.timeoutUser('channel-name', 'target-user-id', 'target-username', 300, 'spam');
+sdk.chat.banUser('channel-name', 'target-user-id', 'target-username', 'severe abuse');
+sdk.chat.liftTimeout('channel-name', 'target-user-id', 'target-username');
+sdk.chat.unbanUser('channel-name', 'target-user-id', 'target-username');
+sdk.chat.deleteMessage('channel-name', 'message-id');
+
+sdk.chat.onModerationError((error, channel) => {
+  console.error(`[${channel}] moderation error`, error.code, error.message);
+});
+
+sdk.chat.onChatAccess((access, channel) => {
+  console.log(`[${channel}] canSend=${access.canSend}`);
+});
+
+sdk.chat.onModerationEvent((event) => {
+  if (event.type === 'messageDeleted') {
+    console.log('deleted message', event.msgId);
+  }
+});
+```
 
 ## Emoji handling
 

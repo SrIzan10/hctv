@@ -1,6 +1,7 @@
 export interface ChatMessage {
   id: string;
   msgId?: string;
+  userId?: string;
   channelName: string;
   username: string;
   displayName?: string;

@@ -16,7 +16,7 @@ import type {
 } from './types';
 
 const DEFAULT_BASE_URL = 'wss://hackclub.tv/api/stream/chat/ws';
-const PING_INTERVAL = 20000; // 20 seconds
+const PING_INTERVAL = 5000; // 5 seconds (required to keep CF websocket alive)
 
 interface ChannelConnection {
   ws: WebSocket;
@@ -198,6 +198,7 @@ export class ChatClient {
     return {
       id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
       msgId: msg.msgId,
+      userId: msg.user.id,
       channelName,
       username: msg.user.username,
       displayName: msg.user.displayName,
@@ -272,7 +273,8 @@ export class ChatClient {
     channelName: string,
     targetUserId: string,
     targetUsername: string,
-    durationSeconds = 300
+    durationSeconds = 300,
+    reason?: string
   ): void {
     this.sendModerationCommand(
       {
@@ -280,6 +282,17 @@ export class ChatClient {
         targetUserId,
         targetUsername,
         durationSeconds,
+        reason,
+      },
+      channelName
+    );
+  }
+
+  deleteMessage(channelName: string, msgId: string): void {
+    this.sendModerationCommand(
+      {
+        type: 'mod:deleteMessage',
+        msgId,
       },
       channelName
     );
@@ -306,6 +319,17 @@ export class ChatClient {
     this.sendModerationCommand(
       {
         type: 'mod:liftTimeout',
+        targetUserId,
+        targetUsername,
+      },
+      channelName
+    );
+  }
+
+  unbanUser(channelName: string, targetUserId: string, targetUsername: string): void {
+    this.sendModerationCommand(
+      {
+        type: 'mod:unbanUser',
         targetUserId,
         targetUsername,
       },

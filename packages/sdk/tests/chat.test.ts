@@ -237,6 +237,57 @@ describe('ChatClient', () => {
     });
   });
 
+  describe('moderation commands', () => {
+    it('should send delete message command', async () => {
+      await client.connect('testchannel');
+
+      client.deleteMessage('testchannel', 'msg-123');
+
+      const mockWs = getMockInstance('testchannel');
+      const messages = mockWs!.sentMessages;
+      const lastMsg = JSON.parse(messages[messages.length - 1]);
+
+      expect(lastMsg).toEqual({
+        type: 'mod:deleteMessage',
+        msgId: 'msg-123',
+      });
+    });
+
+    it('should send timeout command with reason', async () => {
+      await client.connect('testchannel');
+
+      client.timeoutUser('testchannel', 'user-123', 'target-user', 600, 'spam');
+
+      const mockWs = getMockInstance('testchannel');
+      const messages = mockWs!.sentMessages;
+      const lastMsg = JSON.parse(messages[messages.length - 1]);
+
+      expect(lastMsg).toEqual({
+        type: 'mod:timeoutUser',
+        targetUserId: 'user-123',
+        targetUsername: 'target-user',
+        durationSeconds: 600,
+        reason: 'spam',
+      });
+    });
+
+    it('should send unban command', async () => {
+      await client.connect('testchannel');
+
+      client.unbanUser('testchannel', 'user-123', 'target-user');
+
+      const mockWs = getMockInstance('testchannel');
+      const messages = mockWs!.sentMessages;
+      const lastMsg = JSON.parse(messages[messages.length - 1]);
+
+      expect(lastMsg).toEqual({
+        type: 'mod:unbanUser',
+        targetUserId: 'user-123',
+        targetUsername: 'target-user',
+      });
+    });
+  });
+
   describe('onMessage', () => {
     it('should call global handler when message received', async () => {
       const messageHandler = vi.fn();
@@ -419,6 +470,74 @@ describe('ChatClient', () => {
       });
 
       expect(historyHandler).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('moderation events', () => {
+    it('should emit moderation error', async () => {
+      const moderationErrorHandler = vi.fn();
+      client.onModerationError(moderationErrorHandler);
+
+      await client.connect('testchannel');
+
+      getMockInstance('testchannel')?.simulateMessage({
+        type: 'moderationError',
+        code: 'RATE_LIMIT',
+        message: 'You are sending messages too fast.',
+      });
+
+      expect(moderationErrorHandler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          code: 'RATE_LIMIT',
+          message: 'You are sending messages too fast.',
+        }),
+        'testchannel'
+      );
+    });
+
+    it('should emit chat access state', async () => {
+      const chatAccessHandler = vi.fn();
+      client.onChatAccess(chatAccessHandler);
+
+      await client.connect('testchannel');
+
+      getMockInstance('testchannel')?.simulateMessage({
+        type: 'chatAccess',
+        canSend: false,
+        restriction: {
+          type: 'timeout',
+          reason: 'Spam',
+          expiresAt: '2026-01-01T00:00:00.000Z',
+        },
+      });
+
+      expect(chatAccessHandler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          canSend: false,
+          restriction: expect.objectContaining({
+            type: 'timeout',
+          }),
+        }),
+        'testchannel'
+      );
+    });
+
+    it('should emit message deleted moderation event', async () => {
+      const moderationEventHandler = vi.fn();
+      client.onModerationEvent(moderationEventHandler);
+
+      await client.connect('testchannel');
+
+      getMockInstance('testchannel')?.simulateMessage({
+        type: 'messageDeleted',
+        msgId: 'msg-456',
+      });
+
+      expect(moderationEventHandler).toHaveBeenCalledWith({
+        type: 'messageDeleted',
+        msgId: 'msg-456',
+        channelName: 'testchannel',
+      });
     });
   });
 
