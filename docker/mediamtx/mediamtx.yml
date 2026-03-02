@@ -17,4 +17,3 @@ authMethod: http
 authHTTPAddress: http://hctv:3000/api/mediamtx/publish
 
 api: yes
-apiAddress: :9997
