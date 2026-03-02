@@ -373,7 +373,7 @@ export async function addChatBotModerator(channelId: string, botId: string) {
 
   const bot = await prisma.botAccount.findUnique({
     where: { id: botId },
-    select: { id: true, ownerId: true },
+    select: { id: true },
   });
 
   if (!bot) {
@@ -382,14 +382,6 @@ export async function addChatBotModerator(channelId: string, botId: string) {
 
   if (channel.chatModeratorBots.some((existingBot) => existingBot.id === bot.id)) {
     return { success: false, error: 'Bot is already a chat moderator' };
-  }
-
-  const canUseBot =
-    bot.ownerId === channel.ownerId ||
-    channel.managers.some((manager) => manager.id === bot.ownerId);
-
-  if (!canUseBot) {
-    return { success: false, error: 'Bot owner must be a channel manager or owner' };
   }
 
   await prisma.channel.update({

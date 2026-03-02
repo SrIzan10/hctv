@@ -61,6 +61,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { UserCombobox } from '@/components/app/UserCombobox/UserCombobox';
+import { BotCombobox } from '@/components/app/BotCombobox/BotCombobox';
 import { parseAsString, useQueryState } from 'nuqs';
 import { Write } from '@/components/ui/channel-desc-fancy-area/write';
 import { Preview } from '@/components/ui/channel-desc-fancy-area/preview';
@@ -89,7 +90,7 @@ interface ChannelSettingsClientProps {
     chatModerators: User[];
     chatModeratorPersonalChannels: (Channel | null)[];
     chatModeratorBots: BotAccount[];
-    teamBotAccounts: BotAccount[];
+    allBotAccounts: Pick<BotAccount, 'id' | 'displayName' | 'slug' | 'pfpUrl'>[];
     streamInfo: StreamInfo[];
     streamKey: StreamKey | null;
     chatSettings: ChatModerationSettings | null;
@@ -857,7 +858,7 @@ export default function ChannelSettingsClient({
                     />
                     <AddChatBotModeratorDialog
                       channelId={channel.id}
-                      teamBots={channel.teamBotAccounts}
+                      botAccounts={channel.allBotAccounts}
                       existingBotModerators={channel.chatModeratorBots.map((bot) => bot.id)}
                     />
                   </div>
@@ -1260,19 +1261,15 @@ function AddChatModeratorDialog({
 
 function AddChatBotModeratorDialog({
   channelId,
-  teamBots,
+  botAccounts,
   existingBotModerators,
 }: {
   channelId: string;
-  teamBots: BotAccount[];
+  botAccounts: Pick<BotAccount, 'id' | 'displayName' | 'slug' | 'pfpUrl'>[];
   existingBotModerators: string[];
 }) {
   const [open, setOpen] = useState(false);
   const [selectedBotId, setSelectedBotId] = useState('');
-
-  const availableBots = teamBots.filter(
-    (botAccount) => !existingBotModerators.includes(botAccount.id)
-  );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -1286,21 +1283,16 @@ function AddChatBotModeratorDialog({
         <DialogHeader>
           <DialogTitle>Add bot moderator</DialogTitle>
           <DialogDescription>
-            Bots can delete messages, timeout users, and ban users in chat.
+            Look up any bot account by name or slug to grant moderation powers.
           </DialogDescription>
         </DialogHeader>
-        <Select value={selectedBotId} onValueChange={setSelectedBotId}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select bot" />
-          </SelectTrigger>
-          <SelectContent>
-            {availableBots.map((botAccount) => (
-              <SelectItem key={botAccount.id} value={botAccount.id}>
-                {botAccount.displayName} (@{botAccount.slug})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <BotCombobox
+          bots={botAccounts}
+          filter={existingBotModerators}
+          value={selectedBotId}
+          onValueChange={setSelectedBotId}
+          modal
+        />
         <DialogFooter>
           <Button
             disabled={!selectedBotId}

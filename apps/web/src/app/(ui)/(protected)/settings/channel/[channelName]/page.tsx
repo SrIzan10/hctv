@@ -65,12 +65,12 @@ export default async function ChannelSettingsPage({
   const followerPersonalChannels = await Promise.all(
     channel.followers.map((follower) => resolvePersonalChannel(follower.user.id))
   );
-  const teamMemberIds = [channel.ownerId, ...channel.managers.map((manager) => manager.id)];
-  const teamBotAccounts = await prisma.botAccount.findMany({
-    where: {
-      ownerId: {
-        in: teamMemberIds,
-      },
+  const allBotAccounts = await prisma.botAccount.findMany({
+    select: {
+      id: true,
+      displayName: true,
+      slug: true,
+      pfpUrl: true,
     },
     orderBy: {
       slug: 'asc',
@@ -86,7 +86,7 @@ export default async function ChannelSettingsPage({
         managerPersonalChannels,
         chatModeratorPersonalChannels,
         followerPersonalChannels,
-        teamBotAccounts,
+        allBotAccounts,
       }}
       isOwner={isOwner}
       currentUser={user}

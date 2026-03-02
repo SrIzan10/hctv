@@ -55,8 +55,8 @@ export default function StreamGrid({ liveStreams, offlineStreams }: StreamGridPr
       {offlineStreams.length > 0 && (
         <section>
           <SectionHeading label="Offline channels" count={offlineStreams.length} />
-          <div className="relative">
-            <Carousel opts={{ align: 'start', dragFree: true }}>
+          <div className="relative max-w-full overflow-hidden">
+            <Carousel className="w-full max-w-full" opts={{ align: 'start', dragFree: true }}>
               <CarouselContent>
                 {offlineStreams.map((stream) => (
                   <CarouselItem
@@ -86,6 +86,8 @@ function StreamCard({ stream }: { stream: StreamWithChannel }) {
             src={`/api/stream/thumb/${stream.channel.name}`}
             alt={stream.title}
             className="absolute inset-0 object-cover"
+            loading="lazy"
+            decoding="async"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
           <div className="absolute bottom-1.5 left-1.5 md:bottom-2 md:left-2">
@@ -97,7 +99,12 @@ function StreamCard({ stream }: { stream: StreamWithChannel }) {
         </div>
         <div className="flex items-start gap-2 p-2 md:gap-3 md:p-3">
           <Avatar className="h-7 w-7 shrink-0 ring-1 ring-primary/20 md:h-8 md:w-8">
-            <AvatarImage src={stream.channel.pfpUrl} alt={stream.channel.name} />
+            <AvatarImage
+              src={stream.channel.pfpUrl}
+              alt={stream.channel.name}
+              loading="lazy"
+              decoding="async"
+            />
             <AvatarFallback className="text-[10px]">
               {stream.channel.name.slice(0, 2).toUpperCase()}
             </AvatarFallback>
@@ -128,7 +135,12 @@ function OfflineCard({ stream }: { stream: StreamWithChannel }) {
       <div className="flex w-[70px] flex-col items-center gap-1 rounded-lg p-1.5 transition-colors duration-150 hover:bg-muted/50 sm:w-[78px] md:w-[86px] md:gap-1.5 md:p-2">
         <div className="relative">
           <Avatar className="h-9 w-9 ring-2 ring-border transition-colors duration-150 group-hover:ring-border/60 sm:h-10 sm:w-10 md:h-11 md:w-11">
-            <AvatarImage src={stream.channel.pfpUrl} alt={stream.channel.name} />
+            <AvatarImage
+              src={stream.channel.pfpUrl}
+              alt={stream.channel.name}
+              loading="lazy"
+              decoding="async"
+            />
             <AvatarFallback className="text-xs font-semibold">
               {stream.channel.name.slice(0, 2).toUpperCase()}
             </AvatarFallback>
