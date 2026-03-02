@@ -58,6 +58,8 @@ services:
     volumes:
       - 'hctv_redis:/data'
   mediamtx:
-    image: 'srizan10/hclive-mediamtx:latest'
+    build:
+      context: .
+      dockerfile: docker/mediamtx/Dockerfile
     ports:
       - '8890:8890/udp'

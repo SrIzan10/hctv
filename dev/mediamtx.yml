@@ -6,11 +6,9 @@ srt: yes
 srtAddress: :8890
 
 hls: yes
-hlsAddress: :8888
 hlsVariant: lowLatency
 hlsSegmentDuration: 2s
 hlsPartDuration: 500ms
-hlsAlwaysRemux: yes
 hlsSegmentCount: 10
 
 authMethod: http
