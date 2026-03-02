@@ -15,3 +15,5 @@ authMethod: http
 authHTTPAddress: https://hackclub.tv/api/mediamtx/publish
 
 api: yes
+
+logLevel: debug
