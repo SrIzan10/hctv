@@ -20,7 +20,7 @@ export default function StreamPlayer() {
   const { username } = useParams();
   const { session } = useSession();
   const { streamInfo: userInfo } = useUserStreamInfo(username!.toString());
-  
+
   const videoRef = useRef(null);
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export default function StreamPlayer() {
         debug: process.env.NODE_ENV === 'development',
         backBufferLength: 90,
         enableWorker: true,
-        maxLiveSyncPlaybackRate: 1.5,
+        maxLiveSyncPlaybackRate: 1,
         liveSyncDurationCount: 2,
         liveMaxLatencyDurationCount: 4,
       };
@@ -57,12 +57,7 @@ export default function StreamPlayer() {
 
   return (
     <MediaController className="w-full aspect-video">
-      <HlsVideo
-        ref={videoRef}
-        slot="media"
-        crossOrigin="anonymous"
-        autoplay
-      />
+      <HlsVideo ref={videoRef} slot="media" crossOrigin="anonymous" autoplay />
       <MediaLoadingIndicator slot="centered-chrome" noAutohide />
       <MediaControlBar className="w-full px-2">
         <div className="flex items-center gap-2">

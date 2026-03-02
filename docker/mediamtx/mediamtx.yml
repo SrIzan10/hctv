@@ -8,7 +8,7 @@ srtAddress: :8890
 hls: yes
 hlsVariant: lowLatency
 hlsSegmentDuration: 2s
-hlsPartDuration: 500ms
+hlsPartDuration: 1s
 hlsSegmentCount: 10
 
 authMethod: http
