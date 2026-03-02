@@ -12,6 +12,6 @@ hlsPartDuration: 500ms
 hlsSegmentCount: 10
 
 authMethod: http
-authHTTPAddress: http://hctv:3000/api/mediamtx/publish
+authHTTPAddress: https://hackclub.tv/api/mediamtx/publish
 
 api: yes
