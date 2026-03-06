@@ -448,7 +448,7 @@ app.get(
 
         chatUser = {
           ...chatUser,
-          isPlatformAdmin: Boolean(moderatorUser?.isAdmin),
+          isPlatformAdmin: chatUser.isBot ? false : Boolean(moderatorUser?.isAdmin),
           channelRole,
         };
       }
