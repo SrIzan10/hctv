@@ -1,4 +1,5 @@
 import { prisma } from '@hctv/db';
+import { setLiveStreamsByRegion, trackWebJob } from '../metrics';
 import { HttpFlv } from '../types/liveBackendJson';
 import { getNotificationQueue } from '../workers';
 import client from '../services/slackNotifier';
@@ -50,103 +51,107 @@ export async function initializeStreamInfo(channelId?: string) {
 
 export async function syncStream() {
   try {
-    const regions = Object.keys(MEDIAMTX_SERVER_REGIONS) as Array<
-      keyof typeof MEDIAMTX_SERVER_REGIONS
-    >;
+    await trackWebJob('stream_sync', async () => {
+      const regions = Object.keys(MEDIAMTX_SERVER_REGIONS) as Array<
+        keyof typeof MEDIAMTX_SERVER_REGIONS
+      >;
 
-    const allActiveStreams = new Map<string, keyof typeof MEDIAMTX_SERVER_REGIONS>();
+      const allActiveStreams = new Map<string, keyof typeof MEDIAMTX_SERVER_REGIONS>();
+      const liveStreamsByRegion = Object.fromEntries(regions.map((region) => [region, 0]));
 
-    for (const r of regions) {
-      const region = MEDIAMTX_SERVER_REGIONS[r];
-      const response = await fetch(`${region.apiUrl}/v3/paths/list?itemsPerPage=1000`);
+      for (const r of regions) {
+        const region = MEDIAMTX_SERVER_REGIONS[r];
+        const response = await fetch(`${region.apiUrl}/v3/paths/list?itemsPerPage=1000`);
 
-      if (!response.ok) {
-        console.error(
-          `Failed to fetch ${r} stream stats: ${response.status} ${response.statusText}`
-        );
-        continue;
-      }
+        if (!response.ok) {
+          console.error(
+            `Failed to fetch ${r} stream stats: ${response.status} ${response.statusText}`
+          );
+          continue;
+        }
 
-      type ResponseType =
-        paths['/v3/paths/list']['get']['responses']['200']['content']['application/json'];
-      const data = (await response.json()) as ResponseType;
+        type ResponseType =
+          paths['/v3/paths/list']['get']['responses']['200']['content']['application/json'];
+        const data = (await response.json()) as ResponseType;
 
-      if (data?.items) {
-        for (const stream of data.items) {
-          if (stream.ready && stream.name) {
-            allActiveStreams.set(stream.name, r);
+        if (data?.items) {
+          for (const stream of data.items) {
+            if (stream.ready && stream.name) {
+              allActiveStreams.set(stream.name, r);
+              liveStreamsByRegion[r] += 1;
+            }
           }
         }
       }
-    }
 
-    // handle streams going offline
-    const currentLiveStreams = await prisma.streamInfo.findMany({
-      where: { isLive: true },
-    });
+      setLiveStreamsByRegion(liveStreamsByRegion);
 
-    for (const dbStream of currentLiveStreams) {
-      if (!allActiveStreams.has(dbStream.username)) {
-        await prisma.streamInfo.update({
-          where: { username: dbStream.username },
-          data: {
-            isLive: false,
-            viewers: 0,
-            startedAt: new Date(0),
-          },
-        });
-      }
-    }
-
-    // handle streams going online
-    for (const [username, regionKey] of allActiveStreams) {
-      const existingStream = await prisma.streamInfo.findUnique({
-        where: { username },
-        include: { channel: true },
+      const currentLiveStreams = await prisma.streamInfo.findMany({
+        where: { isLive: true },
       });
 
-      if (existingStream && !existingStream.isLive) {
-        console.log(`Stream ${username} is now live in region ${regionKey}`);
-        await prisma.streamInfo.update({
-          where: { username },
-          data: {
-            isLive: true,
-            startedAt: new Date(),
-            streamRegion: regionKey,
-          },
-        });
-
-        const subscribedFollowers = await prisma.follow.findMany({
-          where: {
-            channelId: existingStream.channelId,
-            notifyStream: true,
-          },
-          include: {
-            user: true,
-          },
-        });
-
-        const queue = getNotificationQueue();
-
-        if (!existingStream.channel.is247) {
-          queue.add(`streamStartChannel:${existingStream.username}`, {
-            text: `${existingStream.username} is now *live*, streaming *${existingStream.title}* (${existingStream.category})!\n<https://hackclub.tv/${existingStream.username}|Go check them out>`,
-            channel: process.env.NOTIFICATION_CHANNEL_ID!,
-            unfurl_links: true,
+      for (const dbStream of currentLiveStreams) {
+        if (!allActiveStreams.has(dbStream.username)) {
+          await prisma.streamInfo.update({
+            where: { username: dbStream.username },
+            data: {
+              isLive: false,
+              viewers: 0,
+              startedAt: new Date(0),
+            },
           });
         }
+      }
 
-        if (existingStream.enableNotifications && !existingStream.channel.is247) {
-          for (const follower of subscribedFollowers) {
-            queue.add(`streamStartDm:${follower.user.id}`, {
-              text: `${existingStream.username} is now *live*, streaming *${existingStream.title}* (${existingStream.category})!\n<https://hackclub.tv/${existingStream.username}|Go check them out>\n_Stream notifications are enabled for this user. If you want to disable them, you can do so in \`Profile > Follows\`._`,
-              channel: follower.user.slack_id,
+      for (const [username, regionKey] of allActiveStreams) {
+        const existingStream = await prisma.streamInfo.findUnique({
+          where: { username },
+          include: { channel: true },
+        });
+
+        if (existingStream && !existingStream.isLive) {
+          console.log(`Stream ${username} is now live in region ${regionKey}`);
+          await prisma.streamInfo.update({
+            where: { username },
+            data: {
+              isLive: true,
+              startedAt: new Date(),
+              streamRegion: regionKey,
+            },
+          });
+
+          const subscribedFollowers = await prisma.follow.findMany({
+            where: {
+              channelId: existingStream.channelId,
+              notifyStream: true,
+            },
+            include: {
+              user: true,
+            },
+          });
+
+          const queue = getNotificationQueue();
+
+          if (!existingStream.channel.is247) {
+            queue.add(`streamStartChannel:${existingStream.username}`, {
+              text: `${existingStream.username} is now *live*, streaming *${existingStream.title}* (${existingStream.category})!\n<https://hackclub.tv/${existingStream.username}|Go check them out>`,
+              channel: process.env.NOTIFICATION_CHANNEL_ID!,
               unfurl_links: true,
             });
           }
+
+          if (existingStream.enableNotifications && !existingStream.channel.is247) {
+            for (const follower of subscribedFollowers) {
+              queue.add(`streamStartDm:${follower.user.id}`, {
+                text: `${existingStream.username} is now *live*, streaming *${existingStream.title}* (${existingStream.category})!\n<https://hackclub.tv/${existingStream.username}|Go check them out>\n_Stream notifications are enabled for this user. If you want to disable them, you can do so in \`Profile > Follows\`._`,
+                channel: follower.user.slack_id,
+                unfurl_links: true,
+              });
+            }
+          }
         }
       }
-    }
+    });
   } catch (error) {
     console.error('Error syncing stream status:', error);
   }

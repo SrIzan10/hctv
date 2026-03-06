@@ -9,22 +9,59 @@ services:
       - ./psql:/var/lib/postgresql
     ports:
       - 5555:5432
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.17.1
+    environment:
+      DATA_SOURCE_NAME: postgresql://postgres:skbiditoilet@psql:5432/postgres?sslmode=disable
   redis:
     image: redis:7.4-alpine
     volumes:
       - ./redis:/data
     ports:
       - 6379:6379
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.67.0
+    environment:
+      REDIS_ADDR: redis://redis:6379
   mediamtx:
     image: bluenviron/mediamtx:latest
     ports:
       - 8890:8890/udp
       - 8891:8888
       - 9997:9997
+      - 9998:9998
     volumes:
       - ./mediamtx.yml:/mediamtx.yml
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - 'host.docker.internal:host-gateway'
+  prometheus:
+    image: prom/prometheus:v3.4.2
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+    volumes:
+      - ../observability/prometheus.dev.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - 9090:9090
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+  grafana:
+    image: grafana/grafana:11.6.0
+    depends_on:
+      - prometheus
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_DEFAULT_THEME: light
+    volumes:
+      - ../observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ../observability/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ../observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - 3001:3000
   # mediamtx2:
   #   image: bluenviron/mediamtx:latest
   #   ports:
@@ -35,3 +72,7 @@ services:
   #     - ./mediamtx.yml:/mediamtx.yml
   #   extra_hosts:
   #     - "host.docker.internal:host-gateway"
+
+volumes:
+  prometheus_data:
+  grafana_data:

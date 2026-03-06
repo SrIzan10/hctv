@@ -1,0 +1,39 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: web
+    metrics_path: /api/metrics
+    static_configs:
+      - targets:
+          - hctv:3000
+
+  - job_name: chat
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - chat:8000
+
+  - job_name: mediamtx
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - mediamtx:9998
+
+  - job_name: redis
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - redis-exporter:9121
+
+  - job_name: postgres
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - postgres-exporter:9187
+
+  - job_name: prometheus
+    static_configs:
+      - targets:
+          - localhost:9090

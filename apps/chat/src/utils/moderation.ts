@@ -1,4 +1,5 @@
 import { ChatModerationAction, prisma } from '@hctv/db';
+import { recordChatModerationAction } from '../metrics.js';
 import type {
   ChatModerationCommand,
   ChatRestrictionState,
@@ -270,6 +271,7 @@ export async function handleDeleteMessageCommand(
     reason: 'Message deleted by moderator',
     details: { msgId },
   });
+  recordChatModerationAction('message_deleted');
 
   deps.broadcastToChannel(context.targetUsername, socket, { type: 'messageDeleted', msgId });
 }
@@ -330,6 +332,7 @@ export async function handleUserRestrictionCommand(
       targetUserId: target.targetUserId,
       reason: 'User unbanned in chat',
     });
+    recordChatModerationAction('user_unbanned');
 
     await deps.broadcastRestrictionStateToUser(
       context.targetUsername,
@@ -389,6 +392,7 @@ export async function handleUserRestrictionCommand(
     reason,
     details: durationSeconds ? { durationSeconds } : undefined,
   });
+  recordChatModerationAction(msg.type === 'mod:timeoutUser' ? 'user_timeout' : 'user_banned');
 
   await deps.broadcastRestrictionStateToUser(
     context.targetUsername,
