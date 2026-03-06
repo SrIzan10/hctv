@@ -12,7 +12,12 @@ import {
   recordChatError,
   recordChatModerationBlock,
   recordDeliveredChatMessage,
+  recordDeliveredChatMessageBytes,
+  recordHistoryMessagesLoaded,
   recordIncomingChatMessage,
+  recordUniqueChatter,
+  setChannelHistorySize,
+  setChatModerationState,
   startChatMessageTimer,
 } from './metrics.js';
 import { getPersonalChannel } from './utils/personalChannel.js';
@@ -476,8 +481,17 @@ app.get(
       socketState.isModerator = isModerator;
       socket.metricsTracked = true;
       socketState.metricsTracked = true;
+      socket.metricsAuthMethod = authMethod;
+      socketState.metricsAuthMethod = authMethod;
 
-      recordChatConnectionAccepted(authMethod);
+      recordChatConnectionAccepted(username, authMethod);
+      setChatModerationState(username, {
+        blockedTerms: moderationSettings.blockedTerms.length,
+        maxMessageLength: moderationSettings.maxMessageLength,
+        rateLimitCount: moderationSettings.rateLimitCount,
+        rateLimitWindowSeconds: moderationSettings.rateLimitWindowSeconds,
+        slowModeSeconds: moderationSettings.slowModeSeconds,
+      });
 
       socket.send(
         JSON.stringify({
@@ -507,6 +521,7 @@ app.get(
       const messages = await redis.zrange(channelKey, 0, MESSAGE_HISTORY_SIZE - 1);
 
       if (messages.length > 0) {
+        recordHistoryMessagesLoaded(username, messages.length);
         socket.send(
           JSON.stringify({
             type: 'history',
@@ -514,6 +529,7 @@ app.get(
           })
         );
       }
+      setChannelHistorySize(username, messages.length);
     },
     async onClose(evt, ws) {
       const socket = ws as unknown as ChatSocket;
@@ -522,7 +538,10 @@ app.get(
       if (!socketState.targetUsername) return;
 
       if (socketState.metricsTracked) {
-        recordChatDisconnect();
+        recordChatDisconnect(
+          socketState.targetUsername,
+          socketState.metricsAuthMethod ?? 'unknown'
+        );
         socketState.metricsTracked = false;
       }
 
@@ -547,9 +566,10 @@ app.get(
       try {
         const socket = ws as unknown as ChatSocket;
         const socketState = resolveSocketState(socket);
-        const msg = JSON.parse(evt.data.toString()) as IncomingMessage;
+        const rawPayload = evt.data.toString();
+        const msg = JSON.parse(rawPayload) as IncomingMessage;
         messageType = typeof msg.type === 'string' ? msg.type : 'unknown';
-        recordIncomingChatMessage(messageType);
+        recordIncomingChatMessage(messageType, Buffer.byteLength(rawPayload));
         stopTimer = startChatMessageTimer(messageType);
 
         if (msg.type === 'ping') {
@@ -707,9 +727,16 @@ app.get(
           await redis.zadd(channelKey, Date.now(), redisStr);
           await redis.zremrangebyrank(channelKey, 0, -MESSAGE_HISTORY_SIZE - 1);
           await redis.expire(channelKey, MESSAGE_TTL);
+          const historySize = await redis.zcard(channelKey);
+          setChannelHistorySize(targetUsername, historySize);
 
           broadcastToChannel(targetUsername, socket, msgObj as unknown as Record<string, unknown>);
           recordDeliveredChatMessage(chatUser.isBot ? 'bot' : 'user');
+          recordDeliveredChatMessageBytes(
+            chatUser.isBot ? 'bot' : 'user',
+            Buffer.byteLength(message)
+          );
+          recordUniqueChatter(chatUser.isBot ? 'bot' : 'user');
           outcome = 'broadcast';
         }
         if (msg.type === 'emojiMsg') {

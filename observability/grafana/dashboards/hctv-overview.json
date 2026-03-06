@@ -56,14 +56,13 @@
                 "value": 1
               }
             ]
-          },
-          "unit": "none"
+          }
         },
         "overrides": []
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
+        "w": 3,
         "x": 0,
         "y": 0
       },
@@ -80,7 +79,6 @@
         },
         "textMode": "value"
       },
-      "pluginVersion": "11.1.0",
       "targets": [
         {
           "expr": "max(up{job=\"web\"})",
@@ -131,8 +129,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 4,
+        "w": 3,
+        "x": 3,
         "y": 0
       },
       "id": 2,
@@ -148,7 +146,6 @@
         },
         "textMode": "value"
       },
-      "pluginVersion": "11.1.0",
       "targets": [
         {
           "expr": "max(up{job=\"chat\"})",
@@ -199,8 +196,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 8,
+        "w": 3,
+        "x": 6,
         "y": 0
       },
       "id": 3,
@@ -216,7 +213,6 @@
         },
         "textMode": "value"
       },
-      "pluginVersion": "11.1.0",
       "targets": [
         {
           "expr": "max(up{job=\"mediamtx\"})",
@@ -267,8 +263,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 12,
+        "w": 3,
+        "x": 9,
         "y": 0
       },
       "id": 4,
@@ -284,7 +280,6 @@
         },
         "textMode": "value"
       },
-      "pluginVersion": "11.1.0",
       "targets": [
         {
           "expr": "max(pg_up)",
@@ -335,8 +330,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 16,
+        "w": 3,
+        "x": 12,
         "y": 0
       },
       "id": 5,
@@ -352,7 +347,6 @@
         },
         "textMode": "value"
       },
-      "pluginVersion": "11.1.0",
       "targets": [
         {
           "expr": "max(redis_up)",
@@ -360,6 +354,132 @@
         }
       ],
       "title": "Redis",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 15,
+        "y": 0
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "expr": "hctv_web_active_viewers",
+          "refId": "A"
+        }
+      ],
+      "title": "Active Viewers",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 18,
+        "y": 0
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "expr": "hctv_chat_websocket_connections",
+          "refId": "A"
+        }
+      ],
+      "title": "Chat Sockets",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 21,
+        "y": 0
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "expr": "sum(hctv_web_live_streams)",
+          "refId": "A"
+        }
+      ],
+      "title": "Live Streams",
       "type": "stat"
     },
     {
@@ -382,7 +502,7 @@
         "x": 0,
         "y": 4
       },
-      "id": 6,
+      "id": 9,
       "options": {
         "legend": {
           "displayMode": "table",
@@ -392,15 +512,19 @@
           "mode": "multi"
         }
       },
-      "pluginVersion": "11.1.0",
       "targets": [
         {
           "expr": "sum by (region) (hctv_web_live_streams)",
-          "legendFormat": "{{region}}",
+          "legendFormat": "live {{region}}",
           "refId": "A"
+        },
+        {
+          "expr": "sum by (region) (hctv_web_stream_paths_seen)",
+          "legendFormat": "paths {{region}}",
+          "refId": "B"
         }
       ],
-      "title": "Live Streams by Region",
+      "title": "Stream Estate by Region",
       "type": "timeseries"
     },
     {
@@ -423,17 +547,16 @@
         "x": 8,
         "y": 4
       },
-      "id": 7,
+      "id": 10,
       "options": {
         "legend": {
-          "displayMode": "list",
+          "displayMode": "table",
           "placement": "bottom"
         },
         "tooltip": {
           "mode": "multi"
         }
       },
-      "pluginVersion": "11.1.0",
       "targets": [
         {
           "expr": "hctv_web_active_viewers",
@@ -441,12 +564,57 @@
           "refId": "A"
         },
         {
-          "expr": "hctv_chat_websocket_connections",
-          "legendFormat": "chat sockets",
+          "expr": "hctv_web_hottest_stream_viewers",
+          "legendFormat": "top stream viewers",
           "refId": "B"
+        },
+        {
+          "expr": "hctv_web_streams_with_viewers",
+          "legendFormat": "streams with viewers",
+          "refId": "C"
         }
       ],
       "title": "Audience Pulse",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 4
+      },
+      "id": 11,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (region) (hctv_web_active_viewers_by_region)",
+          "legendFormat": "{{region}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Viewers by Region",
       "type": "timeseries"
     },
     {
@@ -466,10 +634,10 @@
       "gridPos": {
         "h": 8,
         "w": 8,
-        "x": 16,
-        "y": 4
+        "x": 0,
+        "y": 12
       },
-      "id": 8,
+      "id": 12,
       "options": {
         "legend": {
           "displayMode": "table",
@@ -479,7 +647,6 @@
           "mode": "multi"
         }
       },
-      "pluginVersion": "11.1.0",
       "targets": [
         {
           "expr": "sum(rate(hctv_chat_messages_delivered_total[5m]))",
@@ -488,11 +655,101 @@
         },
         {
           "expr": "sum(rate(hctv_chat_incoming_messages_total[5m]))",
-          "legendFormat": "all inbound frames",
+          "legendFormat": "inbound frames",
           "refId": "B"
+        },
+        {
+          "expr": "sum(rate(hctv_chat_message_bytes_delivered_total[5m]))",
+          "legendFormat": "message bytes/sec",
+          "refId": "C"
         }
       ],
       "title": "Chat Throughput",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 12
+      },
+      "id": 13,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (channel) (hctv_chat_websocket_connections_by_channel)",
+          "legendFormat": "{{channel}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Socket Load by Channel",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 12
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (auth_method) (hctv_chat_websocket_connections_by_auth_method)",
+          "legendFormat": "active {{auth_method}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (auth_method, outcome) (rate(hctv_chat_websocket_connection_attempts_total[15m]))",
+          "legendFormat": "{{auth_method}} {{outcome}}",
+          "refId": "B"
+        }
+      ],
+      "title": "Socket Auth Mix",
       "type": "timeseries"
     },
     {
@@ -513,9 +770,9 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 12
+        "y": 20
       },
-      "id": 9,
+      "id": 15,
       "options": {
         "legend": {
           "displayMode": "table",
@@ -525,7 +782,6 @@
           "mode": "multi"
         }
       },
-      "pluginVersion": "11.1.0",
       "targets": [
         {
           "expr": "sum by (action) (rate(hctv_chat_moderation_actions_total[15m]))",
@@ -534,11 +790,91 @@
         },
         {
           "expr": "sum by (reason) (rate(hctv_chat_moderation_blocks_total[15m]))",
-          "legendFormat": "blocked: {{reason}}",
+          "legendFormat": "blocked {{reason}}",
           "refId": "B"
         }
       ],
       "title": "Moderation Load",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 20
+      },
+      "id": 16,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (type) (rate(hctv_chat_inbound_payload_bytes_total[5m]))",
+          "legendFormat": "{{type}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Inbound Payload Rate by Type",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 20
+      },
+      "id": 17,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, type) (rate(hctv_chat_message_duration_seconds_bucket[15m])))",
+          "legendFormat": "{{type}} p95",
+          "refId": "A"
+        }
+      ],
+      "title": "Chat Processing Latency P95",
       "type": "timeseries"
     },
     {
@@ -558,10 +894,10 @@
       "gridPos": {
         "h": 8,
         "w": 8,
-        "x": 8,
-        "y": 12
+        "x": 0,
+        "y": 28
       },
-      "id": 10,
+      "id": 18,
       "options": {
         "legend": {
           "displayMode": "table",
@@ -571,7 +907,6 @@
           "mode": "multi"
         }
       },
-      "pluginVersion": "11.1.0",
       "targets": [
         {
           "expr": "sum by (outcome) (rate(hctv_web_mediamtx_auth_requests_total[5m]))",
@@ -599,10 +934,10 @@
       "gridPos": {
         "h": 8,
         "w": 8,
-        "x": 16,
-        "y": 12
+        "x": 8,
+        "y": 28
       },
-      "id": 11,
+      "id": 19,
       "options": {
         "legend": {
           "displayMode": "table",
@@ -612,7 +947,86 @@
           "mode": "multi"
         }
       },
-      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, action, protocol) (rate(hctv_web_mediamtx_auth_duration_seconds_bucket[15m])))",
+          "legendFormat": "{{action}}/{{protocol}} p95",
+          "refId": "A"
+        }
+      ],
+      "title": "Media Auth Latency P95",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 28
+      },
+      "id": 20,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (job, status) (rate(hctv_web_background_job_runs_total[15m]))",
+          "legendFormat": "{{job}} {{status}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Background Job Outcomes",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 36
+      },
+      "id": 21,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
       "targets": [
         {
           "expr": "histogram_quantile(0.95, sum by (le, job) (rate(hctv_web_background_job_duration_seconds_bucket[15m])))",
@@ -640,10 +1054,10 @@
       "gridPos": {
         "h": 8,
         "w": 8,
-        "x": 0,
-        "y": 20
+        "x": 8,
+        "y": 36
       },
-      "id": 12,
+      "id": 22,
       "options": {
         "legend": {
           "displayMode": "table",
@@ -653,16 +1067,355 @@
           "mode": "multi"
         }
       },
-      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "expr": "sum by (target) (rate(hctv_web_notifications_enqueued_total[15m]))",
+          "legendFormat": "{{target}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Notifications Enqueued",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 36
+      },
+      "id": 23,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (cache) (hctv_web_cache_entries)",
+          "legendFormat": "{{cache}}",
+          "refId": "A"
+        },
+        {
+          "expr": "hctv_web_thumbnail_refresh_targets",
+          "legendFormat": "thumbnail targets",
+          "refId": "B"
+        }
+      ],
+      "title": "Cache + Thumbnail State",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 44
+      },
+      "id": 24,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (entity) (hctv_web_platform_inventory)",
+          "legendFormat": "{{entity}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Platform Inventory",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 44
+      },
+      "id": 25,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (region, transition) (rate(hctv_web_live_stream_transitions_total[15m]))",
+          "legendFormat": "{{region}} {{transition}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (region, status) (rate(hctv_web_stream_sync_scrapes_total[15m]))",
+          "legendFormat": "scrape {{region}} {{status}}",
+          "refId": "B"
+        }
+      ],
+      "title": "Stream Sync Health",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 44
+      },
+      "id": 26,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (sender_type) (rate(hctv_chat_unique_chatters_total[1h]))",
+          "legendFormat": "{{sender_type}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (channel) (rate(hctv_chat_history_messages_loaded_total[15m]))",
+          "legendFormat": "history {{channel}}",
+          "refId": "B"
+        }
+      ],
+      "title": "Chat Participation",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 52
+      },
+      "id": 27,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (channel, setting) (hctv_chat_moderation_state)",
+          "legendFormat": "{{channel}} {{setting}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Channel Moderation Settings",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 52
+      },
+      "id": 28,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (channel) (hctv_chat_channel_history_size)",
+          "legendFormat": "{{channel}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Chat History Footprint",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 52
+      },
+      "id": 29,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (phase) (rate(hctv_chat_errors_total[15m]))",
+          "legendFormat": "chat {{phase}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (job, status) (rate(hctv_web_background_job_runs_total{status=\"error\"}[15m]))",
+          "legendFormat": "web {{job}} errors",
+          "refId": "B"
+        }
+      ],
+      "title": "Application Errors",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 60
+      },
+      "id": 30,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
       "targets": [
         {
           "expr": "pg_stat_database_numbackends{datname=~\"hctv|postgres\"}",
-          "legendFormat": "database connections",
+          "legendFormat": "{{datname}} connections",
           "refId": "A"
         },
         {
           "expr": "rate(pg_stat_database_xact_commit{datname=~\"hctv|postgres\"}[5m])",
-          "legendFormat": "commits / sec",
+          "legendFormat": "{{datname}} commits/sec",
           "refId": "B"
         }
       ],
@@ -687,9 +1440,9 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 20
+        "y": 60
       },
-      "id": 13,
+      "id": 31,
       "options": {
         "legend": {
           "displayMode": "table",
@@ -699,7 +1452,6 @@
           "mode": "multi"
         }
       },
-      "pluginVersion": "11.1.0",
       "targets": [
         {
           "expr": "redis_memory_used_bytes",
@@ -733,9 +1485,9 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 20
+        "y": 60
       },
-      "id": 14,
+      "id": 32,
       "options": {
         "legend": {
           "displayMode": "table",
@@ -745,7 +1497,6 @@
           "mode": "multi"
         }
       },
-      "pluginVersion": "11.1.0",
       "targets": [
         {
           "expr": "hctv_web_process_resident_memory_bytes",
@@ -782,6 +1533,6 @@
   "timezone": "browser",
   "title": "HackClub.tv Overview",
   "uid": "hctv-overview",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }

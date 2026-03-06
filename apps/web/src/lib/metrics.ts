@@ -31,9 +31,37 @@ function createMetricsStore() {
     registers: [register],
   });
 
+  const streamPathsSeen = new Gauge({
+    name: 'hctv_web_stream_paths_seen',
+    help: 'Current number of ready MediaMTX paths seen during the latest sync.',
+    labelNames: ['region'],
+    registers: [register],
+  });
+
+  const liveStreamTransitions = new Counter({
+    name: 'hctv_web_live_stream_transitions_total',
+    help: 'Live stream state transitions observed by the web app.',
+    labelNames: ['transition', 'region'],
+    registers: [register],
+  });
+
+  const streamSyncScrapes = new Counter({
+    name: 'hctv_web_stream_sync_scrapes_total',
+    help: 'MediaMTX region scrapes attempted by stream sync.',
+    labelNames: ['region', 'status'],
+    registers: [register],
+  });
+
   const activeViewers = new Gauge({
     name: 'hctv_web_active_viewers',
     help: 'Current number of active viewers across all live streams.',
+    registers: [register],
+  });
+
+  const activeViewersByRegion = new Gauge({
+    name: 'hctv_web_active_viewers_by_region',
+    help: 'Current number of active viewers grouped by stream region.',
+    labelNames: ['region'],
     registers: [register],
   });
 
@@ -43,10 +71,49 @@ function createMetricsStore() {
     registers: [register],
   });
 
+  const streamsWithViewers = new Gauge({
+    name: 'hctv_web_streams_with_viewers',
+    help: 'Current number of live streams with at least one viewer.',
+    registers: [register],
+  });
+
+  const hottestStreamViewers = new Gauge({
+    name: 'hctv_web_hottest_stream_viewers',
+    help: 'Current viewer count of the most watched live stream.',
+    registers: [register],
+  });
+
   const thumbnailJobsEnqueued = new Counter({
     name: 'hctv_web_thumbnail_jobs_enqueued_total',
     help: 'Total thumbnail refresh jobs enqueued by region.',
     labelNames: ['region'],
+    registers: [register],
+  });
+
+  const thumbnailRefreshTargets = new Gauge({
+    name: 'hctv_web_thumbnail_refresh_targets',
+    help: 'Number of live streams targeted in the latest thumbnail refresh run.',
+    registers: [register],
+  });
+
+  const notificationsEnqueued = new Counter({
+    name: 'hctv_web_notifications_enqueued_total',
+    help: 'Notification jobs enqueued when streams go live.',
+    labelNames: ['target'],
+    registers: [register],
+  });
+
+  const cacheEntries = new Gauge({
+    name: 'hctv_web_cache_entries',
+    help: 'Current number of records mirrored into Redis by cache-sync jobs.',
+    labelNames: ['cache'],
+    registers: [register],
+  });
+
+  const platformInventory = new Gauge({
+    name: 'hctv_web_platform_inventory',
+    help: 'High-level counts of important platform records.',
+    labelNames: ['entity'],
     registers: [register],
   });
 
@@ -68,11 +135,21 @@ function createMetricsStore() {
   return {
     register,
     activeViewers,
+    activeViewersByRegion,
     backgroundJobDuration,
     backgroundJobRuns,
+    cacheEntries,
+    hottestStreamViewers,
     liveStreams,
+    liveStreamTransitions,
     mediamtxAuthDuration,
     mediamtxAuthRequests,
+    notificationsEnqueued,
+    platformInventory,
+    streamPathsSeen,
+    streamsWithViewers,
+    streamSyncScrapes,
+    thumbnailRefreshTargets,
     thumbnailJobsEnqueued,
     viewerCountTrackedStreams,
   };
@@ -109,9 +186,38 @@ export function setLiveStreamsByRegion(streamsByRegion: Record<string, number>):
   }
 }
 
-export function setViewerSnapshot(totalViewers: number, trackedStreams: number): void {
-  metrics.activeViewers.set(totalViewers);
-  metrics.viewerCountTrackedStreams.set(trackedStreams);
+export function setStreamPathsByRegion(pathsByRegion: Record<string, number>): void {
+  metrics.streamPathsSeen.reset();
+
+  for (const [region, count] of Object.entries(pathsByRegion)) {
+    metrics.streamPathsSeen.set({ region }, count);
+  }
+}
+
+export function recordLiveStreamTransition(transition: 'online' | 'offline', region: string): void {
+  metrics.liveStreamTransitions.inc({ transition, region });
+}
+
+export function recordStreamSyncScrape(region: string, status: 'success' | 'error'): void {
+  metrics.streamSyncScrapes.inc({ region, status });
+}
+
+export function setViewerSnapshot(snapshot: {
+  totalViewers: number;
+  trackedStreams: number;
+  viewersByRegion: Record<string, number>;
+  streamsWithViewers: number;
+  hottestStreamViewers: number;
+}): void {
+  metrics.activeViewers.set(snapshot.totalViewers);
+  metrics.viewerCountTrackedStreams.set(snapshot.trackedStreams);
+  metrics.streamsWithViewers.set(snapshot.streamsWithViewers);
+  metrics.hottestStreamViewers.set(snapshot.hottestStreamViewers);
+  metrics.activeViewersByRegion.reset();
+
+  for (const [region, count] of Object.entries(snapshot.viewersByRegion)) {
+    metrics.activeViewersByRegion.set({ region }, count);
+  }
 }
 
 export function recordThumbnailJobsEnqueued(jobsByRegion: Record<string, number>): void {
@@ -119,6 +225,28 @@ export function recordThumbnailJobsEnqueued(jobsByRegion: Record<string, number>
     if (count > 0) {
       metrics.thumbnailJobsEnqueued.inc({ region }, count);
     }
+  }
+}
+
+export function setThumbnailRefreshTargets(count: number): void {
+  metrics.thumbnailRefreshTargets.set(count);
+}
+
+export function recordNotificationsEnqueued(target: 'channel' | 'dm', count: number): void {
+  if (count > 0) {
+    metrics.notificationsEnqueued.inc({ target }, count);
+  }
+}
+
+export function setCacheEntryCount(cache: 'sessions' | 'stream_keys', count: number): void {
+  metrics.cacheEntries.set({ cache }, count);
+}
+
+export function setPlatformInventory(snapshot: Record<string, number>): void {
+  metrics.platformInventory.reset();
+
+  for (const [entity, count] of Object.entries(snapshot)) {
+    metrics.platformInventory.set({ entity }, count);
   }
 }
 

@@ -1,5 +1,5 @@
 import { prisma } from '@hctv/db';
-import { recordThumbnailJobsEnqueued, trackWebJob } from '../metrics';
+import { recordThumbnailJobsEnqueued, setThumbnailRefreshTargets, trackWebJob } from '../metrics';
 import { getThumbnailQueue } from '../workers';
 
 export default async function getLiveThumb() {
@@ -14,6 +14,8 @@ export default async function getLiveThumb() {
     });
     const thumbQueue = getThumbnailQueue();
     const jobsByRegion: Record<string, number> = {};
+
+    setThumbnailRefreshTargets(liveChannels.length);
 
     for (const liveChannel of liveChannels) {
       await thumbQueue.add('getLiveThumb', {

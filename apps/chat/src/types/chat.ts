@@ -40,6 +40,7 @@ export interface ChatSocket {
   viewerId?: string;
   isModerator?: boolean;
   metricsTracked?: boolean;
+  metricsAuthMethod?: string;
   raw?:
     | (ModifiedWebSocket & {
         targetUsername?: string;
@@ -48,6 +49,7 @@ export interface ChatSocket {
         personalChannel?: any;
         isModerator?: boolean;
         metricsTracked?: boolean;
+        metricsAuthMethod?: string;
       })
     | null;
 }

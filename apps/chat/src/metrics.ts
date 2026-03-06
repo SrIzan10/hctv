@@ -15,6 +15,20 @@ function createMetricsStore() {
     registers: [register],
   });
 
+  const websocketConnectionsByChannel = new Gauge({
+    name: 'hctv_chat_websocket_connections_by_channel',
+    help: 'Current number of active chat websocket connections by target channel.',
+    labelNames: ['channel'],
+    registers: [register],
+  });
+
+  const websocketConnectionsByAuthMethod = new Gauge({
+    name: 'hctv_chat_websocket_connections_by_auth_method',
+    help: 'Current number of active chat websocket connections by auth method.',
+    labelNames: ['auth_method'],
+    registers: [register],
+  });
+
   const websocketConnectionAttempts = new Counter({
     name: 'hctv_chat_websocket_connection_attempts_total',
     help: 'Total websocket connection attempts grouped by outcome and auth method.',
@@ -25,6 +39,13 @@ function createMetricsStore() {
   const incomingMessages = new Counter({
     name: 'hctv_chat_incoming_messages_total',
     help: 'Total inbound websocket frames grouped by message type.',
+    labelNames: ['type'],
+    registers: [register],
+  });
+
+  const inboundPayloadBytes = new Counter({
+    name: 'hctv_chat_inbound_payload_bytes_total',
+    help: 'Total inbound websocket payload bytes grouped by message type.',
     labelNames: ['type'],
     registers: [register],
   });
@@ -40,6 +61,41 @@ function createMetricsStore() {
   const deliveredMessages = new Counter({
     name: 'hctv_chat_messages_delivered_total',
     help: 'Total chat messages successfully broadcast, grouped by sender type.',
+    labelNames: ['sender_type'],
+    registers: [register],
+  });
+
+  const deliveredMessageBytes = new Counter({
+    name: 'hctv_chat_message_bytes_delivered_total',
+    help: 'Total message body bytes successfully broadcast, grouped by sender type.',
+    labelNames: ['sender_type'],
+    registers: [register],
+  });
+
+  const channelHistorySize = new Gauge({
+    name: 'hctv_chat_channel_history_size',
+    help: 'Current number of messages retained in Redis history for a channel.',
+    labelNames: ['channel'],
+    registers: [register],
+  });
+
+  const channelHistoryLoadedMessages = new Counter({
+    name: 'hctv_chat_history_messages_loaded_total',
+    help: 'Total history messages loaded from Redis during websocket joins.',
+    labelNames: ['channel'],
+    registers: [register],
+  });
+
+  const moderationState = new Gauge({
+    name: 'hctv_chat_moderation_state',
+    help: 'Current moderation settings by channel.',
+    labelNames: ['channel', 'setting'],
+    registers: [register],
+  });
+
+  const channelUniqueChatters = new Counter({
+    name: 'hctv_chat_unique_chatters_total',
+    help: 'Users who successfully sent at least one chat message, grouped by sender type.',
     labelNames: ['sender_type'],
     registers: [register],
   });
@@ -67,14 +123,22 @@ function createMetricsStore() {
 
   return {
     deliveredMessages,
+    deliveredMessageBytes,
+    channelHistoryLoadedMessages,
+    channelHistorySize,
     errors,
+    inboundPayloadBytes,
     incomingMessages,
     messageDuration,
     moderationActions,
     moderationBlocks,
+    moderationState,
     register,
+    channelUniqueChatters,
     websocketConnectionAttempts,
     websocketConnections,
+    websocketConnectionsByAuthMethod,
+    websocketConnectionsByChannel,
   };
 }
 
@@ -86,21 +150,26 @@ const metrics = (globalForMetrics.__hctvChatMetrics ??= createMetricsStore());
 
 export const chatMetricsRegistry = metrics.register;
 
-export function recordChatConnectionAccepted(authMethod: string): void {
+export function recordChatConnectionAccepted(channel: string, authMethod: string): void {
   metrics.websocketConnectionAttempts.inc({ auth_method: authMethod, outcome: 'accepted' });
   metrics.websocketConnections.inc();
+  metrics.websocketConnectionsByChannel.inc({ channel });
+  metrics.websocketConnectionsByAuthMethod.inc({ auth_method: authMethod });
 }
 
 export function recordChatConnectionRejected(authMethod: string): void {
   metrics.websocketConnectionAttempts.inc({ auth_method: authMethod, outcome: 'rejected' });
 }
 
-export function recordChatDisconnect(): void {
+export function recordChatDisconnect(channel: string, authMethod: string): void {
   metrics.websocketConnections.dec();
+  metrics.websocketConnectionsByChannel.dec({ channel });
+  metrics.websocketConnectionsByAuthMethod.dec({ auth_method: authMethod });
 }
 
-export function recordIncomingChatMessage(type: string): void {
+export function recordIncomingChatMessage(type: string, payloadBytes: number): void {
   metrics.incomingMessages.inc({ type });
+  metrics.inboundPayloadBytes.inc({ type }, payloadBytes);
 }
 
 export function startChatMessageTimer(type: string) {
@@ -109,6 +178,47 @@ export function startChatMessageTimer(type: string) {
 
 export function recordDeliveredChatMessage(senderType: string): void {
   metrics.deliveredMessages.inc({ sender_type: senderType });
+}
+
+export function recordDeliveredChatMessageBytes(senderType: string, bytes: number): void {
+  metrics.deliveredMessageBytes.inc({ sender_type: senderType }, bytes);
+}
+
+export function setChannelHistorySize(channel: string, size: number): void {
+  metrics.channelHistorySize.set({ channel }, size);
+}
+
+export function recordHistoryMessagesLoaded(channel: string, count: number): void {
+  if (count > 0) {
+    metrics.channelHistoryLoadedMessages.inc({ channel }, count);
+  }
+}
+
+export function setChatModerationState(
+  channel: string,
+  settings: {
+    blockedTerms: number;
+    maxMessageLength: number;
+    rateLimitCount: number;
+    rateLimitWindowSeconds: number;
+    slowModeSeconds: number;
+  }
+): void {
+  metrics.moderationState.set({ channel, setting: 'blocked_terms' }, settings.blockedTerms);
+  metrics.moderationState.set({ channel, setting: 'slow_mode_seconds' }, settings.slowModeSeconds);
+  metrics.moderationState.set(
+    { channel, setting: 'max_message_length' },
+    settings.maxMessageLength
+  );
+  metrics.moderationState.set({ channel, setting: 'rate_limit_count' }, settings.rateLimitCount);
+  metrics.moderationState.set(
+    { channel, setting: 'rate_limit_window_seconds' },
+    settings.rateLimitWindowSeconds
+  );
+}
+
+export function recordUniqueChatter(senderType: string): void {
+  metrics.channelUniqueChatters.inc({ sender_type: senderType });
 }
 
 export function recordChatModerationAction(action: string): void {

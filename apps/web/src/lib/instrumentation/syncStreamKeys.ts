@@ -1,5 +1,5 @@
 import { prisma, getRedisConnection } from '@hctv/db';
-import { trackWebJob } from '../metrics';
+import { setCacheEntryCount, trackWebJob } from '../metrics';
 
 export default async function syncStreamKeys() {
   console.log('Syncing stream keys to Redis...');
@@ -26,6 +26,7 @@ export default async function syncStreamKeys() {
       }
 
       await pipeline.exec();
+      setCacheEntryCount('stream_keys', keys.length);
       console.log(`Synced ${keys.length} stream keys to Redis`);
     });
   } catch (error) {

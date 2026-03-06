@@ -1,5 +1,13 @@
 import { prisma } from '@hctv/db';
-import { setLiveStreamsByRegion, trackWebJob } from '../metrics';
+import {
+  recordLiveStreamTransition,
+  recordNotificationsEnqueued,
+  recordStreamSyncScrape,
+  setLiveStreamsByRegion,
+  setPlatformInventory,
+  setStreamPathsByRegion,
+  trackWebJob,
+} from '../metrics';
 import { HttpFlv } from '../types/liveBackendJson';
 import { getNotificationQueue } from '../workers';
 import client from '../services/slackNotifier';
@@ -11,9 +19,28 @@ export default async function runner() {
   if ((await prisma.user.count()) === 0) {
     return;
   }
+  await refreshPlatformInventory();
   await initializeStreamInfo();
   await syncStream();
   setInterval(syncStream, 5000);
+}
+
+async function refreshPlatformInventory() {
+  const [channels, liveStreams, follows, botAccounts, users] = await Promise.all([
+    prisma.channel.count(),
+    prisma.streamInfo.count({ where: { isLive: true } }),
+    prisma.follow.count(),
+    prisma.botAccount.count(),
+    prisma.user.count(),
+  ]);
+
+  setPlatformInventory({
+    bot_accounts: botAccounts,
+    channels,
+    follows,
+    live_stream_rows: liveStreams,
+    users,
+  });
 }
 
 export async function initializeStreamInfo(channelId?: string) {
@@ -58,17 +85,21 @@ export async function syncStream() {
 
       const allActiveStreams = new Map<string, keyof typeof MEDIAMTX_SERVER_REGIONS>();
       const liveStreamsByRegion = Object.fromEntries(regions.map((region) => [region, 0]));
+      const pathsSeenByRegion = Object.fromEntries(regions.map((region) => [region, 0]));
 
       for (const r of regions) {
         const region = MEDIAMTX_SERVER_REGIONS[r];
         const response = await fetch(`${region.apiUrl}/v3/paths/list?itemsPerPage=1000`);
 
         if (!response.ok) {
+          recordStreamSyncScrape(r, 'error');
           console.error(
             `Failed to fetch ${r} stream stats: ${response.status} ${response.statusText}`
           );
           continue;
         }
+
+        recordStreamSyncScrape(r, 'success');
 
         type ResponseType =
           paths['/v3/paths/list']['get']['responses']['200']['content']['application/json'];
@@ -79,12 +110,14 @@ export async function syncStream() {
             if (stream.ready && stream.name) {
               allActiveStreams.set(stream.name, r);
               liveStreamsByRegion[r] += 1;
+              pathsSeenByRegion[r] += 1;
             }
           }
         }
       }
 
       setLiveStreamsByRegion(liveStreamsByRegion);
+      setStreamPathsByRegion(pathsSeenByRegion);
 
       const currentLiveStreams = await prisma.streamInfo.findMany({
         where: { isLive: true },
@@ -92,6 +125,7 @@ export async function syncStream() {
 
       for (const dbStream of currentLiveStreams) {
         if (!allActiveStreams.has(dbStream.username)) {
+          recordLiveStreamTransition('offline', dbStream.streamRegion);
           await prisma.streamInfo.update({
             where: { username: dbStream.username },
             data: {
@@ -111,6 +145,7 @@ export async function syncStream() {
 
         if (existingStream && !existingStream.isLive) {
           console.log(`Stream ${username} is now live in region ${regionKey}`);
+          recordLiveStreamTransition('online', regionKey);
           await prisma.streamInfo.update({
             where: { username },
             data: {
@@ -131,7 +166,6 @@ export async function syncStream() {
           });
 
           const queue = getNotificationQueue();
-
           if (!existingStream.channel.is247) {
             queue.add(`streamStartChannel:${existingStream.username}`, {
               text: `${existingStream.username} is now *live*, streaming *${existingStream.title}* (${existingStream.category})!\n<https://hackclub.tv/${existingStream.username}|Go check them out>`,
@@ -149,8 +183,18 @@ export async function syncStream() {
               });
             }
           }
+
+          recordNotificationsEnqueued('channel', existingStream.channel.is247 ? 0 : 1);
+          recordNotificationsEnqueued(
+            'dm',
+            existingStream.enableNotifications && !existingStream.channel.is247
+              ? subscribedFollowers.length
+              : 0
+          );
         }
       }
+
+      await refreshPlatformInventory();
     });
   } catch (error) {
     console.error('Error syncing stream status:', error);

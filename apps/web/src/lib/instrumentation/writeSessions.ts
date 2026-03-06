@@ -1,5 +1,5 @@
 import { getRedisConnection, prisma } from '@hctv/db';
-import { trackWebJob } from '../metrics';
+import { setCacheEntryCount, trackWebJob } from '../metrics';
 
 export default async function writeSessions() {
   return trackWebJob('write_sessions', async () => {
@@ -13,6 +13,7 @@ export default async function writeSessions() {
       multi.set(`sessions:${sessionId}`, '');
     }
     await multi.exec();
+    setCacheEntryCount('sessions', sessionIds.length);
 
     console.log('Sessions written to Redis');
   });

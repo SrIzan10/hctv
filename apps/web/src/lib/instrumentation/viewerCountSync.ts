@@ -14,7 +14,13 @@ export async function viewerCountSync() {
       });
 
       if (streams.length === 0) {
-        setViewerSnapshot(0, 0);
+        setViewerSnapshot({
+          hottestStreamViewers: 0,
+          streamsWithViewers: 0,
+          totalViewers: 0,
+          trackedStreams: 0,
+          viewersByRegion: {},
+        });
         return;
       }
 
@@ -25,12 +31,23 @@ export async function viewerCountSync() {
       }
       const results = await multi.exec();
       let totalViewers = 0;
+      let streamsWithViewers = 0;
+      let hottestStreamViewers = 0;
+      const viewersByRegion: Record<string, number> = {};
 
       await prisma.$transaction(async (tx) => {
         const updates = results?.map((res, index) => {
           const count = Array.isArray(res[1]) ? res[1].length : 0;
           totalViewers += count;
+          if (count > 0) {
+            streamsWithViewers += 1;
+          }
+          if (count > hottestStreamViewers) {
+            hottestStreamViewers = count;
+          }
           const stream = streams[index];
+          viewersByRegion[stream.streamRegion] =
+            (viewersByRegion[stream.streamRegion] ?? 0) + count;
           return tx.streamInfo.update({
             where: {
               username: stream.username,
@@ -43,7 +60,13 @@ export async function viewerCountSync() {
         await Promise.all(updates || []);
       });
 
-      setViewerSnapshot(totalViewers, streams.length);
+      setViewerSnapshot({
+        hottestStreamViewers,
+        streamsWithViewers,
+        totalViewers,
+        trackedStreams: streams.length,
+        viewersByRegion,
+      });
     });
   } catch (error) {
     console.error('Error syncing viewer counts:', error);
