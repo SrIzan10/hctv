@@ -436,6 +436,7 @@ app.get(
       socket.personalChannel = personalChannel;
       socket.viewerId = randomString(10);
       socket.isModerator = isModerator;
+      socket.excludeFromViewerCount = Boolean(dbGrant);
 
       socketState.targetUsername = username;
       socketState.channelId = channel.id;
@@ -443,6 +444,7 @@ app.get(
       socketState.personalChannel = personalChannel;
       socketState.viewerId = socket.viewerId;
       socketState.isModerator = isModerator;
+      socketState.excludeFromViewerCount = Boolean(dbGrant);
 
       socket.send(
         JSON.stringify({
@@ -497,7 +499,9 @@ app.get(
 
       if (!streamInfo) return;
 
-      await redis.del(`viewer:${socketState.targetUsername}:${socketState.viewerId}`);
+      if (!socketState.excludeFromViewerCount) {
+        await redis.del(`viewer:${socketState.targetUsername}:${socketState.viewerId}`);
+      }
     },
     async onMessage(evt, ws) {
       try {
@@ -506,11 +510,13 @@ app.get(
         const msg = JSON.parse(evt.data.toString()) as IncomingMessage;
 
         if (msg.type === 'ping') {
-          await redis.setex(
-            `viewer:${socketState.targetUsername}:${socketState.viewerId}`,
-            30,
-            '1'
-          );
+          if (!socketState.excludeFromViewerCount) {
+            await redis.setex(
+              `viewer:${socketState.targetUsername}:${socketState.viewerId}`,
+              30,
+              '1'
+            );
+          }
           socket.send(JSON.stringify({ type: 'pong' }));
           return;
         }
