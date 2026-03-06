@@ -112,7 +112,7 @@ async function requireModerationContext(
     return null;
   }
 
-  const isPlatformAdmin = Boolean(moderatorRecord?.isAdmin);
+  const isPlatformAdmin = chatUser.isBot ? false : Boolean(moderatorRecord?.isAdmin);
 
   let channelRole: ChatUser['channelRole'] = null;
   if (chatUser.isBot) {
