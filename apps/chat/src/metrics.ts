@@ -114,6 +114,14 @@ function createMetricsStore() {
     registers: [register],
   });
 
+  const emojiSearchResults = new Histogram({
+    name: 'hctv_chat_emoji_search_results',
+    help: 'Number of emoji search results returned per query.',
+    labelNames: ['outcome'],
+    buckets: [0, 1, 2, 5, 10, 25, 50, 100, 150],
+    registers: [register],
+  });
+
   const errors = new Counter({
     name: 'hctv_chat_errors_total',
     help: 'Errors observed in the chat service grouped by phase.',
@@ -126,6 +134,7 @@ function createMetricsStore() {
     deliveredMessageBytes,
     channelHistoryLoadedMessages,
     channelHistorySize,
+    emojiSearchResults,
     errors,
     inboundPayloadBytes,
     incomingMessages,
@@ -231,4 +240,8 @@ export function recordChatModerationBlock(reason: string): void {
 
 export function recordChatError(phase: string): void {
   metrics.errors.inc({ phase });
+}
+
+export function recordEmojiSearchResults(outcome: string, count: number): void {
+  metrics.emojiSearchResults.observe({ outcome }, count);
 }

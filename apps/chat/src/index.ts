@@ -13,6 +13,7 @@ import {
   recordChatModerationBlock,
   recordDeliveredChatMessage,
   recordDeliveredChatMessageBytes,
+  recordEmojiSearchResults,
   recordHistoryMessagesLoaded,
   recordIncomingChatMessage,
   recordUniqueChatter,
@@ -772,6 +773,7 @@ app.get(
           const rawSearchTerm = (msg.searchTerm as string)?.trim() ?? '';
           if (!rawSearchTerm || rawSearchTerm.length > 50) {
             ws.send(JSON.stringify({ type: 'emojiSearchResponse', results: [] }));
+            recordEmojiSearchResults('empty', 0);
             outcome = 'emoji_search_empty';
             return;
           }
@@ -802,6 +804,7 @@ app.get(
                 results: results,
               })
             );
+            recordEmojiSearchResults('matched', results.length);
             outcome = 'emoji_search';
           } else {
             ws.send(
@@ -810,6 +813,7 @@ app.get(
                 results: [],
               })
             );
+            recordEmojiSearchResults('no_match', 0);
             outcome = 'emoji_search_empty';
           }
         }
