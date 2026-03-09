@@ -24,7 +24,7 @@ export default function StreamGrid({ liveStreams, offlineStreams }: StreamGridPr
   const sortedLiveStreams = [...liveStreams].sort((a, b) => b.viewers - a.viewers);
 
   return (
-    <div className="space-y-8 md:space-y-10">
+    <div className="space-y-8 md:space-y-10 min-w-0">
       {sortedLiveStreams.length === 0 && (
         <div className="flex flex-col items-center gap-4 py-10 text-center">
           <ConfusedDino className="h-24 w-24 opacity-70" />
@@ -53,13 +53,13 @@ export default function StreamGrid({ liveStreams, offlineStreams }: StreamGridPr
       )}
 
       {offlineStreams.length > 0 && (
-        <section>
+        <section className="w-full min-w-0"> 
           <SectionHeading label="Offline channels" count={offlineStreams.length} />
           <div className="px-10">
-            <Carousel className="w-full" opts={{ align: 'start', dragFree: true, containScroll: 'trimSnaps' }}>
+            <Carousel className="w-full max-w-full" opts={{ dragFree: true, containScroll: 'trimSnaps' }}>
               <CarouselContent className="-ml-2">
                 {offlineStreams.map((stream) => (
-                  <CarouselItem key={stream.id} className="basis-auto pl-2">
+                  <CarouselItem key={stream.id} className="basis-auto pl-2 md:pl-3">
                     <OfflineCard stream={stream} />
                   </CarouselItem>
                 ))}
@@ -128,7 +128,7 @@ function StreamCard({ stream }: { stream: StreamWithChannel }) {
 
 function OfflineCard({ stream }: { stream: StreamWithChannel }) {
   return (
-    <Link href={`/${stream.username}`} className="group inline-flex">
+    <Link href={`/${stream.username}`} className="group inline-flex w-[70px]">
       <div className="flex w-[70px] flex-col items-center gap-1 rounded-lg p-1.5 transition-colors duration-150 hover:bg-muted/50 sm:w-[78px] md:w-[86px] md:gap-1.5 md:p-2">
         <div className="relative">
           <Avatar className="h-9 w-9 ring-2 ring-border transition-colors duration-150 group-hover:ring-border/60 sm:h-10 sm:w-10 md:h-11 md:w-11">
