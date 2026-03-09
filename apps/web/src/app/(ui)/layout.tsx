@@ -62,7 +62,7 @@ export default async function RootLayout({
                     <div className="flex flex-1 pt-16">
                       {/* pt-16 for navbar height */}
                       <Sidebar className="pt-16" />
-                      <main className="flex-1 overflow-auto">{children}</main>
+                      <main className="flex-1 overflow-y-auto overflow-x-hidden">{children}</main>
                     </div>
                     <Toaster />
                   </StreamInfoProvider>
