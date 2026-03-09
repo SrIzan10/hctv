@@ -55,14 +55,11 @@ export default function StreamGrid({ liveStreams, offlineStreams }: StreamGridPr
       {offlineStreams.length > 0 && (
         <section>
           <SectionHeading label="Offline channels" count={offlineStreams.length} />
-          <div className="relative max-w-full overflow-hidden">
-            <Carousel className="w-full max-w-full" opts={{ align: 'start', dragFree: true }}>
-              <CarouselContent>
+          <div className="px-10">
+            <Carousel opts={{ align: 'start', dragFree: true, containScroll: 'trimSnaps' }}>
+              <CarouselContent className="-ml-2">
                 {offlineStreams.map((stream) => (
-                  <CarouselItem
-                    key={stream.id}
-                    className="flex basis-[74px] justify-center sm:basis-[82px] md:basis-[90px] lg:basis-[100px]"
-                  >
+                  <CarouselItem key={stream.id} className="basis-auto pl-2">
                     <OfflineCard stream={stream} />
                   </CarouselItem>
                 ))}
