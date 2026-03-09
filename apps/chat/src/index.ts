@@ -50,6 +50,30 @@ type IncomingMessage = {
   [key: string]: unknown;
 };
 
+const METRICS_MESSAGE_TYPES = [
+  'ping',
+  'message',
+  'emojiMsg',
+  'emojiSearch',
+  'mod:deleteMessage',
+  'mod:timeoutUser',
+  'mod:banUser',
+  'mod:unbanUser',
+  'mod:liftTimeout',
+] as const;
+
+type MetricsMessageType = (typeof METRICS_MESSAGE_TYPES)[number] | 'unknown';
+
+function getMetricsMessageType(type: unknown): MetricsMessageType {
+  if (typeof type !== 'string') {
+    return 'unknown';
+  }
+
+  return (METRICS_MESSAGE_TYPES as readonly string[]).includes(type)
+    ? (type as MetricsMessageType)
+    : 'unknown';
+}
+
 const DEFAULT_MODERATION_SETTINGS: ChatModerationSettingsShape = {
   blockedTerms: [],
   slowModeSeconds: 0,
@@ -574,7 +598,7 @@ app.get(
         const socketState = resolveSocketState(socket);
         const rawPayload = evt.data.toString();
         const msg = JSON.parse(rawPayload) as IncomingMessage;
-        messageType = typeof msg.type === 'string' ? msg.type : 'unknown';
+        messageType = getMetricsMessageType(msg.type);
         recordIncomingChatMessage(messageType, Buffer.byteLength(rawPayload));
         stopTimer = startChatMessageTimer(messageType);
 
