@@ -309,15 +309,6 @@ app.get('/up', async (c) => {
   return c.text('it works');
 });
 
-app.get('/metrics', async () => {
-  return new Response(await chatMetricsRegistry.metrics(), {
-    headers: {
-      'Content-Type': chatMetricsRegistry.contentType,
-      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-    },
-  });
-});
-
 app.get(
   '/ws/:username',
   upgradeWebSocket((c) => ({
