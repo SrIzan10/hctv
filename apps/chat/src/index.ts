@@ -37,6 +37,7 @@ import type {
   ChatSocket,
   ChatUser,
 } from './types/chat.js';
+import { basicAuth } from 'hono/basic-auth';
 
 const redis = getRedisConnection();
 const MESSAGE_HISTORY_SIZE = 100;
@@ -300,13 +301,25 @@ async function deleteMessageFromHistory(targetUsername: string, msgId: string): 
 
 const app = new Hono();
 const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
+if (process.env.NODE_ENV === 'production') {
+  app.use('/metrics', basicAuth({ username: process.env.METRICS_USER!, password: process.env.METRICS_PASS! }));
+}
 
 app.get('/', async (c) => {
   return c.text(threed);
 });
 
 app.get('/up', async (c) => {
-  return c.text('it works');
+  return c.text('hello world');
+});
+
+app.get('/metrics', async () => {
+  return new Response(await chatMetricsRegistry.metrics(), {
+    headers: {
+      'Content-Type': chatMetricsRegistry.contentType,
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    },
+  });
 });
 
 app.get(

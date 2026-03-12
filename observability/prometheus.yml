@@ -5,12 +5,18 @@ global:
 scrape_configs:
   - job_name: web
     metrics_path: /api/metrics
+    basic_auth:
+      username: ${METRICS_USER}
+      password: ${METRICS_PASS}
     static_configs:
       - targets:
           - hctv:3000
 
   - job_name: chat
     metrics_path: /metrics
+    basic_auth:
+      username: ${METRICS_USER}
+      password: ${METRICS_PASS}
     static_configs:
       - targets:
           - chat:8000
