@@ -84,8 +84,6 @@ services:
       - 'prometheus_data:/prometheus'
     extra_hosts:
       - 'host.docker.internal:host-gateway'
-    ports:
-      - '9090:9090'
   grafana:
     image: 'grafana/grafana:11.6.0'
     depends_on:
@@ -99,8 +97,6 @@ services:
       - './observability/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro'
       - './observability/grafana/dashboards:/var/lib/grafana/dashboards:ro'
       - 'grafana_data:/var/lib/grafana'
-    ports:
-      - '3001:3000'
 
 volumes:
   hctv_pgdata:
