@@ -302,7 +302,10 @@ async function deleteMessageFromHistory(targetUsername: string, msgId: string): 
 const app = new Hono();
 const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
 if (process.env.NODE_ENV === 'production') {
-  app.use('/metrics', basicAuth({ username: process.env.METRICS_USER!, password: process.env.METRICS_PASS! }));
+  app.use(
+    '/metrics',
+    basicAuth({ username: process.env.METRICS_USER!, password: process.env.METRICS_PASS! })
+  );
 }
 
 app.get('/', async (c) => {
@@ -333,7 +336,7 @@ app.get(
       const botAuth = c.req.query('botAuth');
 
       if (!token && (!grant || grant === 'null') && !authHeader && !botAuth) {
-        recordChatConnectionRejected('missing_auth');
+        recordChatConnectionRejected(authMethod, 'missing_auth');
         ws.close();
         return;
       }
@@ -407,14 +410,14 @@ app.get(
           : null;
 
       if (!chatUser && !dbGrant) {
-        recordChatConnectionRejected('auth_failed');
+        recordChatConnectionRejected(authMethod, 'auth_failed');
         ws.close();
         return;
       }
 
       const { username } = c.req.param();
       if (dbGrant && dbGrant.name !== username) {
-        recordChatConnectionRejected('grant_mismatch');
+        recordChatConnectionRejected(authMethod, 'grant_mismatch');
         ws.close();
         return;
       }
@@ -447,7 +450,7 @@ app.get(
       });
 
       if (!channel) {
-        recordChatConnectionRejected(authMethod === 'unknown' ? 'channel_not_found' : authMethod);
+        recordChatConnectionRejected(authMethod, 'channel_not_found');
         ws.close();
         return;
       }
@@ -522,7 +525,7 @@ app.get(
         rateLimitWindowSeconds: moderationSettings.rateLimitWindowSeconds,
         slowModeSeconds: moderationSettings.slowModeSeconds,
       });
-      
+
       socketState.excludeFromViewerCount = Boolean(dbGrant);
 
       socket.send(

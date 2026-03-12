@@ -23,6 +23,7 @@ export default async function runner() {
   await initializeStreamInfo();
   await syncStream();
   setInterval(syncStream, 5000);
+  setInterval(refreshPlatformInventory, 60_000);
 }
 
 async function refreshPlatformInventory() {
@@ -193,8 +194,6 @@ export async function syncStream() {
           );
         }
       }
-
-      await refreshPlatformInventory();
     });
   } catch (error) {
     console.error('Error syncing stream status:', error);

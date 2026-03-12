@@ -3,8 +3,7 @@ services:
     image: postgres:18-alpine
     environment:
       POSTGRES_USER: postgres
-      # my condolences
-      POSTGRES_PASSWORD: skbiditoilet
+      POSTGRES_PASSWORD: ${PG_PASS:-postgres}
     volumes:
       - ./psql:/var/lib/postgresql
     ports:
@@ -12,7 +11,7 @@ services:
   postgres-exporter:
     image: prometheuscommunity/postgres-exporter:v0.17.1
     environment:
-      DATA_SOURCE_NAME: postgresql://postgres:skbiditoilet@psql:5432/postgres?sslmode=disable
+      DATA_SOURCE_NAME: postgresql://postgres:${PG_PASS:-postgres}@psql:5432/postgres?sslmode=disable
   redis:
     image: redis:7.4-alpine
     volumes:
@@ -62,16 +61,6 @@ services:
       - grafana_data:/var/lib/grafana
     ports:
       - 3001:3000
-  # mediamtx2:
-  #   image: bluenviron/mediamtx:latest
-  #   ports:
-  #     - 8990:8890/udp
-  #     - 8991:8891
-  #     - 9999:9997
-  #   volumes:
-  #     - ./mediamtx.yml:/mediamtx.yml
-  #   extra_hosts:
-  #     - "host.docker.internal:host-gateway"
 
 volumes:
   prometheus_data:

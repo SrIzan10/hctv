@@ -31,8 +31,8 @@ function createMetricsStore() {
 
   const websocketConnectionAttempts = new Counter({
     name: 'hctv_chat_websocket_connection_attempts_total',
-    help: 'Total websocket connection attempts grouped by outcome and auth method.',
-    labelNames: ['outcome', 'auth_method'],
+    help: 'Total websocket connection attempts grouped by outcome, auth method, and rejection reason.',
+    labelNames: ['outcome', 'auth_method', 'reason'],
     registers: [register],
   });
 
@@ -160,14 +160,18 @@ const metrics = (globalForMetrics.__hctvChatMetrics ??= createMetricsStore());
 export const chatMetricsRegistry = metrics.register;
 
 export function recordChatConnectionAccepted(channel: string, authMethod: string): void {
-  metrics.websocketConnectionAttempts.inc({ auth_method: authMethod, outcome: 'accepted' });
+  metrics.websocketConnectionAttempts.inc({
+    auth_method: authMethod,
+    outcome: 'accepted',
+    reason: 'none',
+  });
   metrics.websocketConnections.inc();
   metrics.websocketConnectionsByChannel.inc({ channel });
   metrics.websocketConnectionsByAuthMethod.inc({ auth_method: authMethod });
 }
 
-export function recordChatConnectionRejected(authMethod: string): void {
-  metrics.websocketConnectionAttempts.inc({ auth_method: authMethod, outcome: 'rejected' });
+export function recordChatConnectionRejected(authMethod: string, reason: string): void {
+  metrics.websocketConnectionAttempts.inc({ auth_method: authMethod, outcome: 'rejected', reason });
 }
 
 export function recordChatDisconnect(channel: string, authMethod: string): void {
