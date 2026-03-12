@@ -768,7 +768,12 @@ app.get(
             chatUser.isBot ? 'bot' : 'user',
             Buffer.byteLength(message)
           );
-          recordUniqueChatter(chatUser.isBot ? 'bot' : 'user');
+          const isFirstMessageFromUser =
+            (await redis.sadd(`chat:unique-chatters:${targetUsername}`, chatUser.id)) === 1;
+
+          if (isFirstMessageFromUser) {
+            recordUniqueChatter(chatUser.isBot ? 'bot' : 'user');
+          }
           outcome = 'broadcast';
         }
         if (msg.type === 'emojiMsg') {

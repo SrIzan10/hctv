@@ -12,6 +12,7 @@ export default async function syncStreamKeys() {
       });
 
       if (keys.length === 0) {
+        setCacheEntryCount('stream_keys', 0);
         console.log('No stream keys found to sync.');
         return;
       }
@@ -19,15 +20,17 @@ export default async function syncStreamKeys() {
       const redis = getRedisConnection();
       const pipeline = redis.pipeline();
 
+      let syncedKeyCount = 0;
       for (const key of keys) {
         if (key.channel && key.channel.name) {
           pipeline.set(`streamKey:${key.channel.name}`, key.key);
+          syncedKeyCount += 1;
         }
       }
 
       await pipeline.exec();
-      setCacheEntryCount('stream_keys', keys.length);
-      console.log(`Synced ${keys.length} stream keys to Redis`);
+      setCacheEntryCount('stream_keys', syncedKeyCount);
+      console.log(`Synced ${syncedKeyCount} stream keys to Redis`);
     });
   } catch (error) {
     console.error('Failed to sync stream keys to Redis:', error);
