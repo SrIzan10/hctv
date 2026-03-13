@@ -63,3 +63,44 @@ services:
       dockerfile: docker/mediamtx/Dockerfile
     ports:
       - '8890:8890/udp'
+  postgres-exporter:
+    image: 'prometheuscommunity/postgres-exporter:v0.17.1'
+    environment:
+      DATA_SOURCE_NAME: 'postgresql://postgres:${PG_PASS}@postgres:5432/hctv?sslmode=disable'
+  redis-exporter:
+    image: 'oliver006/redis_exporter:v1.67.0'
+    environment:
+      REDIS_ADDR: 'redis://redis:6379'
+  prometheus:
+    image: 'prom/prometheus:v3.4.2'
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--config.expand-env'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    env_file:
+      - .env
+    volumes:
+      - './observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro'
+      - 'hctv_prometheus_data:/prometheus'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+  grafana:
+    image: 'grafana/grafana:11.6.0'
+    depends_on:
+      - prometheus
+    environment:
+      GF_SECURITY_ADMIN_USER: '${GRAFANA_ADMIN_USER:-admin}'
+      GF_SECURITY_ADMIN_PASSWORD: '${GRAFANA_ADMIN_PASSWORD:-admin}'
+      GF_USERS_DEFAULT_THEME: light
+    volumes:
+      - './observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro'
+      - './observability/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro'
+      - './observability/grafana/dashboards:/var/lib/grafana/dashboards:ro'
+      - 'hctv_grafana_data:/var/lib/grafana'
+
+volumes:
+  hctv_pgdata:
+  hctv_redis:
+  hctv_prometheus_data:
+  hctv_grafana_data:

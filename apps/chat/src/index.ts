@@ -4,6 +4,23 @@ import { Hono } from 'hono';
 import { readFile } from 'node:fs/promises';
 import { lucia } from '@hctv/auth';
 import { getCookie } from 'hono/cookie';
+import {
+  chatMetricsRegistry,
+  recordChatConnectionAccepted,
+  recordChatConnectionRejected,
+  recordChatDisconnect,
+  recordChatError,
+  recordChatModerationBlock,
+  recordDeliveredChatMessage,
+  recordDeliveredChatMessageBytes,
+  recordEmojiSearchResults,
+  recordHistoryMessagesLoaded,
+  recordIncomingChatMessage,
+  recordUniqueChatter,
+  setChannelHistorySize,
+  setChatModerationState,
+  startChatMessageTimer,
+} from './metrics.js';
 import { getPersonalChannel } from './utils/personalChannel.js';
 import { ChatModerationAction, getRedisConnection, prisma } from '@hctv/db';
 import uFuzzy from '@leeoniya/ufuzzy';
@@ -20,6 +37,7 @@ import type {
   ChatSocket,
   ChatUser,
 } from './types/chat.js';
+import { basicAuth } from 'hono/basic-auth';
 
 const redis = getRedisConnection();
 const MESSAGE_HISTORY_SIZE = 100;
@@ -32,6 +50,30 @@ type IncomingMessage = {
   type?: string;
   [key: string]: unknown;
 };
+
+const METRICS_MESSAGE_TYPES = [
+  'ping',
+  'message',
+  'emojiMsg',
+  'emojiSearch',
+  'mod:deleteMessage',
+  'mod:timeoutUser',
+  'mod:banUser',
+  'mod:unbanUser',
+  'mod:liftTimeout',
+] as const;
+
+type MetricsMessageType = (typeof METRICS_MESSAGE_TYPES)[number] | 'unknown';
+
+function getMetricsMessageType(type: unknown): MetricsMessageType {
+  if (typeof type !== 'string') {
+    return 'unknown';
+  }
+
+  return (METRICS_MESSAGE_TYPES as readonly string[]).includes(type)
+    ? (type as MetricsMessageType)
+    : 'unknown';
+}
 
 const DEFAULT_MODERATION_SETTINGS: ChatModerationSettingsShape = {
   blockedTerms: [],
@@ -259,25 +301,42 @@ async function deleteMessageFromHistory(targetUsername: string, msgId: string): 
 
 const app = new Hono();
 const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
+if (process.env.NODE_ENV === 'production') {
+  app.use(
+    '/metrics',
+    basicAuth({ username: process.env.METRICS_USER!, password: process.env.METRICS_PASS! })
+  );
+}
 
 app.get('/', async (c) => {
   return c.text(threed);
 });
 
 app.get('/up', async (c) => {
-  return c.text('it works');
+  return c.text('hello world');
+});
+
+app.get('/metrics', async () => {
+  return new Response(await chatMetricsRegistry.metrics(), {
+    headers: {
+      'Content-Type': chatMetricsRegistry.contentType,
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    },
+  });
 });
 
 app.get(
   '/ws/:username',
   upgradeWebSocket((c) => ({
     async onOpen(evt, ws) {
+      let authMethod = 'unknown';
       const token = getCookie(c, 'auth_session');
       const grant = c.req.query('grant');
       const authHeader = c.req.header('Authorization');
       const botAuth = c.req.query('botAuth');
 
       if (!token && (!grant || grant === 'null') && !authHeader && !botAuth) {
+        recordChatConnectionRejected(authMethod, 'missing_auth');
         ws.close();
         return;
       }
@@ -304,6 +363,7 @@ app.get(
         });
 
         if (botAccount) {
+          authMethod = 'bot_api_key';
           chatUser = {
             id: botAccount.botAccount.id,
             username: botAccount.botAccount.slug,
@@ -327,6 +387,7 @@ app.get(
         if (session.user) {
           const userChannel = await getPersonalChannel(session.user.id);
           if (userChannel) {
+            authMethod = 'session';
             chatUser = {
               id: session.user.id,
               username: userChannel.name,
@@ -349,16 +410,21 @@ app.get(
           : null;
 
       if (!chatUser && !dbGrant) {
+        recordChatConnectionRejected(authMethod, 'auth_failed');
         ws.close();
         return;
       }
 
       const { username } = c.req.param();
+      if (!chatUser && dbGrant) {
+        authMethod = 'obs_grant';
+      }
+
       if (dbGrant && dbGrant.name !== username) {
+        recordChatConnectionRejected(authMethod, 'grant_mismatch');
         ws.close();
         return;
       }
-
       const channel = await prisma.channel.findUnique({
         where: { name: username },
         select: {
@@ -383,6 +449,7 @@ app.get(
       });
 
       if (!channel) {
+        recordChatConnectionRejected(authMethod, 'channel_not_found');
         ws.close();
         return;
       }
@@ -444,6 +511,20 @@ app.get(
       socketState.personalChannel = personalChannel;
       socketState.viewerId = socket.viewerId;
       socketState.isModerator = isModerator;
+      socket.metricsTracked = true;
+      socketState.metricsTracked = true;
+      socket.metricsAuthMethod = authMethod;
+      socketState.metricsAuthMethod = authMethod;
+
+      recordChatConnectionAccepted(username, authMethod);
+      setChatModerationState(username, {
+        blockedTerms: moderationSettings.blockedTerms.length,
+        maxMessageLength: moderationSettings.maxMessageLength,
+        rateLimitCount: moderationSettings.rateLimitCount,
+        rateLimitWindowSeconds: moderationSettings.rateLimitWindowSeconds,
+        slowModeSeconds: moderationSettings.slowModeSeconds,
+      });
+
       socketState.excludeFromViewerCount = Boolean(dbGrant);
 
       socket.send(
@@ -474,6 +555,7 @@ app.get(
       const messages = await redis.zrange(channelKey, 0, MESSAGE_HISTORY_SIZE - 1);
 
       if (messages.length > 0) {
+        recordHistoryMessagesLoaded(username, messages.length);
         socket.send(
           JSON.stringify({
             type: 'history',
@@ -481,12 +563,21 @@ app.get(
           })
         );
       }
+      setChannelHistorySize(username, messages.length);
     },
     async onClose(evt, ws) {
       const socket = ws as unknown as ChatSocket;
       const socketState = resolveSocketState(socket);
       if (process.env.NODE_ENV !== 'production') console.log('client disconnected');
       if (!socketState.targetUsername) return;
+
+      if (socketState.metricsTracked) {
+        recordChatDisconnect(
+          socketState.targetUsername,
+          socketState.metricsAuthMethod ?? 'unknown'
+        );
+        socketState.metricsTracked = false;
+      }
 
       const streamInfo = await prisma.streamInfo.findUnique({
         where: {
@@ -504,10 +595,18 @@ app.get(
       }
     },
     async onMessage(evt, ws) {
+      let outcome = 'ignored';
+      let messageType = 'unknown';
+      let stopTimer: ReturnType<typeof startChatMessageTimer> | null = null;
+
       try {
         const socket = ws as unknown as ChatSocket;
         const socketState = resolveSocketState(socket);
-        const msg = JSON.parse(evt.data.toString()) as IncomingMessage;
+        const rawPayload = evt.data.toString();
+        const msg = JSON.parse(rawPayload) as IncomingMessage;
+        messageType = getMetricsMessageType(msg.type);
+        recordIncomingChatMessage(messageType, Buffer.byteLength(rawPayload));
+        stopTimer = startChatMessageTimer(messageType);
 
         if (msg.type === 'ping') {
           if (!socketState.excludeFromViewerCount) {
@@ -518,6 +617,7 @@ app.get(
             );
           }
           socket.send(JSON.stringify({ type: 'pong' }));
+          outcome = 'pong';
           return;
         }
 
@@ -527,6 +627,7 @@ app.get(
             logModerationEvent,
             broadcastToChannel,
           });
+          outcome = 'moderation';
           return;
         }
 
@@ -541,6 +642,7 @@ app.get(
             broadcastRestrictionStateToUser,
             broadcastToChannel,
           });
+          outcome = 'moderation';
           return;
         }
 
@@ -577,6 +679,7 @@ app.get(
             );
 
             await sendChatAccessState(socket, channelId, chatUser.id);
+            outcome = 'blocked';
             return;
           }
 
@@ -590,6 +693,8 @@ app.get(
             ))
           ) {
             sendModerationError(socket, 'RATE_LIMIT', 'You are sending messages too fast.');
+            recordChatModerationBlock('rate_limit');
+            outcome = 'rate_limited';
             return;
           }
 
@@ -598,6 +703,8 @@ app.get(
             const timeRemaining = await redis.ttl(slowModeKey);
             if (timeRemaining > 0) {
               sendModerationError(socket, 'SLOW_MODE', `Slow mode is on. Wait ${timeRemaining}s.`);
+              recordChatModerationBlock('slow_mode');
+              outcome = 'slow_mode';
               return;
             }
             await redis.setex(slowModeKey, moderationSettings.slowModeSeconds, '1');
@@ -613,6 +720,8 @@ app.get(
               'MESSAGE_TOO_LONG',
               `Message exceeds ${moderationSettings.maxMessageLength} characters.`
             );
+            recordChatModerationBlock('message_too_long');
+            outcome = 'message_too_long';
             return;
           }
 
@@ -628,7 +737,9 @@ app.get(
                 details: { blockedTerm },
               });
             }
+            recordChatModerationBlock('blocked_term');
             sendModerationError(socket, 'BLOCKED_TERM', 'Message blocked by channel moderation.');
+            outcome = 'blocked_term';
             return;
           }
 
@@ -654,8 +765,22 @@ app.get(
           await redis.zadd(channelKey, Date.now(), redisStr);
           await redis.zremrangebyrank(channelKey, 0, -MESSAGE_HISTORY_SIZE - 1);
           await redis.expire(channelKey, MESSAGE_TTL);
+          const historySize = await redis.zcard(channelKey);
+          setChannelHistorySize(targetUsername, historySize);
 
           broadcastToChannel(targetUsername, socket, msgObj as unknown as Record<string, unknown>);
+          recordDeliveredChatMessage(chatUser.isBot ? 'bot' : 'user');
+          recordDeliveredChatMessageBytes(
+            chatUser.isBot ? 'bot' : 'user',
+            Buffer.byteLength(message)
+          );
+          const isFirstMessageFromUser =
+            (await redis.sadd(`chat:unique-chatters:${targetUsername}`, chatUser.id)) === 1;
+
+          if (isFirstMessageFromUser) {
+            recordUniqueChatter(chatUser.isBot ? 'bot' : 'user');
+          }
+          outcome = 'broadcast';
         }
         if (msg.type === 'emojiMsg') {
           if (!socketState.chatUser) return;
@@ -683,12 +808,15 @@ app.get(
               emojis: emojiMap,
             })
           );
+          outcome = 'emoji_lookup';
         }
         if (msg.type === 'emojiSearch') {
           if (!socketState.chatUser) return;
           const rawSearchTerm = (msg.searchTerm as string)?.trim() ?? '';
           if (!rawSearchTerm || rawSearchTerm.length > 50) {
             ws.send(JSON.stringify({ type: 'emojiSearchResponse', results: [] }));
+            recordEmojiSearchResults('empty', 0);
+            outcome = 'emoji_search_empty';
             return;
           }
           const searchTerm = rawSearchTerm;
@@ -718,6 +846,8 @@ app.get(
                 results: results,
               })
             );
+            recordEmojiSearchResults('matched', results.length);
+            outcome = 'emoji_search';
           } else {
             ws.send(
               JSON.stringify({
@@ -725,10 +855,16 @@ app.get(
                 results: [],
               })
             );
+            recordEmojiSearchResults('no_match', 0);
+            outcome = 'emoji_search_empty';
           }
         }
       } catch (e) {
+        outcome = 'error';
+        recordChatError('on_message');
         console.error('Error processing message:', e);
+      } finally {
+        stopTimer?.({ type: messageType, outcome });
       }
     },
   }))
