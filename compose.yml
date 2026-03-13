@@ -75,13 +75,12 @@ services:
     image: 'prom/prometheus:v3.4.2'
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--config.expand-env'
       - '--storage.tsdb.path=/prometheus'
       - '--web.enable-lifecycle'
-    env_file:
-      - .env
     volumes:
       - './observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro'
+      - './observability/web_username:/etc/prometheus/web_username'
+      - './observability/web_password:/etc/prometheus/web_password'
       - 'hctv_prometheus_data:/prometheus'
     extra_hosts:
       - 'host.docker.internal:host-gateway'
