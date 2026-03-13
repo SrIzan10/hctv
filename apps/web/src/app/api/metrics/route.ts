@@ -21,19 +21,38 @@ export async function GET(req: NextRequest) {
 
 // source: https://vancelucas.com/blog/how-to-add-http-basic-auth-to-next-js/
 function isAuthenticated(req: NextRequest) {
-  const authheader = req.headers.get('authorization') || req.headers.get('Authorization');
+  const authheader = req.headers.get('authorization') ?? req.headers.get('Authorization');
 
   if (!authheader) {
     return false;
   }
 
-  const auth = Buffer.from(authheader.split(' ')[1], 'base64').toString().split(':');
-  const user = auth[0];
-  const pass = auth[1];
-
-  if (user == process.env.METRICS_USER && pass == process.env.METRICS_PASS) {
-    return true;
-  } else {
+  const parts = authheader.split(' ');
+  if (parts.length !== 2) {
     return false;
   }
+
+  const scheme = parts[0];
+  const encoded = parts[1];
+
+  if (scheme !== 'Basic' || !encoded) {
+    return false;
+  }
+
+  let decoded: string;
+  try {
+    decoded = Buffer.from(encoded, 'base64').toString();
+  } catch {
+    return false;
+  }
+
+  const separatorIndex = decoded.indexOf(':');
+  if (separatorIndex === -1) {
+    return false;
+  }
+
+  const user = decoded.substring(0, separatorIndex);
+  const pass = decoded.substring(separatorIndex + 1);
+
+  return user === process.env.METRICS_USER && pass === process.env.METRICS_PASS;
 }
