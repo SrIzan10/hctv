@@ -416,16 +416,15 @@ app.get(
       }
 
       const { username } = c.req.param();
+      if (!chatUser && dbGrant) {
+        authMethod = 'obs_grant';
+      }
+
       if (dbGrant && dbGrant.name !== username) {
         recordChatConnectionRejected(authMethod, 'grant_mismatch');
         ws.close();
         return;
       }
-
-      if (!chatUser && dbGrant) {
-        authMethod = 'obs_grant';
-      }
-
       const channel = await prisma.channel.findUnique({
         where: { name: username },
         select: {
