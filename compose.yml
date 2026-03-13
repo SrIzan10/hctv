@@ -82,7 +82,7 @@ services:
       - .env
     volumes:
       - './observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro'
-      - 'prometheus_data:/prometheus'
+      - 'hctv_prometheus_data:/prometheus'
     extra_hosts:
       - 'host.docker.internal:host-gateway'
   grafana:
@@ -97,10 +97,10 @@ services:
       - './observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro'
       - './observability/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro'
       - './observability/grafana/dashboards:/var/lib/grafana/dashboards:ro'
-      - 'grafana_data:/var/lib/grafana'
+      - 'hctv_grafana_data:/var/lib/grafana'
 
 volumes:
   hctv_pgdata:
   hctv_redis:
-  prometheus_data:
-  grafana_data:
+  hctv_prometheus_data:
+  hctv_grafana_data:
