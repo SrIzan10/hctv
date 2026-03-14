@@ -6,8 +6,8 @@ scrape_configs:
   - job_name: web
     metrics_path: /api/metrics
     basic_auth:
-      username: /etc/prometheus/web_username
-      password: /etc/prometheus/web_password
+      username: prometheus
+      password_file: /etc/prometheus/web_password
     static_configs:
       - targets:
           - hctv:3000
@@ -15,8 +15,8 @@ scrape_configs:
   - job_name: chat
     metrics_path: /metrics
     basic_auth:
-      username: ${METRICS_USER}
-      password: ${METRICS_PASS}
+      username: prometheus
+      password_file: /etc/prometheus/web_password
     static_configs:
       - targets:
           - chat:8000
