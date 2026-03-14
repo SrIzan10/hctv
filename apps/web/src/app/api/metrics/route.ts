@@ -54,5 +54,5 @@ function isAuthenticated(req: NextRequest) {
   const user = decoded.substring(0, separatorIndex);
   const pass = decoded.substring(separatorIndex + 1);
 
-  return user === process.env.METRICS_USER && pass === process.env.METRICS_PASS;
+  return user === process.env.METRICS_USER && pass === process.env.METRICS_PASSWORD;
 }

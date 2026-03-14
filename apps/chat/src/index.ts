@@ -304,7 +304,7 @@ const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
 if (process.env.NODE_ENV === 'production') {
   app.use(
     '/metrics',
-    basicAuth({ username: process.env.METRICS_USER!, password: process.env.METRICS_PASS! })
+    basicAuth({ username: process.env.METRICS_USER!, password: process.env.METRICS_PASSWORD! })
   );
 }
 
