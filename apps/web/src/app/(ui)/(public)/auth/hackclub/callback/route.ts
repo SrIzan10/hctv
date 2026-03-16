@@ -8,30 +8,43 @@ import { getRedisConnection } from '@hctv/db';
 export async function GET(request: Request): Promise<Response> {
   const cookies = await nextCookies();
   const url = new URL(request.url);
-	const code = url.searchParams.get("code");
-	const state = url.searchParams.get("state");
-	const storedState = cookies.get("hackclub_oauth_state")?.value ?? null;
-	if (!code || !state || !storedState || state !== storedState) {
+  const code = url.searchParams.get('code');
+  const state = url.searchParams.get('state');
+  const storedState = cookies.get('hackclub_oauth_state')?.value ?? null;
+  if (!code || !state || !storedState || state !== storedState) {
     console.log('invalid state stuff');
-		return new Response(null, {
-			status: 400
-		});
-	}
+    return new Response(null, {
+      status: 400,
+    });
+  }
 
   try {
     const tokens = await hackClub.validateAuthorizationCode(HCID_TOKEN_URL, code, null);
     const accessToken = tokens.accessToken();
     const userResponse = await fetch(HCID_USER_INFO_URL, {
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
       },
     });
+
+    if (!userResponse.ok) {
+      return new Response('Unable to verify your Hack Club identity right now. Please try again.', {
+        status: 502,
+      });
+    }
+
     const userResult: HackClubUserResponse = await userResponse.json();
     const identity = userResult.identity;
 
+    if (identity.verification_status !== 'verified') {
+      return new Response(getVerificationErrorMessage(identity.verification_status), {
+        status: 403,
+      });
+    }
+
     const slackId = identity.slack_id;
     if (!slackId) {
-      return new Response("Please make sure to have a Slack account before continuing.", {
+      return new Response('Please make sure to have a Slack account before continuing.', {
         status: 400,
       });
     }
@@ -70,7 +83,9 @@ export async function GET(request: Request): Promise<Response> {
         id: userId,
         slack_id: slackId,
         email: identity.primary_email,
-        pfpUrl: identity.slack_id ? `https://cachet.dunkirk.sh/users/${identity.slack_id}/r` : 'https://github.com/hackclub.png',
+        pfpUrl: identity.slack_id
+          ? `https://cachet.dunkirk.sh/users/${identity.slack_id}/r`
+          : 'https://github.com/hackclub.png',
         hasOnboarded: false,
       },
     });
@@ -106,9 +121,24 @@ interface HackClubIdentity {
   first_name: string;
   last_name: string;
   primary_email: string;
+  verification_status: VerificationStatus;
 }
 
 interface HackClubUserResponse {
   identity: HackClubIdentity;
 }
 
+type VerificationStatus = 'needs_submission' | 'pending' | 'verified' | 'ineligible';
+
+function getVerificationErrorMessage(status: VerificationStatus): string {
+  switch (status) {
+    case 'needs_submission':
+      return 'Please complete Hack Club Identity verification before signing in to hackclub.tv.';
+    case 'pending':
+      return 'Your Hack Club Identity verification is still being reviewed. Please try again once it is approved.';
+    case 'ineligible':
+      return 'Your Hack Club Identity verification was rejected, so you cannot access hackclub.tv right now.';
+    case 'verified':
+      return 'Verified users can continue.';
+  }
+}

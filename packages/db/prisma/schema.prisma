@@ -22,6 +22,9 @@ model User {
   email    String?
   pfpUrl   String
 
+  hackClubVerificationResult    String?
+  hackClubVerificationCheckedAt DateTime?
+
   hasOnboarded Boolean @default(false)
   isAdmin      Boolean @default(false)
 

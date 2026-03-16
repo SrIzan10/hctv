@@ -13,6 +13,7 @@ import {
   Users,
   Tv,
   Ban,
+  LogOut,
   ShieldOff,
   Search,
   CalendarIcon,
@@ -43,6 +44,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useConfirm } from '@omit/react-confirm-dialog';
 import { toast } from 'sonner';
 import type { User } from '@hctv/db';
 import { cn } from '@/lib/utils';
@@ -235,6 +237,7 @@ function DateTimePicker({
 // ─── Main component ──────────────────────────────────────────────────────────
 
 export default function AdminPanelClient({ currentUser }: AdminPanelClientProps) {
+  const confirm = useConfirm();
   const router = useRouter();
   const [tabParam, setTabParam] = useQueryState('tab', parseAsString.withDefault('users'));
   const [reportIdParam, setReportIdParam] = useQueryState('reportId');
@@ -247,6 +250,7 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
   const [channelsLoading, setChannelsLoading] = useState(false);
   const [auditLoading, setAuditLoading] = useState(false);
   const [reportsLoading, setReportsLoading] = useState(false);
+  const [loggingOutOthers, setLoggingOutOthers] = useState(false);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [reports, setReports] = useState<ChatReport[]>([]);
   const [highlightReportId, setHighlightReportId] = useState<string | null>(null);
@@ -498,6 +502,44 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
     }
   };
 
+  const handleLogoutOthers = async () => {
+    const confirmed = await confirm({
+      title: 'Log Out Everyone Else',
+      description:
+        'This will immediately sign out every other active session on hackclub.tv and keep only your current session active.',
+      confirmText: 'Log Out Others',
+      cancelText: 'Cancel',
+    });
+
+    if (!confirmed) return;
+
+    setLoggingOutOthers(true);
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'logout_others' }),
+      });
+
+      if (!res.ok) {
+        toast.error((await res.text()) || 'Failed to log out other sessions');
+        return;
+      }
+
+      const data = (await res.json()) as { invalidatedSessions: number };
+      toast.success(
+        data.invalidatedSessions > 0
+          ? `Logged out ${data.invalidatedSessions} other session${data.invalidatedSessions === 1 ? '' : 's'}`
+          : 'No other active sessions were found'
+      );
+      router.refresh();
+    } catch {
+      toast.error('Failed to log out other sessions');
+    } finally {
+      setLoggingOutOthers(false);
+    }
+  };
+
   // ── Derived stats ─────────────────────────────────────────────────────────
 
   const openReports = reports.filter((r) => r.status === 'OPEN').length;
@@ -534,24 +576,36 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
               </div>
             </div>
 
-            {/* Quick stats */}
-            <div className="hidden sm:flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1.5">
-              <StatPill icon={<Users className="h-3 w-3" />} label={`${users.length} users`} />
-              <span className="text-border mx-1">|</span>
-              <StatPill
-                icon={<Activity className="h-3 w-3" />}
-                label={`${auditLogs.length} events`}
-              />
-              {openReports > 0 && (
-                <>
-                  <span className="text-border mx-1">|</span>
-                  <StatPill
-                    icon={<Flag className="h-3 w-3" />}
-                    label={`${openReports} open`}
-                    className="text-destructive"
-                  />
-                </>
-              )}
+            <div className="flex flex-col items-end gap-3">
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleLogoutOthers}
+                disabled={loggingOutOthers}
+                className="gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                {loggingOutOthers ? 'Logging out others...' : 'Log everyone else out'}
+              </Button>
+
+              <div className="hidden sm:flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1.5">
+                <StatPill icon={<Users className="h-3 w-3" />} label={`${users.length} users`} />
+                <span className="text-border mx-1">|</span>
+                <StatPill
+                  icon={<Activity className="h-3 w-3" />}
+                  label={`${auditLogs.length} events`}
+                />
+                {openReports > 0 && (
+                  <>
+                    <span className="text-border mx-1">|</span>
+                    <StatPill
+                      icon={<Flag className="h-3 w-3" />}
+                      label={`${openReports} open`}
+                      className="text-destructive"
+                    />
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { validateRequest } from '@/lib/auth/validate';
-import { AdminAuditAction, prisma } from '@hctv/db';
+import { AdminAuditAction, getRedisConnection, prisma } from '@hctv/db';
 import { NextRequest } from 'next/server';
 
 export async function GET(request: NextRequest) {
@@ -32,14 +32,14 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const { user } = await validateRequest();
+  const { user, session } = await validateRequest();
   if (!user?.isAdmin) {
     return new Response('Forbidden', { status: 403 });
   }
 
   let body: {
-    userId: string;
-    action: 'ban' | 'unban' | 'promote' | 'demote';
+    userId?: string;
+    action: 'ban' | 'unban' | 'promote' | 'demote' | 'logout_others';
     reason?: string;
     expiresAt?: string;
   };
@@ -51,6 +51,42 @@ export async function POST(request: NextRequest) {
   }
 
   const { userId, action, reason, expiresAt } = body;
+
+  if (action === 'logout_others') {
+    if (!session) {
+      return new Response('No active session found', { status: 400 });
+    }
+
+    const sessionsToDelete = await prisma.session.findMany({
+      where: {
+        id: {
+          not: session.id,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (sessionsToDelete.length > 0) {
+      const redis = getRedisConnection();
+      await prisma.session.deleteMany({
+        where: {
+          id: {
+            in: sessionsToDelete.map((existingSession) => existingSession.id),
+          },
+        },
+      });
+      await redis.unlink(
+        ...sessionsToDelete.map((existingSession) => `sessions:${existingSession.id}`)
+      );
+    }
+
+    return Response.json({
+      success: true,
+      invalidatedSessions: sessionsToDelete.length,
+    });
+  }
 
   if (!userId || !action) {
     return new Response('Missing required fields', { status: 400 });
