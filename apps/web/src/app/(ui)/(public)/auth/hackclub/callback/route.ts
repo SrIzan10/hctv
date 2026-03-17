@@ -1,3 +1,4 @@
+import slackNotifier from '@/lib/services/slackNotifier';
 import { hackClub, lucia, HCID_TOKEN_URL, HCID_USER_INFO_URL } from '@hctv/auth';
 import { cookies as nextCookies } from 'next/headers';
 import { OAuth2RequestError } from 'arctic';
@@ -46,6 +47,13 @@ export async function GET(request: Request): Promise<Response> {
     if (!slackId) {
       return new Response('Please make sure to have a Slack account before continuing.', {
         status: 400,
+      });
+    }
+
+    const slackValidation = await validateSlackUser(slackId);
+    if (!slackValidation.success) {
+      return new Response(slackValidation.message, {
+        status: slackValidation.status,
       });
     }
 
@@ -130,6 +138,16 @@ interface HackClubUserResponse {
 
 type VerificationStatus = 'needs_submission' | 'pending' | 'verified' | 'ineligible';
 
+type SlackValidationResult =
+  | {
+      success: true;
+    }
+  | {
+      success: false;
+      message: string;
+      status: number;
+    };
+
 function getVerificationErrorMessage(status: VerificationStatus): string {
   switch (status) {
     case 'needs_submission':
@@ -140,5 +158,51 @@ function getVerificationErrorMessage(status: VerificationStatus): string {
       return 'Your Hack Club Identity verification was rejected, so you cannot access hackclub.tv right now.';
     case 'verified':
       return 'Verified users can continue.';
+  }
+}
+
+async function validateSlackUser(slackId: string): Promise<SlackValidationResult> {
+  if (!process.env.SLACK_NOTIFIER_TOKEN) {
+    return {
+      success: false,
+      message: 'Slack verification is not configured right now. Please try again later.',
+      status: 503,
+    };
+  }
+
+  try {
+    const response = await slackNotifier.users.info({ user: slackId });
+    if (!response.ok || !response.user) {
+      return {
+        success: false,
+        message: 'Unable to verify your Slack account right now. Please try again later.',
+        status: 502,
+      };
+    }
+
+    if (response.user.deleted) {
+      return {
+        success: false,
+        message: 'Your Slack account is deactivated, so you cannot access hackclub.tv.',
+        status: 403,
+      };
+    }
+
+    if (response.user.is_restricted || response.user.is_ultra_restricted) {
+      return {
+        success: false,
+        message:
+          'Guest Slack accounts cannot access hackclub.tv. Please sign in with a full Hack Club Slack account.',
+        status: 403,
+      };
+    }
+
+    return { success: true };
+  } catch {
+    return {
+      success: false,
+      message: 'Unable to verify your Slack account right now. Please try again later.',
+      status: 502,
+    };
   }
 }
