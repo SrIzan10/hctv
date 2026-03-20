@@ -61,6 +61,7 @@ export function BotCombobox({ bots, filter, value, modal, onValueChange }: Props
                 <CommandItem
                   key={bot.id}
                   value={bot.id}
+                  keywords={[bot.displayName, bot.slug]}
                   onSelect={(currentValue) => {
                     onValueChange(currentValue === value ? '' : currentValue);
                     setOpen(false);

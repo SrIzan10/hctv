@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 import StreamPlayer from '../StreamPlayer/StreamPlayer';
 import UserInfoCard from '../UserInfoCard/UserInfoCard';
 import ChatPanel from '../ChatPanel/ChatPanel';
@@ -9,13 +10,14 @@ import { Button } from '@/components/ui/button';
 import type { StreamInfo, Channel } from '@hctv/db';
 import { useIsMobile } from '@/lib/hooks/useMobile';
 import { useAllChannels } from '@/lib/hooks/useUserList';
-import { RefreshCw } from 'lucide-react';
 
 export default function LiveStream(props: Props) {
   const isMobile = useIsMobile();
   const { channels, refresh } = useAllChannels(5000);
-  const [isRestricted, setIsRestricted] = useState(false);
-  const [restrictionExpiresAt, setRestrictionExpiresAt] = useState<string | null>(null);
+  const [isRestricted, setIsRestricted] = useState(props.initialRestrictionActive);
+  const [restrictionExpiresAt, setRestrictionExpiresAt] = useState<string | null>(
+    props.initialRestrictionExpiresAt
+  );
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
@@ -38,7 +40,7 @@ export default function LiveStream(props: Props) {
     }
   };
 
-  if (isRestricted) {
+  if (isRestricted && !props.canViewRestrictedStream) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] p-4">
         <h1 className="text-2xl font-bold text-destructive mb-2">Channel Restricted</h1>
@@ -61,6 +63,23 @@ export default function LiveStream(props: Props) {
   return (
     <div className={`${isMobile ? 'flex flex-col' : 'flex'} h-[calc(100vh-64px)] w-full`}>
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {isRestricted && props.canViewRestrictedStream && (
+          <div className="flex items-start gap-3 border-b border-amber-500/30 bg-amber-500/10 px-4 py-3 text-foreground">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <div className="text-sm">
+              <p className="font-medium">Restricted stream override</p>
+              <p>
+                This channel is restricted and unavailable to regular viewers. You are watching it
+                because you are a platform admin.
+              </p>
+              {restrictionExpiresAt && (
+                <p className="mt-1 text-muted-foreground">
+                  Restriction lifts: {format(new Date(restrictionExpiresAt), 'PPP p')}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
         <StreamPlayer />
         {isMobile && (
           <div className="flex-1 min-h-[250px] max-h-[400px] border-t border-border">
@@ -82,4 +101,7 @@ export default function LiveStream(props: Props) {
 interface Props {
   username: string;
   streamInfo: StreamInfo & { channel: Channel };
+  canViewRestrictedStream: boolean;
+  initialRestrictionActive: boolean;
+  initialRestrictionExpiresAt: string | null;
 }
