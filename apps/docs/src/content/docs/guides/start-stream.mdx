@@ -3,13 +3,40 @@ title: How to stream
 description: Get started with OBS and streaming on hackclub.tv
 ---
 
-- open obs
-- open settings
-- open "Stream"
-- set service to custom
-- set url to `srt://localhost:8890?streamid=publish:CHANNEL_NAME:thisusernameislongonpurposesoyoudontaccidentallyleakyourstreamkey:STREAM_KEY&pkt_size=1316`
-- on the website, click "Regenerate key"
-- paste the key into your obs "Stream Key"
-- start streaming!
+_This guide demonstrates how to stream with hackclub.tv via OBS Studio, for other streaming softwares you will need to edit these steps for your chosen softwear._
 
-(screenshots to be added soon)
+- Open OBS Studio 
+
+(_if it is not installed head to [this webpage](https://obsproject.com/) to download the installer_)
+
+![OBS in Windows start menue](../../../assets/obs.png)
+
+- In OBS, in the navbar click `File > Settings`
+
+![Animated GIF of opening the settings page](../../../assets/obs-open-settings.gif)
+
+- In the popup Setting box, from the sidebar open `Stream`
+
+- Set `Service` box to `Custom...`
+
+![Animated GIF of opening 'Stream' settings and changing to 'Custom'](../../../assets/obs-changing-settings.gif)
+
+- Go to https://hackclub.tv/settings/channel/ on your chosen web browser 
+
+(_if you are not logged in you may have to log back in and then try again_)
+
+- Under `Stream Settings` you will find your `Stream Key` and `Stream URL` - copy the `Stream URL` and paste it into OBS
+
+![Hack Club TV Stream Settings](../../../assets/hctv-settings.png)
+
+- Go back on to the website and click this <img alt="Lock Icon" src="../../../assets/lock.png" width="35px"/> icon to regenerate your stream key - copy the new key and past it into the `Stream Key` box in OBS
+
+![OBS Stream Settings with data filled in](../../../assets/obs-custom.png)
+(_Your OBS settings should now look like this_)
+
+- You can now safely `Apply` changes in OBS and start streaming!
+
+Thanks for using this guide and happy streaming!
+
+_A video tutorial is currently in the making, check back another time if you would like to see it!_
+
