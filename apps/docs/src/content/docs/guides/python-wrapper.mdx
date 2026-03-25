@@ -114,7 +114,16 @@ async def say_cmd(ctx, *, text):
 @bot.command()
 async def greet(ctx, name, greeting="hello"):
     await ctx.reply(f"{greeting}, {name}!")
+
+# Keyword-only (rest of message)
+# Use *, text to capture everything after the command as a single string:
+@bot.command()
+async def echo(ctx, *, text):
+    await ctx.reply(text)
+# !echo hello world foo  →  text = "hello world foo"
 ```
+
+> The bot automatically ignores its own messages to prevent loops.
 
 ### Context
 
@@ -185,6 +194,29 @@ await bot.unban_user("channel", user_id="user123")
 await bot.delete_message("channel", msg_id="msg-uuid")
 ```
 
+### Emojis
+
+Look up or search Slack-style emojis. Results come back via events.
+
+```python
+# Look up emoji URLs
+await bot.lookup_emojis(["yay", "aga"])
+
+# Search emojis
+await bot.search_emojis("yay")
+
+# Handle results
+@bot.event
+async def on_emoji_response(emojis):
+    # emojis = {"yay": "https://...", "aga": "https://..."}
+    print(emojis)
+
+@bot.event
+async def on_emoji_search(results):
+    # results = ["yay", "yay-bounce", "yay-spin", ...]
+    print(results)
+```
+
 ### Async Entry Point
 
 If you manage your own event loop:
@@ -202,6 +234,77 @@ async def main():
     await bot.start("hctvb_xxx", channel="bot-playground")
 
 asyncio.run(main())
+```
+
+## Examples
+
+### Echo Bot
+
+```python
+from hctvwrapper import Bot
+import os
+
+bot = Bot(command_prefix="!")
+
+@bot.event
+async def on_ready(session):
+    print(f"✅ Logged in as {session.viewer}")
+
+@bot.command()
+async def ping(ctx):
+    await ctx.reply("pong! 🏓")
+
+@bot.command(name="echo", aliases=["say"])
+async def echo_cmd(ctx, *, text):
+    await ctx.send(text)
+
+bot.run(os.environ["BOT_TOKEN"], channel="bot-playground")
+```
+
+### AI Bot
+
+```python
+from hctvwrapper import Bot
+import aiohttp, os
+
+bot = Bot(command_prefix="/")
+
+@bot.command(name="ai")
+async def ai_cmd(ctx, *, prompt):
+    async with aiohttp.ClientSession() as http:
+        resp = await http.post(
+            "https://ai.hackclub.com/proxy/v1/chat/completions",
+            headers={"Authorization": f"Bearer {os.environ['AI_TOKEN']}"},
+            json={
+                "model": "google/gemini-3-flash-preview",
+                "messages": [{"role": "user", "content": prompt}],
+            },
+        )
+        data = await resp.json()
+    answer = data["choices"][0]["message"]["content"]
+    await ctx.reply(answer)
+
+bot.run(os.environ["BOT_TOKEN"], channel="bot-playground")
+```
+
+### Moderation Bot
+
+```python
+from hctvwrapper import Bot
+import os
+
+bot = Bot(command_prefix="!")
+
+@bot.command()
+async def timeout(ctx, user_id, seconds="300"):
+    await bot.timeout_user(ctx.channel, user_id, duration=int(seconds))
+    await ctx.send(f"⏰ Timed out for {seconds}s")
+
+@bot.event
+async def on_moderation_error(error, channel):
+    print(f"⚠️ {error.code}: {error.message}")
+
+bot.run(os.environ["BOT_TOKEN"], channel="my-channel")
 ```
 
 ## Models Reference
