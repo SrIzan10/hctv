@@ -59,7 +59,9 @@ function TooltipIcon({
   return (
     <Tooltip delayDuration={200}>
       <TooltipTrigger asChild>
-        <Icon className={cn('size-3.5 shrink-0', className)} />
+        <span className={cn('inline-flex align-[-0.15em]', className)}>
+          <Icon className="size-[1.1em] shrink-0" />
+        </span>
       </TooltipTrigger>
       <TooltipContent side="top">{label}</TooltipContent>
     </Tooltip>
@@ -71,15 +73,13 @@ function UsernameRow({ user, displayName }: { user?: User; displayName?: string 
 
   return (
     <TooltipProvider>
-      <span className="font-semibold text-primary shrink-0 flex items-center gap-1">
-        {user?.isBot && <TooltipIcon icon={Bot} label="Bot" className="text-muted-foreground" />}
-        {role && <TooltipIcon icon={role.icon} label={role.label} className={role.className} />}
-        {user?.isPlatformAdmin && (
-          <TooltipIcon icon={ShieldAlert} label="Platform Admin" className="text-destructive" />
-        )}
-        <span>{displayName}</span>
-        <span className="font-normal text-muted-foreground select-none">:</span>
-      </span>
+      {user?.isBot && <TooltipIcon icon={Bot} label="Bot" className="text-muted-foreground mr-[0.3em]" />}
+      {role && <TooltipIcon icon={role.icon} label={role.label} className={cn(role.className, "mr-[0.3em]")} />}
+      {user?.isPlatformAdmin && (
+        <TooltipIcon icon={ShieldAlert} label="Platform Admin" className="text-destructive mr-[0.3em]" />
+      )}
+      <span className="font-semibold text-primary">{displayName}</span>
+      <span className="font-normal text-muted-foreground select-none">:{' '}</span>
     </TooltipProvider>
   );
 }
@@ -215,14 +215,14 @@ export function Message({
     <>
       <div className="group hover:bg-primary/5 rounded px-2 py-1 -mx-2 transition-colors">
         <div className="flex items-start gap-1.5">
-          <UsernameRow user={user} displayName={displayName} />
-          <span
+          <div
             lang="en"
-            className="text-foreground min-w-0 flex-1"
+            className="text-foreground min-w-0 flex-1 leading-normal"
             style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}
           >
+            <UsernameRow user={user} displayName={displayName} />
             <EmojiRenderer text={message} emojiMap={emojiMap} />
-          </span>
+          </div>
           {type === 'message' && user?.id && (
             <MessageActionsMenu
               user={user}
