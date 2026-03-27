@@ -22,7 +22,7 @@ bot = Bot(command_prefix="!")
 
 @bot.event
 async def on_ready(session):
-    print(f"Logged in as {session.viewer}")
+    print(f"Logged in as {session.viewer.username}")
 
 @bot.event
 async def on_message(message):
