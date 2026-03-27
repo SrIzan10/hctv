@@ -1,6 +1,6 @@
 ---
-title: How to use HCTV's python wrapper!
-description: How to use HCTV's unofficial Python wrapper.
+title: Python wrapper
+description: How to use hctv's unofficial Python wrapper.
 ---
 
 A Pycord-style Python wrapper for [hackclub.tv](https://hackclub.tv), made by [Christian](https://github.com/christianwell). Build chat bots with decorators and minimal boilerplate.
@@ -15,6 +15,7 @@ pip install hctvwrapper
 ## Quick Start
 
 ```python
+import os
 from hctvwrapper import Bot
 
 bot = Bot(command_prefix="!")
@@ -31,10 +32,10 @@ async def on_message(message):
 async def ping(ctx):
     await ctx.reply("pong!")
 
-bot.run("hctvb_your_token_here", channel="bot-playground")
+bot.run(os.environ['BOT_TOKEN'], channel="bot-playground")
 ```
 
-## Getting a Bot Token
+### Getting a Bot Token
 
 1. Go to [hackclub.tv](https://hackclub.tv)
 2. Create a bot account and get your API key (starts with `hctvb_`)
@@ -100,7 +101,7 @@ Register commands with `@bot.command()`. The bot automatically parses messages s
 ```python
 bot = Bot(command_prefix="!")
 
-# Simple command — no arguments
+# Simple command, no arguments
 @bot.command()
 async def ping(ctx):
     await ctx.reply("pong!")
@@ -196,7 +197,7 @@ await bot.delete_message("channel", msg_id="msg-uuid")
 
 ### Emojis
 
-Look up or search Slack-style emojis. Results come back via events.
+Look up or search emojis from the Slack. Results come back via events.
 
 ```python
 # Look up emoji URLs
