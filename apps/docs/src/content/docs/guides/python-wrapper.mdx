@@ -1,0 +1,333 @@
+---
+title: Python wrapper
+description: How to use hctv's unofficial Python wrapper.
+---
+
+A Pycord-style Python wrapper for [hackclub.tv](https://hackclub.tv), made by [Christian](https://github.com/christianwell). Build chat bots with decorators and minimal boilerplate.
+
+Check it out on PyPI: https://pypi.org/project/hctvwrapper/
+You can take a look at the code [here](https://github.com/christianwell/hctvwrapper)
+
+```
+pip install hctvwrapper
+```
+
+## Quick Start
+
+```python
+import os
+from hctvwrapper import Bot
+
+bot = Bot(command_prefix="!")
+
+@bot.event
+async def on_ready(session):
+    print(f"Logged in as {session.viewer.username}")
+
+@bot.event
+async def on_message(message):
+    print(f"{message.author.username}: {message.content}")
+
+@bot.command()
+async def ping(ctx):
+    await ctx.reply("pong!")
+
+bot.run(os.environ['BOT_TOKEN'], channel="bot-playground")
+```
+
+### Getting a Bot Token
+
+1. Go to [hackclub.tv](https://hackclub.tv)
+2. Create a bot account and get your API key (starts with `hctvb_`)
+3. Set it as an environment variable: `export BOT_TOKEN=hctvb_xxx`
+
+## Guide
+
+### Events
+
+Register event handlers with `@bot.event`. The function name determines which event it handles.
+
+```python
+@bot.event
+async def on_ready(session):
+    """Fired when the bot connects and receives session info."""
+    print(f"Logged in as {session.viewer.username}")
+    print(f"Can moderate: {session.permissions.can_moderate}")
+    print(f"Max message length: {session.moderation.max_message_length}")
+
+@bot.event
+async def on_message(message):
+    """Fired on every chat message."""
+    print(f"[{message.channel}] {message.author.username}: {message.content}")
+    # message.author.id, .pfp_url, .display_name, .is_bot,
+    # .is_platform_admin, .channel_role
+    # message.msg_id, .timestamp, .type
+
+@bot.event
+async def on_history(messages):
+    """Fired once on connect with up to 100 recent messages."""
+    print(f"Got {len(messages)} historical messages")
+
+@bot.event
+async def on_system_message(message):
+    """Fired on system notifications (bans, unbans, etc.)."""
+    print(f"System: {message.content}")
+
+@bot.event
+async def on_message_deleted(event):
+    """Fired when a message is deleted by a moderator."""
+    print(f"Message {event.msg_id} deleted in {event.channel}")
+
+@bot.event
+async def on_chat_access(access, channel):
+    """Fired when chat permissions change (timeouts, bans)."""
+    print(f"Can send in {channel}: {access.can_send}")
+    if access.restriction:
+        print(f"  Restriction: {access.restriction.type}")
+
+@bot.event
+async def on_moderation_error(error, channel):
+    """Fired when a moderation action or message is rejected."""
+    print(f"Error in {channel}: {error.code} — {error.message}")
+    # error.code is one of: FORBIDDEN, RATE_LIMIT, SLOW_MODE,
+    # TIMED_OUT, BANNED, MESSAGE_TOO_LONG, BLOCKED_TERM,
+    # INVALID_TARGET, INVALID_REQUEST, NOT_FOUND
+```
+
+### Commands
+
+Register commands with `@bot.command()`. The bot automatically parses messages starting with the prefix.
+
+```python
+bot = Bot(command_prefix="!")
+
+# Simple command, no arguments
+@bot.command()
+async def ping(ctx):
+    await ctx.reply("pong!")
+
+# Named command with aliases
+@bot.command(name="say", aliases=["echo", "repeat"])
+async def say_cmd(ctx, *, text):
+    await ctx.send(text)
+
+# Positional arguments (split by whitespace)
+@bot.command()
+async def greet(ctx, name, greeting="hello"):
+    await ctx.reply(f"{greeting}, {name}!")
+
+# Keyword-only (rest of message)
+# Use *, text to capture everything after the command as a single string:
+@bot.command()
+async def echo(ctx, *, text):
+    await ctx.reply(text)
+# !echo hello world foo  →  text = "hello world foo"
+```
+
+> The bot automatically ignores its own messages to prevent loops.
+
+### Context
+
+The `ctx` object passed to commands gives you everything you need:
+
+```python
+@bot.command()
+async def info(ctx):
+    ctx.message     # the full Message object
+    ctx.author      # shortcut to ctx.message.author (Author)
+    ctx.channel     # channel name (str)
+    ctx.bot         # reference to the Bot
+
+    await ctx.reply("text")   # sends "@username text"
+    await ctx.send("text")    # sends "text" without mention
+    await ctx.delete()        # deletes the triggering message (needs mod perms)
+```
+
+### Sending Messages
+
+```python
+# Inside a command
+await ctx.reply("mentioned reply")
+await ctx.send("plain message")
+
+# Anywhere (if you have a reference to the bot)
+await bot.send("hello!", channel="bot-playground")
+```
+
+### Multi-Channel
+
+Connect to multiple channels at once:
+
+```python
+bot.run("hctvb_xxx", channels=["channel1", "channel2", "bot-playground"])
+```
+
+Messages and commands work across all channels. Use `ctx.channel` or `message.channel` to know which channel a message came from.
+
+```python
+@bot.event
+async def on_message(message):
+    print(f"[{message.channel}] {message.author.username}: {message.content}")
+
+@bot.command()
+async def where(ctx):
+    await ctx.reply(f"you're in {ctx.channel}")
+```
+
+### Moderation
+
+Bots with moderation permissions can manage users:
+
+```python
+# Timeout a user for 5 minutes (default)
+await bot.timeout_user("channel", user_id="user123", duration=300, reason="spam")
+
+# Ban a user
+await bot.ban_user("channel", user_id="user123", reason="repeated violations")
+
+# Remove a timeout
+await bot.lift_timeout("channel", user_id="user123")
+
+# Unban a user
+await bot.unban_user("channel", user_id="user123")
+
+# Delete a specific message
+await bot.delete_message("channel", msg_id="msg-uuid")
+```
+
+### Emojis
+
+Look up or search emojis from the Slack. Results come back via events.
+
+```python
+# Look up emoji URLs
+await bot.lookup_emojis(["yay", "aga"])
+
+# Search emojis
+await bot.search_emojis("yay")
+
+# Handle results
+@bot.event
+async def on_emoji_response(emojis):
+    # emojis = {"yay": "https://...", "aga": "https://..."}
+    print(emojis)
+
+@bot.event
+async def on_emoji_search(results):
+    # results = ["yay", "yay-bounce", "yay-spin", ...]
+    print(results)
+```
+
+### Async Entry Point
+
+If you manage your own event loop:
+
+```python
+import asyncio
+
+async def main():
+    bot = Bot(command_prefix="!")
+
+    @bot.event
+    async def on_ready(session):
+        print("Connected!")
+
+    await bot.start("hctvb_xxx", channel="bot-playground")
+
+asyncio.run(main())
+```
+
+## Examples
+
+### Echo Bot
+
+```python
+from hctvwrapper import Bot
+import os
+
+bot = Bot(command_prefix="!")
+
+@bot.event
+async def on_ready(session):
+    print(f"✅ Logged in as {session.viewer}")
+
+@bot.command()
+async def ping(ctx):
+    await ctx.reply("pong! 🏓")
+
+@bot.command(name="echo", aliases=["say"])
+async def echo_cmd(ctx, *, text):
+    await ctx.send(text)
+
+bot.run(os.environ["BOT_TOKEN"], channel="bot-playground")
+```
+
+### AI Bot
+
+```python
+from hctvwrapper import Bot
+import aiohttp, os
+
+bot = Bot(command_prefix="/")
+
+@bot.command(name="ai")
+async def ai_cmd(ctx, *, prompt):
+    async with aiohttp.ClientSession() as http:
+        resp = await http.post(
+            "https://ai.hackclub.com/proxy/v1/chat/completions",
+            headers={"Authorization": f"Bearer {os.environ['AI_TOKEN']}"},
+            json={
+                "model": "google/gemini-3-flash-preview",
+                "messages": [{"role": "user", "content": prompt}],
+            },
+        )
+        data = await resp.json()
+    answer = data["choices"][0]["message"]["content"]
+    await ctx.reply(answer)
+
+bot.run(os.environ["BOT_TOKEN"], channel="bot-playground")
+```
+
+### Moderation Bot
+
+```python
+from hctvwrapper import Bot
+import os
+
+bot = Bot(command_prefix="!")
+
+@bot.command()
+async def timeout(ctx, user_id, seconds="300"):
+    await bot.timeout_user(ctx.channel, user_id, duration=int(seconds))
+    await ctx.send(f"⏰ Timed out for {seconds}s")
+
+@bot.event
+async def on_moderation_error(error, channel):
+    print(f"⚠️ {error.code}: {error.message}")
+
+bot.run(os.environ["BOT_TOKEN"], channel="my-channel")
+```
+
+## Models Reference
+
+| Model | Fields |
+|---|---|
+| `Message` | `content`, `author`, `channel`, `msg_id`, `timestamp`, `type`, `is_bot` |
+| `Author` | `id`, `username`, `pfp_url`, `display_name`, `is_bot`, `is_platform_admin`, `channel_role` |
+| `Session` | `viewer` (Author), `permissions`, `moderation` |
+| `Permissions` | `can_moderate` |
+| `ModerationSettings` | `has_blocked_terms`, `slow_mode_seconds`, `max_message_length` |
+| `SystemMessage` | `type`, `channel`, `content`, `timestamp` |
+| `ChatAccess` | `can_send`, `restriction` |
+| `Restriction` | `type` (timeout/ban), `reason`, `expires_at` |
+| `ModerationError` | `code`, `message`, `restriction` |
+| `ModerationEvent` | `type`, `msg_id`, `channel` |
+
+## Requirements
+
+- Python 3.10+
+- `websockets` (only dependency)
+
+## License
+
+Copyright (c) 2026 Christian Well - [MIT License](https://github.com/christianwell/hctvwrapper/blob/main/LICENSE)

@@ -3,20 +3,42 @@ title: Development Setup
 description: Instructions to set up a local development environment for hackclub.tv
 ---
 
-1. clone repo
-2. `pnpm install`
-3. `cp apps/web/.env.example apps/web/.env && cp packages/db/.env.example packages/db/.env` 
-4. `pnpm dev`
-5. `pnpm db:migrate` (RUN THIS AFTER POPULATING ENV)
+Follow these steps to run hackclub.tv locally:
 
-- slack notifier app manifest is as follows:  
+1. Clone the repository.
+2. Install dependencies:
+
+```
+pnpm install
+```
+
+3. Create environment files:
+
+```
+cp apps/web/.env.example apps/web/.env && cp packages/db/.env.example packages/db/.env
+```
+
+4. Fill in the required values in both .env files.
+5. Start the development servers:
+
+```
+pnpm dev
+```
+
+6. Run database migrations (after environment variables are set):
+
+```
+pnpm db:migrate
+```
+
+- Slack notifier app manifest:
 ```
 display_information:
-  # please change the name to something that can be linked to you if possible
+  # Please change the name to something linked to you.
   name: hctv notifier dev
 features:
   bot_user:
-    # same with this :pray:
+    # Same here.
     display_name: hctv notifier dev
     always_online: false
 oauth_config:
