@@ -650,8 +650,8 @@ export async function editBot(prev: any, formData: FormData) {
 	}
 	
 	if (zod.data.pfpUrl === '') {
-      const identicon = await genIdenticonUpload(zod.data.name, 'pfp');
-      zod.data.pfpUrl = identicon;
+    const identicon = await genIdenticonUpload(zod.data.name, 'pfp');
+    zod.data.pfpUrl = identicon;
   }
 
   // i feel like you could just append the data instead of manually changing each field but oh well
