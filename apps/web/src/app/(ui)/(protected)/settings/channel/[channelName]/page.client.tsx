@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -123,6 +123,7 @@ export default function ChannelSettingsClient({
   const [region, setRegion] = useState<MediaMTXRegion>('hq');
   const channelList = useOwnedChannels();
   const router = useRouter();
+  const channelSettingsFormRef = useRef<HTMLFormElement>(null);
 
   const handleStreamInfoActionComplete = useCallback((result: any) => {
     if (result?.success) {
@@ -291,6 +292,7 @@ export default function ChannelSettingsClient({
             </CardHeader>
             <CardContent className="space-y-6">
               <UniversalForm
+                formRef={channelSettingsFormRef}
                 fields={[
                   { name: 'channelId', type: 'hidden', value: channel.id, label: 'Channel ID' },
                   {
@@ -346,6 +348,9 @@ export default function ChannelSettingsClient({
                                 if (res && res[0]) {
                                   field.onChange(res[0].ufsUrl);
                                   toast.success('Profile picture uploaded successfully!');
+                                  setTimeout(() => {
+                                    channelSettingsFormRef.current?.requestSubmit();
+                                  }, 0);
                                 }
                               }}
                               onUploadError={(error) => {

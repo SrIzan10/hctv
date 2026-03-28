@@ -50,6 +50,7 @@ export const createBotSchema = z.object({
 export const editBotSchema = createBotSchema.and(
   z.object({
     from: z.string().min(1),
+    pfpUrl: z.string(),
   })
 );
 

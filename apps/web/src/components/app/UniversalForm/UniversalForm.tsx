@@ -47,6 +47,7 @@ export function UniversalForm<T extends z.ZodType>({
   action,
   onActionComplete,
   defaultValues,
+  formRef,
   submitText = 'Submit',
   submitClassname,
   otherSubmitButton,
@@ -87,7 +88,7 @@ export function UniversalForm<T extends z.ZodType>({
 
   return (
     <Form {...form}>
-      <form action={formAction} className="space-y-2">
+      <form ref={formRef} action={formAction} className="space-y-2">
         {fields.map((field) => (
           <FormField
             key={field.name}

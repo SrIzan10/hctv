@@ -614,7 +614,7 @@ export async function createBot(prev: any, formData: FormData) {
       slug: zod.data.slug,
       ownerId: user.id,
       description: zod.data.description,
-      pfpUrl: await genIdenticonUpload(zod.data.slug, 'botpfp'),
+			pfpUrl: await genIdenticonUpload(zod.data.slug, 'botpfp'),
     },
   });
 
@@ -647,14 +647,21 @@ export async function editBot(prev: any, formData: FormData) {
     if (botExists) {
       return { success: false, error: 'Bot slug already exists' };
     }
+	}
+	
+	if (zod.data.pfpUrl === '') {
+      const identicon = await genIdenticonUpload(zod.data.name, 'pfp');
+      zod.data.pfpUrl = identicon;
   }
 
+  // i feel like you could just append the data instead of manually changing each field but oh well
   const updatedBot = await prisma.botAccount.update({
     where: { id: zod.data.from },
     data: {
       displayName: zod.data.name,
       slug: zod.data.slug,
       description: zod.data.description,
+      pfpUrl: zod.data.pfpUrl,
     },
   });
 
