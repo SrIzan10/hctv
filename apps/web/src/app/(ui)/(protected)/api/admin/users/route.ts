@@ -22,7 +22,13 @@ export async function GET(request: NextRequest) {
           hasOnboarded: true,
         }
       : undefined,
-    include: {
+    select: {
+      id: true,
+      slack_id: true,
+      email: true,
+      pfpUrl: true,
+      isAdmin: true,
+      bypassVerification: true,
       ban: true,
       personalChannel: { select: { name: true } },
     },
@@ -39,7 +45,7 @@ export async function POST(request: NextRequest) {
 
   let body: {
     userId?: string;
-    action: 'ban' | 'unban' | 'promote' | 'demote' | 'logout_others';
+    action: 'ban' | 'unban' | 'promote' | 'demote' | 'logout_others' | 'toggle_bypass_verification';
     reason?: string;
     expiresAt?: string;
   };
@@ -208,6 +214,33 @@ export async function POST(request: NextRequest) {
     });
 
     return Response.json({ success: true, message: 'User demoted from admin' });
+  }
+
+  if (action === 'toggle_bypass_verification') {
+    const newBypassStatus = !targetUser.bypassVerification;
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { bypassVerification: newBypassStatus },
+    });
+
+    await prisma.adminAuditLog.create({
+      data: {
+        action: newBypassStatus
+          ? AdminAuditAction.BYPASS_VERIFICATION_ENABLED
+          : AdminAuditAction.BYPASS_VERIFICATION_DISABLED,
+        actorId: user.id,
+        targetUserId: userId,
+      },
+    });
+
+    return Response.json({
+      success: true,
+      message: newBypassStatus
+        ? 'Email verification bypass enabled'
+        : 'Email verification bypass disabled',
+      bypassVerification: newBypassStatus,
+    });
   }
 
   return new Response('Invalid action', { status: 400 });

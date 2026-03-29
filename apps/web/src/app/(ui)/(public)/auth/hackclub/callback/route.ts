@@ -36,11 +36,14 @@ export async function GET(request: Request): Promise<Response> {
 
     const userResult: HackClubUserResponse = await userResponse.json();
     const identity = userResult.identity;
+    const bypass = await checkIfBypass(identity.primary_email);
 
     if (identity.verification_status !== 'verified') {
-      return new Response(getVerificationErrorMessage(identity.verification_status), {
-        status: 403,
-      });
+      if (!bypass) {
+        return new Response(getVerificationErrorMessage(identity.verification_status), {
+          status: 403,
+        });
+      }
     }
 
     const slackId = identity.slack_id;
@@ -52,9 +55,11 @@ export async function GET(request: Request): Promise<Response> {
 
     const slackValidation = await validateSlackUser(slackId);
     if (!slackValidation.success) {
-      return new Response(slackValidation.message, {
-        status: slackValidation.status,
-      });
+      if (!bypass) {
+        return new Response(slackValidation.message, {
+          status: slackValidation.status,
+        });
+      }
     }
 
     const existingUser = await prisma.user.findFirst({
@@ -205,4 +210,9 @@ async function validateSlackUser(slackId: string): Promise<SlackValidationResult
       status: 502,
     };
   }
+}
+
+async function checkIfBypass(email: string): Promise<boolean> {
+  const user = await prisma.user.findFirst({ where: { email } });
+  return user?.bypassVerification ?? false;
 }

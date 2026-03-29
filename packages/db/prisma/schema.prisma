@@ -24,6 +24,7 @@ model User {
 
   hackClubVerificationResult    String?
   hackClubVerificationCheckedAt DateTime?
+  bypassVerification            Boolean @default(false)
 
   hasOnboarded Boolean @default(false)
   isAdmin      Boolean @default(false)
@@ -311,6 +312,8 @@ enum AdminAuditAction {
   REPORT_REVIEWED
   REPORT_DISMISSED
   REPORT_ENFORCEMENT
+  BYPASS_VERIFICATION_ENABLED
+  BYPASS_VERIFICATION_DISABLED
 }
 
 enum ChatModerationAction {

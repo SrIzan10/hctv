@@ -34,6 +34,7 @@ import {
   Activity,
   Hash,
   ShieldAlert,
+  Settings,
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
@@ -51,9 +52,7 @@ import { cn } from '@/lib/utils';
 import { parseAsString, useQueryState } from 'nuqs';
 import { useRouter } from 'next/navigation';
 
-// ─── Constants ───────────────────────────────────────────────────────────────
-
-const ADMIN_TABS = ['users', 'channels', 'audit', 'reports'] as const;
+const ADMIN_TABS = ['users', 'channels', 'audit', 'reports', 'settings'] as const;
 type AdminTab = (typeof ADMIN_TABS)[number];
 
 const NAV_ITEMS: Array<{ id: AdminTab; label: string; icon: React.ReactNode }> = [
@@ -61,9 +60,9 @@ const NAV_ITEMS: Array<{ id: AdminTab; label: string; icon: React.ReactNode }> =
   { id: 'channels', label: 'Channels', icon: <Tv className="h-4 w-4" /> },
   { id: 'audit', label: 'Audit Log', icon: <ClipboardList className="h-4 w-4" /> },
   { id: 'reports', label: 'Reports', icon: <Flag className="h-4 w-4" /> },
+  { id: 'settings', label: 'Settings', icon: <Settings className="h-4 w-4" /> },
 ];
 
-// Audit action colour coding
 const AUDIT_SOURCE_DOT: Record<string, string> = {
   platform: 'bg-primary',
   chat: 'bg-amber-500',
@@ -83,6 +82,8 @@ const AUDIT_ACTION_COLOR: Record<string, string> = {
   TIMEOUT_USER: 'text-amber-500',
   BAN_FROM_CHAT: 'text-destructive',
   LIFT_CHAT_BAN: 'text-green-600 dark:text-green-400',
+  BYPASS_VERIFICATION_ENABLED: 'text-green-600 dark:text-green-400',
+  BYPASS_VERIFICATION_DISABLED: 'text-amber-500',
 };
 
 const REPORT_STATUS_CONFIG = {
@@ -117,8 +118,6 @@ const LAST_ACTION_LABELS: Record<string, string> = {
   BAN_PLATFORM: 'Platform banned',
   UNBAN_PLATFORM: 'Platform unbanned',
 };
-
-// ─── Small helpers ───────────────────────────────────────────────────────────
 
 function SectionHeader({
   icon,
@@ -167,8 +166,6 @@ function LoadingRows({ cols }: { cols: number }) {
     </div>
   );
 }
-
-// ─── Date/time picker shared component ──────────────────────────────────────
 
 function DateTimePicker({
   value,
@@ -233,8 +230,6 @@ function DateTimePicker({
     </div>
   );
 }
-
-// ─── Main component ──────────────────────────────────────────────────────────
 
 export default function AdminPanelClient({ currentUser }: AdminPanelClientProps) {
   const confirm = useConfirm();
@@ -317,8 +312,6 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
     }
   }, []);
 
-  // ── Effects ────────────────────────────────────────────────────────────────
-
   useEffect(() => {
     if (tabParam && ADMIN_TABS.includes(tabParam as AdminTab)) {
       setActiveTab(tabParam as AdminTab);
@@ -356,8 +349,6 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
     const timer = setTimeout(() => fetchChannels(channelSearch), 300);
     return () => clearTimeout(timer);
   }, [channelSearch, fetchChannels]);
-
-  // ── Actions ────────────────────────────────────────────────────────────────
 
   const resetDialogState = () => {
     setReason('');
@@ -502,6 +493,26 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
     }
   };
 
+  const handleToggleBypassVerification = async (userId: string) => {
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, action: 'toggle_bypass_verification' }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(data.message);
+        fetchUsers(userSearch);
+        fetchAuditLogs();
+      } else {
+        toast.error((await res.text()) || 'Failed to toggle bypass verification');
+      }
+    } catch {
+      toast.error('Failed to toggle bypass verification');
+    }
+  };
+
   const handleLogoutOthers = async () => {
     const confirmed = await confirm({
       title: 'Log Out Everyone Else',
@@ -540,11 +551,7 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
     }
   };
 
-  // ── Derived stats ─────────────────────────────────────────────────────────
-
   const openReports = reports.filter((r) => r.status === 'OPEN').length;
-
-  // ── Tab switch helper ─────────────────────────────────────────────────────
 
   const switchTab = async (tab: AdminTab) => {
     setActiveTab(tab);
@@ -554,8 +561,6 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
       setHighlightReportId(null);
     }
   };
-
-  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen">
@@ -577,17 +582,6 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
             </div>
 
             <div className="flex flex-col items-end gap-3">
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleLogoutOthers}
-                disabled={loggingOutOthers}
-                className="gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                {loggingOutOthers ? 'Logging out others...' : 'Log everyone else out'}
-              </Button>
-
               <div className="hidden sm:flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1.5">
                 <StatPill icon={<Users className="h-3 w-3" />} label={`${users.length} users`} />
                 <span className="text-border mx-1">|</span>
@@ -1193,6 +1187,175 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
                   </div>
                 )}
               </div>
+						)}
+            
+						{activeTab === 'settings' && (
+							<div>
+                <SectionHeader
+                  icon={<Settings className="h-4 w-4" />}
+                  title="Platform Settings"
+                  description="Manage verification bypass and platform configuration."
+                />
+
+                <div className="space-y-5">
+                  <div className="rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background p-5 shadow-lg">
+                    <div className="mb-5 flex items-start gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 ring-2 ring-primary/20">
+                        <ShieldAlert className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-base font-bold tracking-tight">
+                          ID Verification Bypass
+                        </h3>
+                        <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
+                          Allow existing users to bypass HCA verification and let them access the platform.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="relative mb-4">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search by email or username to manage bypass…"
+                        value={userSearch}
+                        onChange={(e) => setUserSearch(e.target.value)}
+                        className="pl-10 h-9 bg-background/50 border-2 focus:border-primary/50 transition-colors"
+                      />
+                    </div>
+
+                    {usersLoading ? (
+                      <LoadingRows cols={1} />
+                    ) : !userSearch ? (
+                      <div className="rounded-lg border-2 border-dashed border-primary/20 bg-primary/5 p-6 text-center">
+                        <div className="mx-auto w-fit rounded-full bg-primary/10 p-3 mb-2">
+                          <Search className="h-5 w-5 text-primary" />
+                        </div>
+                        <p className="text-sm font-medium text-foreground mb-1">
+                          Start searching to manage users
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Type an email or username above to find users and toggle their verification bypass
+                        </p>
+                      </div>
+                    ) : users.length === 0 ? (
+                      <div className="rounded-lg border-2 border-dashed border-border bg-muted/30 p-6 text-center">
+                        <XCircle className="mx-auto h-8 w-8 text-muted-foreground/50 mb-2" />
+                        <p className="text-sm font-medium text-foreground mb-1">No users found</p>
+                        <p className="text-xs text-muted-foreground">
+                          Try a different search term
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="space-y-2 mb-3">
+                          {users.map((user) => (
+                            <div
+                              key={user.id}
+                              className={cn(
+                                'group relative overflow-hidden rounded-lg border-2 bg-card transition-all duration-200',
+                                user.bypassVerification
+                                  ? 'border-primary/40 bg-primary/5 hover:border-primary/50 hover:shadow-md hover:shadow-primary/5'
+                                  : 'border-border hover:border-primary/30 hover:shadow-sm'
+                              )}
+                            >
+                              <div className="flex items-center gap-3 px-3 py-2.5">
+                                <Avatar className="h-9 w-9 shrink-0 ring-2 ring-background">
+                                  <AvatarImage src={user.pfpUrl} />
+                                  <AvatarFallback className="text-xs font-semibold">
+                                    {user.personalChannel?.name?.[0]?.toUpperCase() ?? 'U'}
+                                  </AvatarFallback>
+                                </Avatar>
+
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                                    <span className="font-semibold text-sm">
+                                      {user.personalChannel?.name ?? user.slack_id}
+                                    </span>
+                                    {user.isAdmin && (
+                                      <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/30">
+                                        <Shield className="h-2.5 w-2.5" />
+                                        Admin
+                                      </span>
+                                    )}
+                                    {user.bypassVerification && (
+                                      <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/30 animate-in fade-in zoom-in duration-200">
+                                        <CheckCircle2 className="h-2.5 w-2.5" />
+                                        Bypass Active
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-muted-foreground truncate">
+                                    {user.email ?? 'No email'}
+                                  </p>
+                                </div>
+
+                                <Button
+                                  variant={user.bypassVerification ? 'outline' : 'default'}
+                                  size="sm"
+                                  onClick={() => handleToggleBypassVerification(user.id)}
+                                  className={cn(
+                                    'h-7 text-xs gap-1 shrink-0 font-semibold transition-all duration-200',
+                                    user.bypassVerification && 'border-primary/30 hover:bg-primary/10 hover:border-primary/50'
+                                  )}
+                                >
+                                  {user.bypassVerification ? (
+                                    <>
+                                      <XCircle className="h-3 w-3" />
+                                      Disable
+                                    </>
+                                  ) : (
+                                    <>
+                                      <CheckCircle2 className="h-3 w-3" />
+                                      Enable
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+
+                              {user.bypassVerification && (
+                                <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-primary/0 via-primary/50 to-primary/0" />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="rounded-xl border-2 border-border bg-card p-4 shadow-lg">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted ring-2 ring-border">
+                        <LogOut className="h-5 w-5 text-foreground" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-base font-bold tracking-tight">Session Management</h3>
+                        <p className="mt-0.5 text-xs text-muted-foreground mb-3 leading-relaxed">
+                          Force logout all other sessions except your current one. Useful for security maintenance.
+                        </p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleLogoutOthers}
+                          disabled={loggingOutOthers}
+                          className="h-7 gap-1.5 font-semibold text-xs"
+                        >
+                          {loggingOutOthers ? (
+                            <>
+                              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                              Logging out...
+                            </>
+                          ) : (
+                            <>
+                              <LogOut className="h-3.5 w-3.5" />
+                              Logout All Other Sessions
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>
@@ -1331,6 +1494,7 @@ interface UserWithBan {
   email: string | null;
   pfpUrl: string;
   isAdmin: boolean;
+  bypassVerification: boolean;
   ban: {
     id: string;
     reason: string;
