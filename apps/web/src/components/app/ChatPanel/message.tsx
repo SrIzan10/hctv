@@ -73,13 +73,25 @@ function UsernameRow({ user, displayName }: { user?: User; displayName?: string 
 
   return (
     <TooltipProvider>
-      {user?.isBot && <TooltipIcon icon={Bot} label="Bot" className="text-muted-foreground mr-[0.3em]" />}
-      {role && <TooltipIcon icon={role.icon} label={role.label} className={cn(role.className, "mr-[0.3em]")} />}
+      {user?.isBot && (
+        <TooltipIcon icon={Bot} label="Bot" className="text-muted-foreground mr-[0.3em]" />
+      )}
+      {role && (
+        <TooltipIcon
+          icon={role.icon}
+          label={role.label}
+          className={cn(role.className, 'mr-[0.3em]')}
+        />
+      )}
       {user?.isPlatformAdmin && (
-        <TooltipIcon icon={ShieldAlert} label="Platform Admin" className="text-destructive mr-[0.3em]" />
+        <TooltipIcon
+          icon={ShieldAlert}
+          label="Platform Admin"
+          className="text-destructive mr-[0.3em]"
+        />
       )}
       <span className="font-semibold text-primary">{displayName}</span>
-      <span className="font-normal text-muted-foreground select-none">:{' '}</span>
+      <span className="font-normal text-muted-foreground select-none">: </span>
     </TooltipProvider>
   );
 }
@@ -116,7 +128,7 @@ function ReportDialog({
           <div className="text-sm text-muted-foreground rounded-md border p-3 bg-muted/30">
             <p className="font-medium text-foreground mb-1">Reported user</p>
             <p>{displayName}</p>
-            <p className="mt-2">{message}</p>
+            <p className="mt-2 whitespace-pre-wrap break-words">{message}</p>
           </div>
           <div>
             <label className="text-sm font-medium">Reason</label>
@@ -221,7 +233,9 @@ export function Message({
             style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}
           >
             <UsernameRow user={user} displayName={displayName} />
-            <EmojiRenderer text={message} emojiMap={emojiMap} />
+            <span className="whitespace-pre-wrap break-words">
+              <EmojiRenderer text={message} emojiMap={emojiMap} />
+            </span>
           </div>
           {type === 'message' && user?.id && (
             <MessageActionsMenu
