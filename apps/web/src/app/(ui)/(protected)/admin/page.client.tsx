@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Separator } from '@/components/ui/separator';
 import {
   Users,
   Tv,
@@ -256,8 +255,6 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
   const [selectedChannel, setSelectedChannel] = useState<ChannelWithRestriction | null>(null);
   const [reason, setReason] = useState('');
   const [expiresAt, setExpiresAt] = useState<Date | undefined>(undefined);
-
-  // ── Data fetchers ──────────────────────────────────────────────────────────
 
   const fetchUsers = useCallback(async (search: string) => {
     setUsersLoading(true);

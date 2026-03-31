@@ -31,6 +31,7 @@ export const lucia = new Lucia(adapter, {
       pfpUrl: attributes.pfpUrl,
       hackClubVerificationResult: attributes.hackClubVerificationResult,
       hackClubVerificationCheckedAt: attributes.hackClubVerificationCheckedAt,
+      bypassVerification: attributes.bypassVerification,
       hasOnboarded: attributes.hasOnboarded,
       personalChannelId: attributes.personalChannelId,
       isAdmin: attributes.isAdmin,
@@ -51,6 +52,7 @@ interface DatabaseUserAttributes {
   pfpUrl: string;
   hackClubVerificationResult: string | null;
   hackClubVerificationCheckedAt: Date | null;
+  bypassVerification: boolean;
   hasOnboarded: boolean;
   personalChannelId: string | null;
   isAdmin: boolean;
