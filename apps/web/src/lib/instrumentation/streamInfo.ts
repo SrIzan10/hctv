@@ -141,7 +141,13 @@ export async function syncStream() {
       for (const [username, regionKey] of allActiveStreams) {
         const existingStream = await prisma.streamInfo.findUnique({
           where: { username },
-          include: { channel: true },
+          include: {
+            channel: {
+              include: {
+                owner: true,
+              },
+            },
+          },
         });
 
         if (existingStream && !existingStream.isLive) {
@@ -173,6 +179,20 @@ export async function syncStream() {
               channel: process.env.NOTIFICATION_CHANNEL_ID!,
               unfurl_links: true,
             });
+
+            for (const channelId of existingStream.channel.notifChannels) {
+              queue.add(`streamStartChannel:${existingStream.username}`, {
+                text: `${existingStream.username} is now *live*, streaming *${existingStream.title}* (${existingStream.category})!\n<https://hackclub.tv/${existingStream.username}|Go check them out>`,
+                channel: channelId,
+                unfurl_links: true,
+                metadata: {
+                  type: 'custom_stream_announcement',
+                  managedChannelId: existingStream.channel.id,
+                  ownerSlackId: existingStream.channel.owner.slack_id,
+                  ownerChannelName: existingStream.channel.name,
+                },
+              });
+            }
           }
 
           if (existingStream.enableNotifications && !existingStream.channel.is247) {

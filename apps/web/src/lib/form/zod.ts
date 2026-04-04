@@ -59,21 +59,20 @@ export const changeUsernameSchema = z.object({
   newUsername: username,
 });
 
-const notificationChannelsSchema: z.ZodType<string[], z.ZodTypeDef, string | string[]> =
-  z.preprocess(
-    (value) => {
-      if (typeof value === 'string') {
-        return value
-          .replace(/\r\n/g, '\n')
-          .split('\n')
-          .map((channel) => channel.trim())
-          .filter(Boolean);
-      }
+const notificationChannelsSchema = z
+  .union([z.string(), z.array(z.string())])
+  .transform((value) => {
+    if (typeof value === 'string') {
+      return value
+        .replace(/\r\n/g, '\n')
+        .split('\n')
+        .map((channel) => channel.trim())
+        .filter(Boolean);
+    }
 
-      return value;
-    },
-    z.array(z.string()).max(10)
-  );
+    return value.map((channel) => channel.trim()).filter(Boolean);
+  })
+  .pipe(z.array(z.string()).max(10));
 
 export const updateNotificationChannelsSchema = z.object({
   channelId: z.string().min(1),

@@ -1109,7 +1109,7 @@ export default function ChannelSettingsClient({
                           <label className="block text-sm font-medium mb-1">
                             Notification channels
                           </label>
-                          <Textarea
+                      <Textarea
                             name={field.name}
                             ref={field.ref}
                             value={
@@ -1119,13 +1119,20 @@ export default function ChannelSettingsClient({
                                   ? field.value.join('\n')
                                   : ''
                             }
+                            disabled={channel.is247}
                             rows={4}
-                            placeholder="Enter channel IDs, one per line"
+                            placeholder={
+                              channel.is247
+                                ? 'Notifications are disabled for 24/7 channels'
+                                : 'Enter channel IDs, one per line'
+                            }
                             onBlur={field.onBlur}
                             onChange={field.onChange}
                           />
                           <p className="text-xs text-muted-foreground mt-1">
-                            Enter one channel ID per line. You can find channel IDs in their URLs.
+                            {channel.is247
+                              ? '24/7 channels do not send go-live notifications, so notification channels cannot be edited.'
+                              : 'Enter one channel ID per line. You can find channel IDs in their URLs.'}
                           </p>
                         </div>
                       ),
