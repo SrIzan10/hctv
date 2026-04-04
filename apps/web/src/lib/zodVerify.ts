@@ -1,6 +1,6 @@
 'use server';
 
-import { ZodType } from 'zod';
+import { z } from 'zod';
 
 type SuccessResult<T> = {
   success: true;
@@ -14,7 +14,10 @@ type ErrorResult = {
 
 type VerifyResult<T> = SuccessResult<T> | ErrorResult;
 
-export default async function zodVerify<T>(schema: ZodType<T>, data: FormData | Object): Promise<VerifyResult<T>> {
+export default async function zodVerify<TSchema extends z.ZodTypeAny>(
+  schema: TSchema,
+  data: FormData | Object
+): Promise<VerifyResult<z.output<TSchema>>> {
   let obj: any = data;
   if (data instanceof FormData) {
     obj = Object.fromEntries(data.entries());

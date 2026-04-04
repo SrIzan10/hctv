@@ -51,3 +51,5 @@ slack-import-emojis/target
 .idea
 
 /apps/docs/src/content/docs/typedoc-sdk
+
+.codex

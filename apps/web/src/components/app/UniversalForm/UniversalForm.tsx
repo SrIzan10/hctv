@@ -28,6 +28,7 @@ import {
   streamInfoEditSchema,
   updateChatModerationSchema,
   updateChannelSettingsSchema,
+  updateNotificationChannelsSchema,
 } from '@/lib/form/zod';
 
 export const schemaDb = [
@@ -39,6 +40,7 @@ export const schemaDb = [
   { name: 'editBot', zod: editBotSchema },
   { name: 'changeUsername', zod: changeUsernameSchema },
   { name: 'updateChatModeration', zod: updateChatModerationSchema },
+  { name: 'updateNotificationChannels', zod: updateNotificationChannelsSchema },
 ] as const;
 
 export function UniversalForm<T extends z.ZodType>({

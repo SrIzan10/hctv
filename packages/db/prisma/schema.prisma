@@ -57,6 +57,7 @@ model Channel {
   name        String @unique
   description String @default("A hctv channel")
   pfpUrl      String
+  notifChannels String[] @default([])
 
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt

@@ -39,6 +39,7 @@ import {
   editStreamInfo,
   changeUsername,
   updateChatModeration,
+  updateNotificationChannels,
 } from '@/lib/form/actions';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
@@ -80,6 +81,7 @@ import {
 } from '@/components/ui/select';
 import { getMediamtxClientEnvs } from '@/lib/utils/mediamtx/client';
 import type { MediaMTXRegion } from '@/lib/utils/mediamtx/regions';
+import { Textarea } from '@/components/ui/textarea';
 
 interface ChannelSettingsClientProps {
   channel: Channel & {
@@ -107,7 +109,6 @@ interface ChannelSettingsClientProps {
 export default function ChannelSettingsClient({
   channel,
   isOwner,
-  currentUser,
   isPersonal,
 }: ChannelSettingsClientProps) {
   const confirm = useConfirm();
@@ -140,6 +141,12 @@ export default function ChannelSettingsClient({
   const handleModerationActionComplete = useCallback((result: any) => {
     if (result?.success) {
       toast.success('Moderation settings updated');
+    }
+  }, []);
+
+  const handleNotifChannelsActionComplete = useCallback((result: any) => {
+    if (result?.success) {
+      toast.success('Notification channels updated');
     }
   }, []);
 
@@ -276,9 +283,9 @@ export default function ChannelSettingsClient({
             <MessageSquareWarning className="h-4 w-4" />
             Moderation
           </TabsTrigger>
-          <TabsTrigger value="utilities" className="flex items-center gap-2">
+          <TabsTrigger value="integrations" className="flex items-center gap-2">
             <Wrench className="size-4" />
-            Utilities
+            Integrations
           </TabsTrigger>
         </TabsList>
 
@@ -1053,11 +1060,13 @@ export default function ChannelSettingsClient({
             </CardContent>
           </Card>
         </TabsContent>
-        <TabsContent value="utilities">
+        <TabsContent value="integrations">
           <Card>
             <CardHeader>
-              <CardTitle>Utilities</CardTitle>
-              <CardDescription>OBS overlays, APIs... everything in one neat place!</CardDescription>
+              <CardTitle>Integrations</CardTitle>
+              <CardDescription>
+                OBS overlays, Slack... everything in one neat place!
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
@@ -1075,11 +1084,58 @@ export default function ChannelSettingsClient({
                         className="w-full px-3 py-2 border rounded-md bg-mantle font-mono text-sm"
                       />
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => setKeyVisible(!keyVisible)}>
-                      {keyVisible ? 'Hide' : 'Show'}
+                    <Button
+                      variant="outline"
+                      size="smicon"
+                      onClick={() => setKeyVisible(!keyVisible)}
+                    >
+                      {keyVisible ? <EyeOff /> : <Eye />}
                     </Button>
                   </div>
                 </div>
+                <UniversalForm
+                  fields={[
+                    { name: 'channelId', type: 'hidden', value: channel.id, label: 'Channel ID' },
+                    {
+                      name: 'channels',
+                      label: 'Notification channels',
+                      value: channel.notifChannels.join('\n'),
+                      textArea: true,
+                      textAreaRows: 4,
+                      description:
+                        'One channel ID per line. These channels will receive notifications when you go live.',
+                      component: ({ field }) => (
+                        <div>
+                          <label className="block text-sm font-medium mb-1">
+                            Notification channels
+                          </label>
+                          <Textarea
+                            name={field.name}
+                            ref={field.ref}
+                            value={
+                              typeof field.value === 'string'
+                                ? field.value
+                                : Array.isArray(field.value)
+                                  ? field.value.join('\n')
+                                  : ''
+                            }
+                            rows={4}
+                            placeholder="Enter channel IDs, one per line"
+                            onBlur={field.onBlur}
+                            onChange={field.onChange}
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Enter one channel ID per line. You can find channel IDs in their URLs.
+                          </p>
+                        </div>
+                      ),
+                    },
+                  ]}
+                  schemaName="updateNotificationChannels"
+                  action={updateNotificationChannels}
+                  submitText="Save notification channels"
+                  onActionComplete={handleNotifChannelsActionComplete}
+                />
               </div>
             </CardContent>
           </Card>
