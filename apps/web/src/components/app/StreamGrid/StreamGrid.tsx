@@ -21,11 +21,30 @@ interface StreamGridProps {
 }
 
 export default function StreamGrid({ liveStreams, offlineStreams }: StreamGridProps) {
-  const sortedLiveStreams = [...liveStreams].sort((a, b) => b.viewers - a.viewers);
+  const sortedLiveStreams = liveStreams
+    .filter((stream) => !stream.channel.is247)
+    .sort((a, b) => b.viewers - a.viewers);
+  const alwaysOnStreams = [...liveStreams, ...offlineStreams]
+    .filter((stream) => stream.channel.is247)
+    .sort((a, b) => {
+      if (a.isLive !== b.isLive) {
+        return Number(b.isLive) - Number(a.isLive);
+      }
+
+      if (a.viewers !== b.viewers) {
+        return b.viewers - a.viewers;
+      }
+
+      return a.channel.name.localeCompare(b.channel.name);
+    });
+  const sortedOfflineStreams = offlineStreams
+    .filter((stream) => !stream.channel.is247)
+    .sort((a, b) => a.channel.name.localeCompare(b.channel.name));
+  const hasVisibleLiveStreams = sortedLiveStreams.length > 0 || alwaysOnStreams.some((stream) => stream.isLive);
 
   return (
     <div className="space-y-8 md:space-y-10 min-w-0">
-      {sortedLiveStreams.length === 0 && (
+      {!hasVisibleLiveStreams && (
         <div className="flex flex-col items-center gap-4 py-10 text-center">
           <ConfusedDino className="h-24 w-24 opacity-70" />
           <div className="space-y-1">
@@ -52,13 +71,24 @@ export default function StreamGrid({ liveStreams, offlineStreams }: StreamGridPr
         </section>
       )}
 
-      {offlineStreams.length > 0 && (
-        <section className="w-full min-w-0"> 
-          <SectionHeading label="Offline channels" count={offlineStreams.length} />
+      {alwaysOnStreams.length > 0 && (
+        <section>
+          <SectionHeading label="24/7 channels" count={alwaysOnStreams.length} />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+            {alwaysOnStreams.map((stream) => (
+              <StreamCard key={stream.id} stream={stream} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {sortedOfflineStreams.length > 0 && (
+        <section className="w-full min-w-0">
+          <SectionHeading label="Offline channels" count={sortedOfflineStreams.length} />
           <div className="px-10">
             <Carousel className="w-full max-w-full" opts={{ dragFree: true, containScroll: 'trimSnaps' }}>
               <CarouselContent className="-ml-2">
-                {offlineStreams.map((stream) => (
+                {sortedOfflineStreams.map((stream) => (
                   <CarouselItem key={stream.id} className="basis-auto pl-2 md:pl-3">
                     <OfflineCard stream={stream} />
                   </CarouselItem>
@@ -87,12 +117,16 @@ function StreamCard({ stream }: { stream: StreamWithChannel }) {
             decoding="async"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-          <div className="absolute bottom-1.5 left-1.5 md:bottom-2 md:left-2">
-            <LiveBadge small />
-          </div>
-          <div className="absolute bottom-1.5 right-1.5 md:bottom-2 md:right-2">
-            <ViewerCount count={stream.viewers} small />
-          </div>
+          {stream.isLive && (
+            <>
+              <div className="absolute bottom-1.5 left-1.5 md:bottom-2 md:left-2">
+                <LiveBadge small />
+              </div>
+              <div className="absolute bottom-1.5 right-1.5 md:bottom-2 md:right-2">
+                <ViewerCount count={stream.viewers} small />
+              </div>
+            </>
+          )}
         </div>
         <div className="flex items-start gap-2 p-2 md:gap-3 md:p-3">
           <Avatar className="h-7 w-7 shrink-0 ring-1 ring-primary/20 md:h-8 md:w-8">

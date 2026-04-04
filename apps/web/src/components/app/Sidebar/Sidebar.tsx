@@ -25,8 +25,9 @@ export default function Sidebar({ ...props }: React.ComponentProps<typeof UISide
 
   if (isLoading) return <SidebarSkeleton {...props} />;
 
-  const liveStreamers = stream?.filter((s) => s.isLive) || [];
-  const offlineStreamers = stream?.filter((s) => !s.isLive) || [];
+  const alwaysOnStreamers = stream?.filter((s) => s.channel.is247) || [];
+  const liveStreamers = stream?.filter((s) => s.isLive && !s.channel.is247) || [];
+  const offlineStreamers = stream?.filter((s) => !s.isLive && !s.channel.is247) || [];
 
   return (
     <UISidebar collapsible="icon" {...props}>
@@ -49,6 +50,31 @@ export default function Sidebar({ ...props }: React.ComponentProps<typeof UISide
                 </div>
               )}
               {liveStreamers.map((streamer) => (
+                <StreamerItem key={streamer.id} streamer={streamer} isCollapsed={isCollapsed} />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <Separator className="group-data-[collapsible=icon]:block hidden" />
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="flex items-center justify-between px-2 py-1.5">
+            <span className="text-xs font-semibold uppercase text-muted-foreground group-data-[collapsible=icon]:opacity-0 transition-opacity duration-200">
+              24/7 Channels
+            </span>
+            <span className="text-xs text-muted-foreground group-data-[collapsible=icon]:opacity-0 transition-opacity duration-200">
+              {alwaysOnStreamers.length}
+            </span>
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {alwaysOnStreamers.length === 0 && !isCollapsed && (
+                <div className="px-4 py-2 text-sm text-muted-foreground">
+                  No 24/7 channels
+                </div>
+              )}
+              {alwaysOnStreamers.map((streamer) => (
                 <StreamerItem key={streamer.id} streamer={streamer} isCollapsed={isCollapsed} />
               ))}
             </SidebarMenu>
