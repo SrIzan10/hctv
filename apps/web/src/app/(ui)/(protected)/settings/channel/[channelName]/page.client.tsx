@@ -1102,13 +1102,8 @@ export default function ChannelSettingsClient({
                       value: channel.notifChannels.join('\n'),
                       textArea: true,
                       textAreaRows: 4,
-                      description:
-                        'One channel ID per line. These channels will receive notifications when you go live.',
                       component: ({ field }) => (
                         <div>
-                          <label className="block text-sm font-medium mb-1">
-                            Notification channels
-                          </label>
                       <Textarea
                             name={field.name}
                             ref={field.ref}
