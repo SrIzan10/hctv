@@ -25,9 +25,9 @@ export default function Sidebar({ ...props }: React.ComponentProps<typeof UISide
 
   if (isLoading) return <SidebarSkeleton {...props} />;
 
-  const alwaysOnStreamers = stream?.filter((s) => s.channel.is247) || [];
+  const alwaysOnStreamers = stream?.filter((s) => s.isLive && s.channel.is247) || [];
   const liveStreamers = stream?.filter((s) => s.isLive && !s.channel.is247) || [];
-  const offlineStreamers = stream?.filter((s) => !s.isLive && !s.channel.is247) || [];
+  const offlineStreamers = stream?.filter((s) => !s.isLive) || [];
 
   return (
     <UISidebar collapsible="icon" {...props}>

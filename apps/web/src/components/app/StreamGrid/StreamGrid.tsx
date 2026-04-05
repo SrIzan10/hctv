@@ -25,7 +25,7 @@ export default function StreamGrid({ liveStreams, offlineStreams }: StreamGridPr
     .filter((stream) => !stream.channel.is247)
     .sort((a, b) => b.viewers - a.viewers);
   const alwaysOnStreams = [...liveStreams, ...offlineStreams]
-    .filter((stream) => stream.channel.is247)
+    .filter((stream) => stream.isLive && stream.channel.is247)
     .sort((a, b) => {
       if (a.isLive !== b.isLive) {
         return Number(b.isLive) - Number(a.isLive);
@@ -38,7 +38,6 @@ export default function StreamGrid({ liveStreams, offlineStreams }: StreamGridPr
       return a.channel.name.localeCompare(b.channel.name);
     });
   const sortedOfflineStreams = offlineStreams
-    .filter((stream) => !stream.channel.is247)
     .sort((a, b) => a.channel.name.localeCompare(b.channel.name));
   const hasVisibleLiveStreams = sortedLiveStreams.length > 0 || alwaysOnStreams.some((stream) => stream.isLive);
 
