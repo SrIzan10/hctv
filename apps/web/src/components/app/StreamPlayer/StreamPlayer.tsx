@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { useSession } from '@/lib/providers/SessionProvider';
 import { useUserStreamInfo } from '@/lib/hooks/useUserList';
 import { getMediamtxClientEnvs } from '@/lib/utils/mediamtx/client';
-import type { MediaMTXRegion } from '@/lib/utils/mediamtx/client';
+import type { MediaMTXRegion } from '@/lib/utils/mediamtx/regions';
 
 const WAITING_RECOVERY_DELAY_MS = 8000;
 const RECOVERY_COOLDOWN_MS = 2000;
