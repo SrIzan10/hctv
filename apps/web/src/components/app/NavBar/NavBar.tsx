@@ -15,13 +15,21 @@ import { logout } from '@/lib/auth/actions';
 import { useSession } from '@/lib/providers/SessionProvider';
 import Link from 'next/link';
 import { ThemeSwitcher } from '../ThemeSwitcher/ThemeSwitcher';
-import { IdCard, Shield } from 'lucide-react';
+import { IdCard, Shield, Settings, Users, PenSquare, LogOut, Code, Github, Heart } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import Image from 'next/image';
-import Logo from '../../../logo.webp';
+import Logo from '@/lib/assets/logo.webp';
+import { usePersonalChannels } from '@/lib/hooks/useUserList';
 
 export default function Navbar(props: Props) {
   const { user } = useSession();
+  const { channels: personalChannels } = usePersonalChannels();
+  const personalChannel = personalChannels.find((channel) => channel.channelId === user?.personalChannelId);
+  const username = personalChannel?.username || 'not-onboarded';
+  
+  const menuItemClass = "cursor-pointer rounded-lg px-3 py-2 text-sm font-medium hover:bg-primary/10 focus:bg-primary/10 hover:text-primary focus:text-primary";
+  const iconClass = "w-4 h-4 mr-3 text-muted-foreground";
+
   return (
     <>
       <nav className="flex items-center justify-between h-14 md:h-16 px-2 md:px-4 border-b gap-1 md:gap-3 w-full z-40 fixed top-0 left-0 shadow-md bg-mantle">
@@ -50,71 +58,108 @@ export default function Navbar(props: Props) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild className="cursor-pointer">
                 <Avatar className="h-8 w-8 md:h-10 md:w-10">
-                  <AvatarImage src={user.pfpUrl} alt={`@${user.id}`} />
+                  <AvatarImage src={user.pfpUrl} alt={`@${username || '(not onboarded)'}`} />
                   <AvatarFallback>{user.pfpUrl}</AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
+              <DropdownMenuContent className="w-64 mt-2 p-2 rounded-xl border-border/50 shadow-xl backdrop-blur-xl bg-mantle/95" align="end" sideOffset={5}>
+                <div className="flex items-center gap-3 p-2 mb-2">
+                  <Avatar className="h-10 w-10 border border-border/50">
+                    <AvatarImage src={user.pfpUrl} alt={`@${username}`} />
+                    <AvatarFallback>{username[0]?.toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col space-y-0.5">
+                    <p className="text-sm font-semibold tracking-tight text-foreground">@{username}</p>
+                    <p className="text-xs text-muted-foreground truncate max-w-[140px]">Manage your account</p>
+                  </div>
+                </div>
+                <DropdownMenuSeparator className="bg-border/40 mb-2" />
+                
+                <DropdownMenuGroup className="space-y-1">
                   <Link href={`/settings/follows`}>
-                    <DropdownMenuItem className="cursor-pointer">Follows</DropdownMenuItem>
+                    <DropdownMenuItem className={menuItemClass}>
+                      <Users className={iconClass} />
+                      Follows
+                    </DropdownMenuItem>
                   </Link>
                   <Link href={`/settings/channel/create`}>
-                    <DropdownMenuItem className="cursor-pointer">Create channel</DropdownMenuItem>
+                    <DropdownMenuItem className={menuItemClass}>
+                      <PenSquare className={iconClass} />
+                      Create channel
+                    </DropdownMenuItem>
                   </Link>
                   <Link href={`/settings/bot`}>
-                    <DropdownMenuItem className="cursor-pointer">Bot accounts</DropdownMenuItem>
+                    <DropdownMenuItem className={menuItemClass}>
+                      <Settings className={iconClass} />
+                      Bot accounts
+                    </DropdownMenuItem>
                   </Link>
+                  
                   {user.isAdmin && (
-                    <>
-                      <DropdownMenuSeparator />
+                    <div>
+                      <DropdownMenuSeparator className="bg-border/40 my-2" />
                       <Link href={`/admin`}>
-                        <DropdownMenuItem className="cursor-pointer text-primary">
-                          <Shield className="w-4 h-4 mr-2" />
+                        <DropdownMenuItem className={`${menuItemClass} text-primary hover:text-primary`}>
+                          <Shield className={`w-4 h-4 mr-3 text-primary`} />
                           Admin Panel
                         </DropdownMenuItem>
                       </Link>
-                    </>
+                    </div>
                   )}
-                  <DropdownMenuSeparator />
+                </DropdownMenuGroup>
+                
+                <DropdownMenuSeparator className="bg-border/40 my-2" />
+                
+                <DropdownMenuGroup className="space-y-1">
                   <Link href={'https://docs.hackclub.tv'} target="_blank" rel="noreferrer">
-                    <DropdownMenuItem className="cursor-pointer">API Docs</DropdownMenuItem>
+                    <DropdownMenuItem className={menuItemClass}>
+                      <Code className={iconClass} />
+                      API Docs
+                    </DropdownMenuItem>
                   </Link>
-                  <Link href={'https://github.com/SrIzan10/hctv'} target="_blank" rel="noreferrer">
-                    <DropdownMenuItem className="cursor-pointer">Github</DropdownMenuItem>
-                  </Link>
-                  <Link href={'https://github.com/sponsors/SrIzan10'} target="_blank" rel="noreferrer">
-                    <DropdownMenuItem className="cursor-pointer">Sponsor</DropdownMenuItem>
-                  </Link>
+                  <div className="grid grid-cols-2 gap-1">
+                    <Link href={'https://github.com/SrIzan10/hctv'} target="_blank" rel="noreferrer">
+                      <DropdownMenuItem className={`${menuItemClass} justify-center text-xs`}>
+                        <Github className="w-3.5 h-3.5 mr-1.5" />
+                        Github
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link href={'https://github.com/sponsors/SrIzan10'} target="_blank" rel="noreferrer">
+                      <DropdownMenuItem className={`${menuItemClass} justify-center text-xs text-pink-500 hover:text-pink-500 hover:bg-pink-500/10 focus:bg-pink-500/10`}>
+                        <Heart className="w-3.5 h-3.5 mr-1.5" />
+                        Sponsor
+                      </DropdownMenuItem>
+                    </Link>
+                  </div>
                 </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  <DropdownMenuItem
-                    className="cursor-pointer"
-                    onClick={() => {
-                      logout();
-                    }}
-                  >
-                    Sign out
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
+                
+                <DropdownMenuSeparator className="bg-border/40 my-2" />
+                
+                <div className="flex items-center justify-between px-1">
                   <ThemeSwitcher />
-                </DropdownMenuGroup>
-                <DropdownMenuGroup>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm px-2">
-                    v{process.env.version}-{process.env.NODE_ENV === 'development' ? 'dev' : 'prod'}, commit{' '}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="rounded-lg text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                    onClick={() => logout()}
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign out
+                  </Button>
+                </div>
+                
+                <div className="mt-2 pt-3 border-t border-border/40 px-2">
+                  <p className="text-[10px] text-muted-foreground/60 text-center font-mono">
+                    v{process.env.version}-{process.env.NODE_ENV === 'development' ? 'dev' : 'prod'} • {' '}
                     <Link
                       href={`https://github.com/SrIzan10/hctv/commit/${process.env.commit}`}
                       target="_blank"
+                      className="hover:text-primary underline decoration-border/50 underline-offset-2"
                     >
-                      {process.env.commit}
+                      {process.env.commit?.substring(0, 7) || 'unknown'}
                     </Link>
                   </p>
-                </DropdownMenuGroup>
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
