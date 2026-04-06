@@ -1089,7 +1089,7 @@ export default function ChannelSettingsClient({
                       size="smicon"
                       onClick={() => setKeyVisible(!keyVisible)}
                     >
-                      {keyVisible ? <EyeOff /> : <Eye />}
+                      {keyVisible ? <EyeOff className='size-4' /> : <Eye className='size-4' />}
                     </Button>
                   </div>
                 </div>
