@@ -7,6 +7,7 @@ import { useSession } from '@/lib/providers/SessionProvider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Tv, Heart, MessageSquare } from 'lucide-react';
 import Image from 'next/image';
+import BlahajHeart from '@/lib/assets/blahaj-heart.webp';
 
 export default function OnboardingClient() {
   const { user } = useSession();
@@ -31,7 +32,7 @@ export default function OnboardingClient() {
               Welcome to hackclub.tv!
             </h1>
             <p className="text-lg text-muted-foreground flex gap-2 justify-center">
-              Let&apos;s get you set up <Image src="https://emoji.slack-edge.com/T0266FRGM/blahaj-heart/db9adf8229e9a4fb.png" alt=":blahaj-heart:" width={24} height={24} />
+              Let&apos;s get you set up <Image src={BlahajHeart} alt=":blahaj-heart:" height={28} />
             </p>
           </div>
         </div>
