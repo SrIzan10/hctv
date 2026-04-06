@@ -188,13 +188,15 @@ export default function StreamPlayer() {
           autoplay
         />
         <MediaLoadingIndicator slot="centered-chrome" noAutohide />
-        <MediaControlBar className="w-full px-2">
-          <div className="flex items-center gap-2">
-            <MediaPlayButton />
-            <MediaMuteButton />
-            <MediaVolumeRange />
+        <MediaControlBar className="w-full px-2 sm:px-4 pb-1">
+          <div className="flex items-center gap-1 sm:gap-4">
+            <div className="flex items-center">
+              <MediaPlayButton />
+              <MediaMuteButton />
+              <MediaVolumeRange className="hidden sm:block opacity-80 hover:opacity-100 transition-opacity pl-4" />
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             {(process.env.NODE_ENV === 'development' || userInfo?.isLive) && (
               <MediaChromeButton onClick={() => triggerRecovery('manual_reload')}>
                 <span className="flex h-4 w-4 items-center justify-center">

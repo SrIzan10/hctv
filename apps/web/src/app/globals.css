@@ -148,58 +148,97 @@ h2 {
 
 media-controller {
   --media-primary-color: #ffffff;
-  --media-secondary-color: hsla(var(--background), 0.85);
-  --media-control-hover-background: hsla(var(--accent), 0.85);
-  --media-control-background: hsla(var(--secondary), 0.85);
-  --media-loading-icon-color: #ffffff;
-  border-radius: var(--radius);
+  --media-secondary-color: transparent;
+  --media-control-background: transparent;
+  --media-control-hover-background: hsla(var(--primary), 0.4);
+  
+  /* Range colors */
+  --media-range-track-background: hsla(0, 0%, 100%, 0.3);
+  --media-range-bar-color: hsl(var(--primary));
+  --media-range-thumb-background: hsl(var(--primary));
+  --media-range-thumb-border-radius: 50%;
+  --media-range-thumb-height: 12px;
+  --media-range-thumb-width: 12px;
+  --media-range-track-height: 4px;
+  
+  /* Layout & structure */
+  border-radius: calc(var(--radius) * 1.5);
   overflow: hidden;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid hsla(var(--border), 0.2);
+  background-color: #000;
+  box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3);
 }
 
 media-control-bar {
-  background-color: hsla(var(--background), 0.8);
-  backdrop-filter: blur(8px);
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
+  backdrop-filter: blur(4px);
+  -webkit-mask-image: linear-gradient(to top, black 50%, transparent 100%);
+  mask-image: linear-gradient(to top, black 50%, transparent 100%);
   width: 100%;
   box-sizing: border-box;
   justify-content: space-between;
+  padding: 2rem 0.75rem 0.75rem;
+  align-items: center;
 }
 
 media-time-range {
-  --media-range-track-height: 6px;
-  --media-range-thumb-height: 14px;
-  --media-range-thumb-width: 14px;
-  --media-range-thumb-border-radius: 50%;
-  --media-range-bar-color: #ffffff;
-  --media-range-thumb-background: #ffffff;
-  --media-preview-background: hsla(var(--card), 0.9);
+  --media-preview-background: hsla(var(--card), 0.95);
   --media-preview-border-radius: var(--radius);
+  --media-time-display-color: hsl(var(--foreground));
 }
 
 media-time-display {
   --media-text-color: #ffffff;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
 }
 
 media-controller::part(centered-layer) {
-  background-color: hsla(var(--background), 0.2);
-  transition: opacity 0.3s ease;
+  background-color: transparent;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 media-controller:not([mediapaused])[userinactive]::part(centered-layer) {
   opacity: 0;
-  transition: opacity 1s ease;
+  transition: opacity 0.8s ease;
 }
 
 media-loading-indicator {
-  --media-loading-icon-width: 48px;
-  --media-loading-icon-height: 48px;
-  --media-loading-icon-color: #ffffff;
+  --media-loading-icon-width: 56px;
+  --media-loading-icon-height: 56px;
+  --media-loading-icon-color: hsl(var(--primary));
+  filter: drop-shadow(0 0 8px hsla(var(--primary), 0.4));
+}
+
+media-play-button,
+media-mute-button,
+media-fullscreen-button,
+media-chrome-button {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--radius);
+  margin: 0 2px;
 }
 
 media-play-button:hover,
 media-mute-button:hover,
 media-fullscreen-button:hover,
-media-seek-backward-button:hover,
-media-seek-forward-button:hover {
-  --media-control-hover-background: rgba(255, 255, 255, 0.2);
+media-chrome-button:hover {
+  transform: scale(1.1);
+  --media-control-background: hsla(var(--primary), 0.85);
+  --media-button-icon-color: #ffffff;
+}
+
+/* A pulse animation for the live/retry indicator if needed */
+@keyframes stream-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.stream-live-indicator {
+  animation: stream-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+media-volume-range {
+  width: 90px;
+  height: 40px; /* Aligns with standard media button heights */
 }
