@@ -146,7 +146,6 @@ h2 {
   @apply scroll-m-20 pb-2 text-3xl font-semibold tracking-tight first:mt-0;
 }
 
-/* Media controller styles remain unchanged */
 media-controller {
   --media-primary-color: #ffffff;
   --media-secondary-color: hsla(var(--background), 0.85);

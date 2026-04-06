@@ -10,8 +10,9 @@ import {
   MediaMuteButton,
   MediaVolumeRange,
   MediaFullscreenButton,
+  MediaChromeButton,
 } from 'media-chrome/react';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, RotateCw } from 'lucide-react';
 import HlsVideo from 'hls-video-element/react';
 import type { HlsVideoElement } from 'hls-video-element';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ import { useSession } from '@/lib/providers/SessionProvider';
 import { useUserStreamInfo } from '@/lib/hooks/useUserList';
 import { getMediamtxClientEnvs } from '@/lib/utils/mediamtx/client';
 import type { MediaMTXRegion } from '@/lib/utils/mediamtx/regions';
+import { cn } from '@/lib/utils';
 
 const WAITING_RECOVERY_DELAY_MS = 8000;
 const RECOVERY_COOLDOWN_MS = 2000;
@@ -193,26 +195,18 @@ export default function StreamPlayer() {
             <MediaVolumeRange />
           </div>
           <div className="flex items-center gap-2">
+            {(process.env.NODE_ENV === 'development' || userInfo?.isLive) && (
+              <MediaChromeButton onClick={() => triggerRecovery('manual_reload')}>
+                <span className="flex h-4 w-4 items-center justify-center">
+                  <RefreshCw className="h-5 w-5 shrink-0" strokeWidth={2.5} />
+                </span>
+                <span slot="tooltip-content">Retry stream</span>
+              </MediaChromeButton>
+            )}
             <MediaFullscreenButton />
           </div>
         </MediaControlBar>
       </MediaController>
-
-      {userInfo?.isLive && (
-        <div className="pointer-events-none absolute right-3 top-3">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            className="pointer-events-auto gap-2"
-            onClick={() => triggerRecovery('manual_retry')}
-            disabled={isRecovering || !session}
-          >
-            <RefreshCw className={isRecovering ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} />
-            {isRecovering ? 'Reconnecting...' : 'Retry stream'}
-          </Button>
-        </div>
-      )}
     </div>
   );
 }
