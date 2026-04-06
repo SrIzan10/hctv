@@ -74,7 +74,7 @@ export default function OnboardingClient() {
                   <Heart className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-sm">Follow hackclubbers</h3>
+                  <h3 className="font-semibold text-sm">Follow Hack Clubbers</h3>
                   <p className="text-xs text-muted-foreground">
                     Stay updated with your favorite creators and streams
                   </p>
