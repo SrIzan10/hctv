@@ -11,6 +11,7 @@ import {
   MediaVolumeRange,
   MediaFullscreenButton,
   MediaChromeButton,
+  MediaLiveButton,
 } from 'media-chrome/react';
 import { RefreshCw, RotateCw } from 'lucide-react';
 import HlsVideo from 'hls-video-element/react';
@@ -24,6 +25,15 @@ import { cn } from '@/lib/utils';
 
 const WAITING_RECOVERY_DELAY_MS = 8000;
 const RECOVERY_COOLDOWN_MS = 2000;
+
+function LiveBadge({ recovering }: { recovering: boolean }) {
+  return (
+    <div className="flex items-center gap-1.5 rounded-sm bg-background/60 backdrop-blur-sm border border-border/30 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-foreground/90 select-none">
+      <span className={cn('h-1.5 w-1.5 rounded-full bg-primary', !recovering && 'animate-pulse')} />
+      {recovering ? 'Reconnecting' : 'Live'}
+    </div>
+  );
+}
 
 export default function StreamPlayer() {
   const { username } = useParams();
@@ -177,7 +187,7 @@ export default function StreamPlayer() {
   }, [clearWaitingTimeout, playerKey, triggerRecovery]);
 
   return (
-    <div className="relative">
+    <div className="relative w-full">
       <MediaController className="w-full aspect-video">
         <HlsVideo
           key={playerKey}
@@ -188,23 +198,35 @@ export default function StreamPlayer() {
           autoplay
         />
         <MediaLoadingIndicator slot="centered-chrome" noAutohide />
-        <MediaControlBar className="w-full px-2">
-          <div className="flex items-center gap-2">
-            <MediaPlayButton />
-            <MediaMuteButton />
-            <MediaVolumeRange />
+
+        {/* Top bar — live badge */}
+        {userInfo?.isLive && (
+          <div slot="top-chrome" className="stream-player-top-bar">
+            <LiveBadge recovering={isRecovering} />
           </div>
-          <div className="flex items-center gap-2">
-            {(process.env.NODE_ENV === 'development' || userInfo?.isLive) && (
-              <MediaChromeButton onClick={() => triggerRecovery('manual_reload')}>
-                <span className="flex h-4 w-4 items-center justify-center">
-                  <RefreshCw className="h-5 w-5 shrink-0" strokeWidth={2.5} />
-                </span>
-                <span slot="tooltip-content">Retry stream</span>
-              </MediaChromeButton>
-            )}
-            <MediaFullscreenButton />
-          </div>
+        )}
+
+        <MediaControlBar>
+          <MediaPlayButton />
+          <MediaMuteButton />
+          <MediaVolumeRange />
+          <div className="flex-1" />
+          {userInfo?.isLive && <MediaLiveButton />}
+          {(process.env.NODE_ENV === 'development' || userInfo?.isLive) && (
+            <MediaChromeButton
+              onClick={() => triggerRecovery('manual_reload')}
+              className={cn('transition-opacity', isRecovering && 'opacity-50 pointer-events-none')}
+            >
+              <span className="flex h-4 w-4 items-center justify-center">
+                <RefreshCw
+                  className={cn('h-[14px] w-[14px] shrink-0', isRecovering && 'animate-spin')}
+                  strokeWidth={2.5}
+                />
+              </span>
+              <span slot="tooltip-content">Retry stream</span>
+            </MediaChromeButton>
+          )}
+          <MediaFullscreenButton />
         </MediaControlBar>
       </MediaController>
     </div>
