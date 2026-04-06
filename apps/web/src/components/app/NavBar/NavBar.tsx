@@ -17,6 +17,8 @@ import Link from 'next/link';
 import { ThemeSwitcher } from '../ThemeSwitcher/ThemeSwitcher';
 import { IdCard, Shield } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import Image from 'next/image';
+import Logo from '../../../logo.webp';
 
 export default function Navbar(props: Props) {
   const { user } = useSession();
@@ -24,11 +26,19 @@ export default function Navbar(props: Props) {
     <>
       <nav className="flex items-center justify-between h-14 md:h-16 px-2 md:px-4 border-b gap-1 md:gap-3 w-full z-40 fixed top-0 left-0 shadow-md bg-mantle">
         <div className="flex items-center space-x-2 md:space-x-5 shrink-0">
-          <Link href="/" className="flex items-center">
-            <Button variant={'ghost'} className="px-2 md:px-3 text-sm md:text-base">
-              hackclub.tv
+            <Link href="/" className="flex items-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-sm hover:scale-105 transition-transform duration-200 "
+            >
+              <Image
+              src={Logo}
+              alt="HCTV Logo"
+              className="h-6 w-6 md:h-8 md:w-8"
+              />
             </Button>
-          </Link>
+            </Link>
           <SidebarTrigger />
         </div>
 
