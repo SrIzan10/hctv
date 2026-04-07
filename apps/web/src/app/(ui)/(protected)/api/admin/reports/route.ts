@@ -292,6 +292,7 @@ export async function POST(request: NextRequest) {
             details: {
               reportId,
               msgId: report.reportedMessageId,
+              messageContent: report.reportedMessage,
             } as any,
           },
         });
@@ -307,6 +308,7 @@ export async function POST(request: NextRequest) {
               reportId,
               enforcement: 'DELETE_REPORTED_MESSAGE',
               msgId: report.reportedMessageId,
+              messageContent: report.reportedMessage,
             } as any,
           },
         });

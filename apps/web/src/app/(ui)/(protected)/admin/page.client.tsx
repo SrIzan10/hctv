@@ -1019,6 +1019,20 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
                                   {log.reason}
                                 </p>
                               )}
+
+                              {log.deletedMessageContent && (
+                                <div className="mt-2 flex items-start gap-2 rounded-md border border-border bg-muted/40 px-3 py-2">
+                                  <MessageSquare className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                  <div className="min-w-0">
+                                    <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                      Deleted message
+                                    </p>
+                                    <p className="mt-1 break-words text-xs leading-relaxed text-foreground/90">
+                                      {log.deletedMessageContent}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
                         );
@@ -1184,10 +1198,10 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
                   </div>
                 )}
               </div>
-						)}
-            
-						{activeTab === 'settings' && (
-							<div>
+            )}
+
+            {activeTab === 'settings' && (
+              <div>
                 <SectionHeader
                   icon={<Settings className="h-4 w-4" />}
                   title="Platform Settings"
@@ -1205,7 +1219,8 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
                           ID Verification Bypass
                         </h3>
                         <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
-                          Allow existing users to bypass HCA verification and let them access the platform.
+                          Allow existing users to bypass HCA verification and let them access the
+                          platform.
                         </p>
                       </div>
                     </div>
@@ -1231,16 +1246,15 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
                           Start searching to manage users
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Type an email or username above to find users and toggle their verification bypass
+                          Type an email or username above to find users and toggle their
+                          verification bypass
                         </p>
                       </div>
                     ) : users.length === 0 ? (
                       <div className="rounded-lg border-2 border-dashed border-border bg-muted/30 p-6 text-center">
                         <XCircle className="mx-auto h-8 w-8 text-muted-foreground/50 mb-2" />
                         <p className="text-sm font-medium text-foreground mb-1">No users found</p>
-                        <p className="text-xs text-muted-foreground">
-                          Try a different search term
-                        </p>
+                        <p className="text-xs text-muted-foreground">Try a different search term</p>
                       </div>
                     ) : (
                       <>
@@ -1292,7 +1306,8 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
                                   onClick={() => handleToggleBypassVerification(user.id)}
                                   className={cn(
                                     'h-7 text-xs gap-1 shrink-0 font-semibold transition-all duration-200',
-                                    user.bypassVerification && 'border-primary/30 hover:bg-primary/10 hover:border-primary/50'
+                                    user.bypassVerification &&
+                                      'border-primary/30 hover:bg-primary/10 hover:border-primary/50'
                                   )}
                                 >
                                   {user.bypassVerification ? (
@@ -1327,7 +1342,8 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
                       <div className="flex-1">
                         <h3 className="text-base font-bold tracking-tight">Session Management</h3>
                         <p className="mt-0.5 text-xs text-muted-foreground mb-3 leading-relaxed">
-                          Force logout all other sessions except your current one. Useful for security maintenance.
+                          Force logout all other sessions except your current one. Useful for
+                          security maintenance.
                         </p>
                         <Button
                           variant="outline"
@@ -1536,6 +1552,7 @@ interface AuditLog {
   reason: string | null;
   details?: unknown;
   channelName?: string;
+  deletedMessageContent?: string | null;
 }
 
 interface ChatReport {

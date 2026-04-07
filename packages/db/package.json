@@ -19,6 +19,7 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:populate-verification": "tsx src/populateHackClubVerification.ts",
+    "db:studio": "prisma studio",
     "build": "prisma generate && tsc --build",
     "dev": "tsc --watch --preserveWatchOutput"
   },

@@ -2,6 +2,15 @@ import { validateRequest } from '@/lib/auth/validate';
 import { prisma } from '@hctv/db';
 import { NextRequest } from 'next/server';
 
+function getDeletedMessageContent(details: unknown): string | null {
+  if (!details || typeof details !== 'object' || Array.isArray(details)) {
+    return null;
+  }
+
+  const messageContent = (details as { messageContent?: unknown }).messageContent;
+  return typeof messageContent === 'string' && messageContent.length > 0 ? messageContent : null;
+}
+
 export async function GET(request: NextRequest) {
   const { user } = await validateRequest();
   if (!user?.isAdmin) {
@@ -136,6 +145,7 @@ export async function GET(request: NextRequest) {
       (log.targetUserId ? (targetUserMap.get(log.targetUserId) ?? log.targetUserId) : null),
     reason: log.reason,
     details: log.details,
+    deletedMessageContent: getDeletedMessageContent(log.details),
     actorMeta: {
       isPlatformAdmin: log.actor.isAdmin,
       isChannelModerator: channelModSet.has(log.actorId),
@@ -157,6 +167,7 @@ export async function GET(request: NextRequest) {
     target: log.targetUser?.personalChannel?.name ?? log.channel.name,
     reason: log.reason,
     details: log.details,
+    deletedMessageContent: getDeletedMessageContent(log.details),
     channelName: log.channel.name,
     actorMeta: {
       isPlatformAdmin: log.moderator.isAdmin,

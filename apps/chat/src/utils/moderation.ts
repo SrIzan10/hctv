@@ -26,7 +26,10 @@ type ModerationContext = {
 };
 
 type DeleteMessageDeps = {
-  deleteMessageFromHistory: (targetUsername: string, msgId: string) => Promise<boolean>;
+  deleteMessageFromHistory: (
+    targetUsername: string,
+    msgId: string
+  ) => Promise<{ deleted: boolean; messageContent?: string }>;
   logModerationEvent: (payload: {
     action: ChatModerationAction;
     channelId: string;
@@ -258,8 +261,8 @@ export async function handleDeleteMessageCommand(
     return;
   }
 
-  const deleted = await deps.deleteMessageFromHistory(context.targetUsername, msgId);
-  if (!deleted) {
+  const deletedMessage = await deps.deleteMessageFromHistory(context.targetUsername, msgId);
+  if (!deletedMessage.deleted) {
     sendModerationError(socket, 'NOT_FOUND', 'Message not found.');
     return;
   }
@@ -269,7 +272,10 @@ export async function handleDeleteMessageCommand(
     channelId: context.channelId,
     moderatorId: context.chatUser.moderatorUserId,
     reason: 'Message deleted by moderator',
-    details: { msgId },
+    details: {
+      msgId,
+      messageContent: deletedMessage.messageContent,
+    },
   });
   recordChatModerationAction('message_deleted');
 

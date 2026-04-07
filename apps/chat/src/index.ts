@@ -280,23 +280,32 @@ async function logModerationEvent(payload: {
   });
 }
 
-async function deleteMessageFromHistory(targetUsername: string, msgId: string): Promise<boolean> {
+async function deleteMessageFromHistory(
+  targetUsername: string,
+  msgId: string
+): Promise<{ deleted: boolean; messageContent?: string }> {
   const channelKey = `chat:history:${targetUsername}`;
   const history = await redis.zrange(channelKey, 0, -1);
 
   for (const entry of history) {
     try {
-      const parsed = JSON.parse(entry) as { msgId?: string };
+      const parsed = JSON.parse(entry) as { msgId?: string; message?: string };
       if (parsed.msgId === msgId) {
         await redis.zrem(channelKey, entry);
-        return true;
+        return {
+          deleted: true,
+          messageContent:
+            typeof parsed.message === 'string' && parsed.message.length > 0
+              ? parsed.message
+              : undefined,
+        };
       }
     } catch {
       continue;
     }
   }
 
-  return false;
+  return { deleted: false };
 }
 
 const app = new Hono();
