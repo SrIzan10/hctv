@@ -2,43 +2,50 @@
 title: How to stream
 description: Get started with OBS and streaming on hackclub.tv
 ---
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
 
 _This guide demonstrates how to stream with hackclub.tv via OBS Studio. For other streaming software, you will need to adapt these steps for your chosen software._
 
-- Open OBS Studio.
+<Steps>
+1. Open OBS Studio.
+   (_If it is not installed, head to [this webpage](https://obsproject.com/) to download the installer._)
 
-(_If it is not installed, head to [this webpage](https://obsproject.com/) to download the installer._)
+   ![OBS in Windows start menu](../../../assets/obs.png)
 
-![OBS in Windows start menu](../../../assets/obs.png)
+2. In OBS, click `File > Settings` in the top navigation bar.
 
-- In OBS, click `File > Settings` in the top navigation bar.
+   <img alt="Animated GIF of opening the settings page" src="/guides/obs-open-settings-op.gif" />
 
-<img alt="Animated GIF of opening the settings page" src="/guides/obs-open-settings-op.gif" />
+3. In the Settings popup, open `Stream` from the sidebar.
 
-- In the Settings popup, open `Stream` from the sidebar.
+4. Set `Service` to `Custom...`.
 
-- Set `Service` to `Custom...`.
+   <img
+     alt="Animated GIF of opening 'Stream' settings and changing to 'Custom'"
+     src="/guides/obs-changing-settings-op.gif"
+   />
 
-<img
-  alt="Animated GIF of opening 'Stream' settings and changing to 'Custom'"
-  src="/guides/obs-changing-settings-op.gif"
-/>
+5. Go to https://hackclub.tv/settings/channel/ in your web browser.
 
-- Go to https://hackclub.tv/settings/channel/ in your web browser.
+   (_If you are not logged in, you may have to log in again and then try again._)
 
-(_If you are not logged in, you may have to log in again and then try again._)
+6. Under `Stream Settings`, you will find your `Stream Key` and `Stream URL`. Copy the `Stream URL` and paste it into OBS.
 
-- Under `Stream Settings`, you will find your `Stream Key` and `Stream URL`. Copy the `Stream URL` and paste it into OBS.
+   ![Hack Club TV Stream Settings](../../../assets/hctv-settings.png)
 
-![Hack Club TV Stream Settings](../../../assets/hctv-settings.png)
+7. Go back to the website and copy the streaming key and paste it into the `Stream Key` box in OBS.
+   <Aside type="caution">You must keep your stream key secret and never share it with anyone.</Aside>
 
-- Go back to the website and click this <img alt="Lock Icon" src="../../../assets/lock.png" width="35"/> icon to regenerate your stream key. Copy the new key and paste it into the `Stream Key` box in OBS.
+   <Aside type="tip">
+    You can regenerate your stream key at any time if compromised! Just click the key icon and copy the new key. Remember to update your streaming software with the new key if you do this.
+   </Aside>
 
-![OBS Stream Settings with data filled in](../../../assets/obs-custom.png)
-(_Your OBS settings should now look like this_)
+   ![OBS Stream Settings with data filled in](../../../assets/obs-custom.png)
 
-- You can now safely apply the changes in OBS and start streaming.
+   (_Your OBS settings should now look like this_)
+
+8. You can now safely apply the changes in OBS and start streaming.
+</Steps>
 
 Thanks for using this guide and happy streaming!
-
-_A video tutorial is currently being made, so check back later if you would like to see it!_
