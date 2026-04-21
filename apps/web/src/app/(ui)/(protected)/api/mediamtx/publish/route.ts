@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
   action = parsedAction;
   protocol = parsedProtocol;
 
-  if (parsedAction === 'publish' && parsedProtocol === 'srt') {
+  if (parsedAction === 'publish' && (parsedProtocol === 'srt' || parsedProtocol === 'webrtc')) {
     const channelKey = await redis.get(`streamKey:${path}`);
 
     if (channelKey) {
@@ -69,7 +69,8 @@ export async function POST(request: NextRequest) {
 
       return finish('youre in yay', 200, 'authorized_publish');
     }
-  } else if (parsedAction === 'read' && parsedProtocol === 'hls') {
+  }
+  if (parsedAction === 'read' && parsedProtocol === 'hls') {
     if (password === process.env.MEDIAMTX_PUBLISH_KEY) {
       return finish('authorized (hls read key for thumbs)', 200, 'authorized_thumbnail');
     }

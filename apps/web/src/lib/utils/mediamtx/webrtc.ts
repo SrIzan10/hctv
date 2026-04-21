@@ -1,11 +1,11 @@
 // based off https://github.com/bluenviron/mediamtx/blob/v1.17.1/internal/servers/webrtc/publisher.js
 // modified by codex to typescript
-type OnError = (err: string) => void;
-type OnConnected = () => void;
+export type OnError = (err: string) => void;
+export type OnConnected = () => void;
 
-type PublisherState = 'running' | 'restarting' | 'closed';
+export type PublisherState = 'running' | 'restarting' | 'closed';
 
-type PublisherConfig = {
+export type PublisherConfig = {
   url: string;
   user?: string;
   pass?: string;
@@ -30,22 +30,28 @@ type ParsedIceServer = RTCIceServer & {
   credentialType?: 'password';
 };
 
-interface Window {
-  MediaMTXWebRTCPublisher: typeof MediaMTXWebRTCPublisher;
-}
-
 /** WebRTC/WHIP publisher. */
-class MediaMTXWebRTCPublisher {
+export class MediaMTXWebRTCPublisher {
   private readonly retryPause = 2000;
   private readonly conf: PublisherConfig;
   private state: PublisherState = 'running';
-  private restartTimeout: number | null = null;
+  private restartTimeout: ReturnType<typeof setTimeout> | null = null;
   private pc: RTCPeerConnection | null = null;
   private offerData: OfferData | null = null;
   private sessionUrl: string | null = null;
   private queuedCandidates: RTCIceCandidate[] = [];
 
   constructor(conf: PublisherConfig) {
+    if (
+      typeof window === 'undefined'
+      || typeof RTCPeerConnection === 'undefined'
+      || typeof MediaStream === 'undefined'
+    ) {
+      throw new Error(
+        'MediaMTXWebRTCPublisher can only be used in a browser environment.'
+      );
+    }
+
     this.conf = conf;
     this.start();
   }
@@ -58,7 +64,7 @@ class MediaMTXWebRTCPublisher {
     }
 
     if (this.restartTimeout !== null) {
-      window.clearTimeout(this.restartTimeout);
+      clearTimeout(this.restartTimeout);
     }
   };
 
@@ -303,7 +309,7 @@ class MediaMTXWebRTCPublisher {
       this.queuedCandidates = [];
       this.state = 'restarting';
 
-      this.restartTimeout = window.setTimeout(() => {
+      this.restartTimeout = setTimeout(() => {
         this.restartTimeout = null;
         this.state = 'running';
         void this.start();
@@ -495,4 +501,4 @@ class MediaMTXWebRTCPublisher {
   }
 }
 
-window.MediaMTXWebRTCPublisher = MediaMTXWebRTCPublisher;
+export default MediaMTXWebRTCPublisher;
