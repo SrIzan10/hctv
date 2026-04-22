@@ -3,12 +3,25 @@
 import { useEffect, useState } from 'react';
 import { ChannelSelect } from '@/components/app/ChannelSelect/ChannelSelect';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useChannelStreamKey } from '@/lib/hooks/useChannelStreamKey';
 import { useOwnedChannels } from '@/lib/hooks/useUserList';
 import { useScreensharePublisher } from '@/lib/hooks/useScreensharePublisher';
+import { getMediamtxClientRegionOptions } from '@/lib/utils/mediamtx/client';
+import type { MediaMTXRegion } from '@/lib/utils/mediamtx/regions';
 
 export default function Page() {
+  const serverOptions = getMediamtxClientRegionOptions();
   const [selectedChannel, setSelectedChannel] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState<MediaMTXRegion>(
+    serverOptions[0]?.value ?? 'hq'
+  );
   const { channels, isLoading: isLoadingChannels } = useOwnedChannels();
   const ownedChannels = channels.map(({ channel }) => channel);
   const {
@@ -28,10 +41,12 @@ export default function Page() {
     stopPublishing,
   } = useScreensharePublisher({
     channelName: selectedChannel,
+    region: selectedRegion,
     streamKey,
   });
 
   const hasChannels = ownedChannels.length > 0;
+  const hasServerOptions = serverOptions.length > 0;
   const canStartPublishing =
     !isSessionActive && Boolean(selectedChannel) && Boolean(streamKey) && !isLoadingStreamKey;
   const channelPlaceholder = isLoadingChannels ? 'Loading channels...' : 'Select a channel';
@@ -53,7 +68,7 @@ export default function Page() {
         broadcast.
       </p>
 
-      <div className="grid gap-4 md:grid-cols-[220px_1fr]">
+      <div className="grid gap-4 md:grid-cols-[220px_220px]">
         <div className="space-y-2">
           <p className="text-sm font-medium">Channel</p>
           <ChannelSelect
@@ -64,6 +79,26 @@ export default function Page() {
             onSelect={setSelectedChannel}
             triggerClassName="w-full"
           />
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Server</p>
+          <Select
+            value={selectedRegion}
+            onValueChange={(value) => setSelectedRegion(value as MediaMTXRegion)}
+            disabled={isSessionActive || !hasServerOptions}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select server" />
+            </SelectTrigger>
+            <SelectContent>
+              {serverOptions.map((server) => (
+                <SelectItem key={server.value} value={server.value}>
+                  {server.label} {server.emoji}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
