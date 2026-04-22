@@ -1,9 +1,10 @@
 // based off https://github.com/bluenviron/mediamtx/blob/v1.17.1/internal/servers/webrtc/publisher.js
-// modified by codex to typescript
+// modified by codex to typescript and to suit the platform's needs!
 export type OnError = (err: string) => void;
 export type OnConnected = () => void;
 
 export type PublisherState = 'running' | 'restarting' | 'closed';
+type MediaKind = 'audio' | 'video';
 
 export type PublisherConfig = {
   url: string;
@@ -34,39 +35,84 @@ type ParsedIceServer = RTCIceServer & {
 export class MediaMTXWebRTCPublisher {
   private readonly retryPause = 2000;
   private readonly conf: PublisherConfig;
+  private stream: MediaStream;
   private state: PublisherState = 'running';
   private restartTimeout: ReturnType<typeof setTimeout> | null = null;
   private pc: RTCPeerConnection | null = null;
   private offerData: OfferData | null = null;
   private sessionUrl: string | null = null;
   private queuedCandidates: RTCIceCandidate[] = [];
+  private trackSenders: Partial<Record<MediaKind, RTCRtpSender>> = {};
 
   constructor(conf: PublisherConfig) {
     if (
-      typeof window === 'undefined'
-      || typeof RTCPeerConnection === 'undefined'
-      || typeof MediaStream === 'undefined'
+      typeof window === 'undefined' ||
+      typeof RTCPeerConnection === 'undefined' ||
+      typeof MediaStream === 'undefined'
     ) {
-      throw new Error(
-        'MediaMTXWebRTCPublisher can only be used in a browser environment.'
-      );
+      throw new Error('MediaMTXWebRTCPublisher can only be used in a browser environment.');
     }
 
     this.conf = conf;
+    this.stream = conf.stream;
     this.start();
   }
 
   close = (): void => {
     this.state = 'closed';
 
-    if (this.pc !== null) {
-      this.pc.close();
-    }
-
     if (this.restartTimeout !== null) {
       clearTimeout(this.restartTimeout);
     }
+
+    this.resetConnection();
+    this.disposeSession();
   };
+
+  replaceStream = async (stream: MediaStream): Promise<void> => {
+    if (this.state !== 'running' || this.pc === null) {
+      throw new Error('publisher is not running');
+    }
+
+    const nextTracks: Record<MediaKind, MediaStreamTrack | null> = {
+      audio: stream.getAudioTracks()[0] ?? null,
+      video: stream.getVideoTracks()[0] ?? null,
+    };
+
+    await Promise.all(
+      (['audio', 'video'] as const).map(async (kind) => {
+        const sender = this.trackSenders[kind];
+
+        if (!sender) {
+          return;
+        }
+
+        await sender.replaceTrack(nextTracks[kind]);
+      })
+    );
+
+    this.stream = stream;
+  };
+
+  private resetConnection(): void {
+    if (this.pc !== null) {
+      this.pc.close();
+      this.pc = null;
+    }
+
+    this.offerData = null;
+    this.queuedCandidates = [];
+    this.trackSenders = {};
+  }
+
+  private disposeSession(): void {
+    if (this.sessionUrl !== null) {
+      void fetch(this.sessionUrl, {
+        method: 'DELETE',
+      });
+      this.sessionUrl = null;
+    }
+  }
 
   static #unquoteCredential(value: string): string {
     return JSON.parse(`"${value}"`) as string;
@@ -120,10 +166,7 @@ export class MediaMTXWebRTCPublisher {
     return parsedOffer;
   }
 
-  static #generateSdpFragment(
-    offerData: OfferData,
-    candidates: RTCIceCandidate[]
-  ): string {
+  static #generateSdpFragment(offerData: OfferData, candidates: RTCIceCandidate[]): string {
     const candidatesByMedia: Record<number, RTCIceCandidate[]> = {};
 
     for (const candidate of candidates) {
@@ -138,15 +181,13 @@ export class MediaMTXWebRTCPublisher {
       candidatesByMedia[mid].push(candidate);
     }
 
-    let fragment = `a=ice-ufrag:${offerData.iceUfrag}\r\n`
-      + `a=ice-pwd:${offerData.icePwd}\r\n`;
+    let fragment = `a=ice-ufrag:${offerData.iceUfrag}\r\n` + `a=ice-pwd:${offerData.icePwd}\r\n`;
 
     let mid = 0;
 
     for (const media of offerData.medias) {
       if (candidatesByMedia[mid] !== undefined) {
-        fragment += `m=${media}\r\n`
-          + `a=mid:${mid}\r\n`;
+        fragment += `m=${media}\r\n` + `a=mid:${mid}\r\n`;
 
         for (const candidate of candidatesByMedia[mid]) {
           fragment += `a=${candidate.candidate}\r\n`;
@@ -292,21 +333,8 @@ export class MediaMTXWebRTCPublisher {
 
   private handleError(err: string): void {
     if (this.state === 'running') {
-      if (this.pc !== null) {
-        this.pc.close();
-        this.pc = null;
-      }
-
-      this.offerData = null;
-
-      if (this.sessionUrl !== null) {
-        void fetch(this.sessionUrl, {
-          method: 'DELETE',
-        });
-        this.sessionUrl = null;
-      }
-
-      this.queuedCandidates = [];
+      this.resetConnection();
+      this.disposeSession();
       this.state = 'restarting';
 
       this.restartTimeout = setTimeout(() => {
@@ -352,9 +380,14 @@ export class MediaMTXWebRTCPublisher {
 
     this.pc.onicecandidate = (event) => this.onLocalCandidate(event);
     this.pc.onconnectionstatechange = () => this.onConnectionState();
+    this.trackSenders = {};
 
-    this.conf.stream.getTracks().forEach((track) => {
-      this.pc?.addTrack(track, this.conf.stream);
+    this.stream.getTracks().forEach((track) => {
+      const sender = this.pc?.addTrack(track, this.stream);
+
+      if (sender && (track.kind === 'audio' || track.kind === 'video')) {
+        this.trackSenders[track.kind] = sender;
+      }
     });
 
     const offer = await this.pc.createOffer();
@@ -421,10 +454,7 @@ export class MediaMTXWebRTCPublisher {
       throw new Error('missing peer connection');
     }
 
-    const editedAnswer = MediaMTXWebRTCPublisher.#editAnswer(
-      answer,
-      this.conf.videoBitrate
-    );
+    const editedAnswer = MediaMTXWebRTCPublisher.#editAnswer(answer, this.conf.videoBitrate);
 
     await peerConnection.setRemoteDescription(
       new RTCSessionDescription({
@@ -490,10 +520,7 @@ export class MediaMTXWebRTCPublisher {
       return;
     }
 
-    if (
-      this.pc.connectionState === 'failed'
-      || this.pc.connectionState === 'closed'
-    ) {
+    if (this.pc.connectionState === 'failed' || this.pc.connectionState === 'closed') {
       this.handleError('peer connection closed');
     } else if (this.pc.connectionState === 'connected') {
       this.conf.onConnected?.();

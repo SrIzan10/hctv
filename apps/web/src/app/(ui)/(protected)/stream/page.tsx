@@ -1,80 +1,82 @@
 'use client';
 
-import { useRef, useState } from 'react';
-import MediaMTXWebRTCPublisher from '@/lib/utils/mediamtx/webrtc';
+import { useEffect, useState } from 'react';
+import { ChannelSelect } from '@/components/app/ChannelSelect/ChannelSelect';
 import { Button } from '@/components/ui/button';
-
-const HLS_COMPATIBLE_VIDEO_CODECS = [
-  ['h264', 'h264/90000'],
-  ['vp9', 'vp9/90000'],
-  ['av1', 'av1/90000'],
-  ['h265', 'h265/90000'],
-] as const;
+import { useChannelStreamKey } from '@/lib/hooks/useChannelStreamKey';
+import { useOwnedChannels } from '@/lib/hooks/useUserList';
+import { useScreensharePublisher } from '@/lib/hooks/useScreensharePublisher';
 
 export default function Page() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const publisherRef = useRef<MediaMTXWebRTCPublisher | null>(null);
-  const [isPublishing, setIsPublishing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [selectedChannel, setSelectedChannel] = useState('');
+  const { channels, isLoading: isLoadingChannels } = useOwnedChannels();
+  const ownedChannels = channels.map(({ channel }) => channel);
+  const {
+    streamKey,
+    error: streamKeyError,
+    isLoading: isLoadingStreamKey,
+  } = useChannelStreamKey(selectedChannel || undefined);
+  const {
+    changeSource,
+    error,
+    isLive,
+    isSessionActive,
+    isStarting,
+    isSwitchingSource,
+    previewRef,
+    startPublishing,
+    stopPublishing,
+  } = useScreensharePublisher({
+    channelName: selectedChannel,
+    streamKey,
+  });
 
-  const startPublishing = async () => {
-    try {
-      setError(null);
-      const videoCodec = await getPreferredVideoCodec();
+  const hasChannels = ownedChannels.length > 0;
+  const canStartPublishing =
+    !isSessionActive && Boolean(selectedChannel) && Boolean(streamKey) && !isLoadingStreamKey;
+  const channelPlaceholder = isLoadingChannels ? 'Loading channels...' : 'Select a channel';
 
-      const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-        audio: true,
-      });
-
-      streamRef.current = stream;
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-
-      publisherRef.current = new MediaMTXWebRTCPublisher({
-        url: 'http://localhost:8889/eth0/whip',
-        stream,
-        videoCodec,
-        videoBitrate: 2000,
-        audioCodec: 'opus',
-        audioBitrate: 64,
-        audioVoice: true,
-        user: 'user',
-        pass: '83ea0c36-57ff-4bc5-b6fe-f920b0e5d9d9',
-        onConnected: () => {
-          setIsPublishing(true);
-        },
-        onError: (message) => {
-          setError(message);
-          setIsPublishing(false);
-        },
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start publishing');
-    }
-  };
-
-  const stopPublishing = () => {
-    publisherRef.current?.close();
-    publisherRef.current = null;
-
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    streamRef.current = null;
-
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
+  useEffect(() => {
+    if (isSessionActive) {
+      return;
     }
 
-    setIsPublishing(false);
-  };
+    if (!ownedChannels.some((channel) => channel.name === selectedChannel)) {
+      setSelectedChannel(ownedChannels[0]?.name ?? '');
+    }
+  }, [isSessionActive, ownedChannels, selectedChannel]);
 
   return (
     <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Start a screenshare stream, then switch windows, tabs, or displays without ending the
+        broadcast.
+      </p>
+
+      <div className="grid gap-4 md:grid-cols-[220px_1fr]">
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Channel</p>
+          <ChannelSelect
+            channelList={ownedChannels}
+            disabled={isSessionActive || isLoadingChannels || !hasChannels}
+            placeholder={channelPlaceholder}
+            value={selectedChannel || undefined}
+            onSelect={setSelectedChannel}
+            triggerClassName="w-full"
+          />
+        </div>
+      </div>
+
+      {!hasChannels && !isLoadingChannels ? (
+        <p className="text-sm text-muted-foreground">
+          You need at least one channel before you can publish.
+        </p>
+      ) : null}
+
+      {streamKeyError ? <p className="text-sm text-destructive">{streamKeyError.message}</p> : null}
+
       <video
-        ref={videoRef}
+        ref={previewRef}
         autoPlay
         muted
         playsInline
@@ -82,38 +84,23 @@ export default function Page() {
       />
 
       <div className="flex gap-2">
-        <Button onClick={startPublishing} disabled={isPublishing}>
+        <Button onClick={startPublishing} disabled={!canStartPublishing} loading={isStarting}>
           Start
         </Button>
-        <Button onClick={stopPublishing} disabled={!isPublishing}>
+        <Button
+          variant="outline"
+          onClick={changeSource}
+          disabled={!isLive}
+          loading={isSwitchingSource}
+        >
+          Change source
+        </Button>
+        <Button onClick={stopPublishing} disabled={!isSessionActive || isSwitchingSource}>
           Stop
         </Button>
       </div>
 
-      {error ? <p>{error}</p> : null}
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
     </div>
-  );
-}
-
-async function getPreferredVideoCodec(): Promise<string> {
-  const tempPc = new RTCPeerConnection();
-
-  try {
-    tempPc.addTransceiver('video', { direction: 'sendonly' });
-
-    const offer = await tempPc.createOffer();
-    const sdp = offer.sdp?.toLowerCase() ?? '';
-
-    for (const [codec, needle] of HLS_COMPATIBLE_VIDEO_CODECS) {
-      if (sdp.includes(needle)) {
-        return codec;
-      }
-    }
-  } finally {
-    tempPc.close();
-  }
-
-  throw new Error(
-    'This browser does not expose an HLS-compatible WebRTC video codec. MediaMTX HLS supports AV1, VP9, H265, and H264, but not VP8.'
   );
 }
