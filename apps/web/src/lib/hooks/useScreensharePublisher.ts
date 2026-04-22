@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getMediamtxClientEnvs } from '@/lib/utils/mediamtx/client';
 import type { MediaMTXRegion } from '@/lib/utils/mediamtx/regions';
 import MediaMTXWebRTCPublisher from '@/lib/utils/mediamtx/webrtc';
@@ -31,7 +31,8 @@ export function useScreensharePublisher({
   const captureCleanupRef = useRef<(() => void) | null>(null);
   const publisherRef = useRef<MediaMTXWebRTCPublisher | null>(null);
   const [publishState, setPublishState] = useState<PublishState>('idle');
-  const [error, setError] = useState<string | null>(null);
+  const [issue, setIssue] = useState<PublisherIssue | null>(null);
+  const browserWarning = useMemo(() => getBrowserWarning(), []);
 
   const setPreviewStream = useCallback((stream: MediaStream | null) => {
     if (previewRef.current) {
@@ -65,7 +66,7 @@ export function useScreensharePublisher({
 
   const stopPublishing = useCallback(() => {
     disposeCurrentSession();
-    setError(null);
+    setIssue(null);
     setPublishState('idle');
   }, [disposeCurrentSession]);
 
@@ -105,17 +106,27 @@ export function useScreensharePublisher({
 
   const startPublishing = useCallback(async () => {
     if (!channelName) {
-      setError('Select a channel before starting your stream.');
+      setIssue({
+        context: 'start',
+        description: 'Pick a channel first so we know where to publish.',
+        title: 'Choose a channel before starting',
+        tone: 'warning',
+      });
       return;
     }
 
     if (!streamKey) {
-      setError('Stream key unavailable for the selected channel.');
+      setIssue({
+        context: 'start',
+        description: 'Wait for the stream key to load, then try starting again.',
+        title: 'Stream key is still unavailable',
+        tone: 'warning',
+      });
       return;
     }
 
     try {
-      setError(null);
+      setIssue(null);
       setPublishState('connecting');
 
       const videoCodec = await getPreferredVideoCodec();
@@ -145,7 +156,7 @@ export function useScreensharePublisher({
             return;
           }
 
-          setError(message);
+          setIssue(classifyPublisherIssue(message, 'publish'));
           setPublishState('connecting');
         },
       });
@@ -154,7 +165,7 @@ export function useScreensharePublisher({
     } catch (err) {
       disposeCurrentSession();
       setPublishState('idle');
-      setError(getErrorMessage(err, 'Failed to start publishing'));
+      setIssue(classifyPublisherIssue(err, 'start'));
     }
   }, [channelName, commitCaptureStream, disposeCurrentSession, region, streamKey]);
 
@@ -168,7 +179,7 @@ export function useScreensharePublisher({
     let nextStream: MediaStream | null = null;
 
     try {
-      setError(null);
+      setIssue(null);
       setPublishState('switching');
 
       nextStream = await requestCaptureStream();
@@ -178,7 +189,7 @@ export function useScreensharePublisher({
     } catch (err) {
       stopTracks(nextStream);
       setPublishState(publisherRef.current ? 'live' : 'idle');
-      setError(getErrorMessage(err, 'Failed to change screenshare source'));
+      setIssue(classifyPublisherIssue(err, 'switch'));
     }
   }, [commitCaptureStream]);
 
@@ -189,12 +200,14 @@ export function useScreensharePublisher({
   }, [disposeCurrentSession]);
 
   return {
+    browserWarning,
     changeSource,
-    error,
+    issue,
     isLive: publishState === 'live',
     isSessionActive: publishState !== 'idle',
     isStarting: publishState === 'connecting',
     isSwitchingSource: publishState === 'switching',
+    publishState,
     previewRef,
     startPublishing,
     stopPublishing,
@@ -217,6 +230,126 @@ function stopTracks(stream: MediaStream | null) {
 
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
+}
+
+function classifyPublisherIssue(error: unknown, context: PublisherIssueContext): PublisherIssue {
+  const message = getErrorMessage(
+    error,
+    context === 'switch' ? 'Failed to change screenshare source' : 'Failed to start publishing'
+  );
+  const normalizedMessage = message.toLowerCase();
+
+  if (normalizedMessage.includes('notallowederror') || normalizedMessage.includes('permission')) {
+    return {
+      context,
+      description:
+        context === 'switch'
+          ? 'Choose a new tab, window, or display in the browser picker to continue the broadcast.'
+          : 'Approve the browser screen-share prompt, then try again.',
+      title:
+        context === 'switch'
+          ? 'Source switch was cancelled or blocked'
+          : 'Screen-share permission was denied',
+      tone: 'warning',
+    };
+  }
+
+  if (normalizedMessage.includes('notfounderror')) {
+    return {
+      context,
+      description:
+        'Open the window or tab you want to capture, then retry the screen-share picker.',
+      title: 'No capturable source was found',
+      tone: 'warning',
+    };
+  }
+
+  if (
+    normalizedMessage.includes('getdisplaymedia') ||
+    normalizedMessage.includes('secure context') ||
+    normalizedMessage.includes('browser environment')
+  ) {
+    return {
+      context,
+      description:
+        'Use HackClub.tv over HTTPS or localhost in a Chromium-based browser, then try again.',
+      title: 'This browser or page cannot start screen sharing',
+      tone: 'destructive',
+    };
+  }
+
+  if (normalizedMessage.includes('hls-compatible webrtc video codec')) {
+    return {
+      context,
+      description:
+        'Switch to a Chromium-based browser. Firefox and Safari can expose codecs that our ingest pipeline cannot use reliably yet.',
+      title: 'This browser cannot publish a compatible stream codec',
+      tone: 'destructive',
+    };
+  }
+
+  if (normalizedMessage.includes('invalid stream key') || normalizedMessage.includes('403')) {
+    return {
+      context,
+      description:
+        'Refresh the page or regenerate the stream key in channel settings if this keeps happening.',
+      title: 'The ingest server rejected your stream key',
+      tone: 'destructive',
+    };
+  }
+
+  if (normalizedMessage.includes('404')) {
+    return {
+      context,
+      description:
+        'The selected ingest server may be misconfigured or offline. Try another server or retry in a moment.',
+      title: 'The selected ingest server could not be reached',
+      tone: 'destructive',
+    };
+  }
+
+  if (normalizedMessage.includes('retrying in some seconds')) {
+    return {
+      context,
+      description:
+        'We are retrying automatically. Keep this page open, or stop and start again if it does not recover.',
+      title: 'Connection to the ingest server dropped',
+      tone: 'warning',
+    };
+  }
+
+  return {
+    context,
+    description:
+      context === 'switch'
+        ? 'Try choosing the source again. If it keeps failing, stop the stream and start a new session.'
+        : 'Try again. If it keeps failing, switch servers or reload the page.',
+    title:
+      context === 'switch' ? 'Could not switch the shared source' : 'Could not start the stream',
+    tone: 'destructive',
+  };
+}
+
+function getBrowserWarning(): PublisherIssue | null {
+  if (typeof navigator === 'undefined') {
+    return null;
+  }
+
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isChromium =
+    userAgent.includes('chrome') || userAgent.includes('chromium') || userAgent.includes('edg/');
+
+  if (isChromium) {
+    return null;
+  }
+
+  return {
+    context: 'warning',
+    description:
+      'You can still try this here, but screen capture and source switching are most reliable in Chrome or another Chromium-based browser.',
+    title: 'This browser is supported on a best-effort basis',
+    tone: 'warning',
+  };
 }
 
 async function getPreferredVideoCodec(): Promise<string> {
@@ -249,6 +382,15 @@ type UseScreensharePublisherOptions = {
   region: MediaMTXRegion;
   streamKey?: string | null;
 };
+
+type PublisherIssue = {
+  context: PublisherIssueContext;
+  description: string;
+  title: string;
+  tone: 'warning' | 'destructive';
+};
+
+type PublisherIssueContext = 'publish' | 'start' | 'switch' | 'warning';
 
 type ScreenCaptureOptions = DisplayMediaStreamOptions & {
   monitorTypeSurfaces?: 'include' | 'exclude';
