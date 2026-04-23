@@ -11,6 +11,8 @@ hlsSegmentDuration: 2s
 hlsPartDuration: 1s
 hlsSegmentCount: 10
 
+webrtc: yes
+
 authMethod: http
 authHTTPAddress: http://hctv:3000/api/mediamtx/publish
 
