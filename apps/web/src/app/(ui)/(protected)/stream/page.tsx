@@ -5,13 +5,17 @@ import type { ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   AlertTriangle,
-  CheckCircle2,
   CircleAlert,
+  Globe,
   LoaderCircle,
+  Monitor,
   Radio,
   RefreshCw,
+  Square,
+  Video,
 } from 'lucide-react';
 import { ChannelSelect } from '@/components/app/ChannelSelect/ChannelSelect';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -44,13 +48,16 @@ export default function Page() {
   const {
     browserWarning,
     changeSource,
+    hasPreview,
     issue,
     isLive,
+    isPreviewReady,
+    isPreviewingSource,
     isSessionActive,
     isStarting,
     isSwitchingSource,
-    publishState,
     previewRef,
+    previewSource,
     startPublishing,
     stopPublishing,
   } = useScreensharePublisher({
@@ -62,9 +69,12 @@ export default function Page() {
   const hasChannels = ownedChannels.length > 0;
   const hasServerOptions = serverOptions.length > 0;
   const canStartPublishing =
-    !isSessionActive && Boolean(selectedChannel) && Boolean(streamKey) && !isLoadingStreamKey;
+    !isSessionActive &&
+    !isPreviewingSource &&
+    Boolean(selectedChannel) &&
+    Boolean(streamKey) &&
+    !isLoadingStreamKey;
   const channelPlaceholder = isLoadingChannels ? 'Loading channels...' : 'Select a channel';
-  const statusMeta = getStatusMeta(publishState);
   const primaryIssue = issue ?? browserWarning;
 
   useEffect(() => {
@@ -77,217 +87,288 @@ export default function Page() {
     }
   }, [isSessionActive, ownedChannels, selectedChannel]);
 
+  const statusLabel = isLive
+    ? 'LIVE'
+    : isSwitchingSource
+      ? 'Switching'
+      : isStarting
+        ? 'Connecting'
+        : isPreviewingSource
+          ? hasPreview
+            ? 'Updating Preview'
+            : 'Preparing Preview'
+          : isPreviewReady
+            ? 'Preview'
+            : 'Ready';
+
   return (
-    <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
-        Start a screenshare stream, then switch windows, tabs, or displays without ending the
-        broadcast.
-      </p>
+    <div className="relative flex min-h-[calc(100vh-4rem)] flex-col">
+      {/* Video Stage */}
+      <div className="flex flex-1 items-center justify-center px-4 py-4 md:px-6">
+        <div className="w-full max-w-6xl">
+          <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-black shadow-2xl">
+            <div className="relative aspect-video w-full bg-black">
+              <video
+                ref={previewRef}
+                autoPlay
+                muted
+                playsInline
+                className="h-full w-full object-contain"
+              />
 
-      <div className="grid gap-4 md:grid-cols-[220px_220px]">
-        <div className="space-y-2">
-          <p className="text-sm font-medium">Channel</p>
-          <ChannelSelect
-            channelList={ownedChannels}
-            disabled={isSessionActive || isLoadingChannels || !hasChannels}
-            placeholder={channelPlaceholder}
-            value={selectedChannel || undefined}
-            onSelect={setSelectedChannel}
-            triggerClassName="w-full"
-          />
-        </div>
+              {!hasPreview && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 px-6 text-muted-foreground">
+                  <div className="flex h-24 w-24 items-center justify-center rounded-full border border-secondary bg-secondary/80">
+                    <Monitor className="h-10 w-10 text-primary/80" />
+                  </div>
+                  <div className="max-w-md text-center space-y-1.5">
+                    <p className="text-lg font-medium text-zinc-200">
+                      Ready to livestream
+                    </p>
+                    <p className="text-sm text-zinc-400">
+                      Select a tab, window, or display to preview.
+                    </p>
+                  </div>
+                </div>
+              )}
 
-        <div className="space-y-2">
-          <p className="text-sm font-medium">Server</p>
-          <Select
-            value={selectedRegion}
-            onValueChange={(value) => setSelectedRegion(value as MediaMTXRegion)}
-            disabled={isSessionActive || !hasServerOptions}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select server" />
-            </SelectTrigger>
-            <SelectContent>
-              {serverOptions.map((server) => (
-                <SelectItem key={server.value} value={server.value}>
-                  {server.label} {server.emoji}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              {(isPreviewingSource || isStarting || isSwitchingSource) && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/60 text-white backdrop-blur-sm">
+                  <LoaderCircle className="h-8 w-8 animate-spin" />
+                  <p className="text-sm font-medium">
+                    {isPreviewingSource
+                      ? hasPreview
+                        ? 'Updating preview...'
+                        : 'Preparing preview...'
+                      : isStarting
+                        ? 'Starting broadcast...'
+                        : 'Switching source...'}
+                  </p>
+                </div>
+              )}
+
+              <div className="absolute left-6 top-6">
+                <Badge
+                  variant={isLive ? 'default' : hasPreview ? 'secondary' : 'outline'}
+                  className={cn(
+                    'gap-2 px-3 py-1 text-xs font-semibold shadow-lg backdrop-blur-md transition-all',
+                    isLive && 'bg-red-500 text-white hover:bg-red-600',
+                    !isLive && !hasPreview && 'border-zinc-800 bg-black/50 text-zinc-400'
+                  )}
+                >
+                  {isLive && <span className="h-2 w-2 animate-pulse rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
+                  {statusLabel}
+                </Badge>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {!hasChannels && !isLoadingChannels ? (
-        <p className="text-sm text-muted-foreground">
-          You need at least one channel before you can publish.
-        </p>
-      ) : null}
+      {(streamKeyError || primaryIssue) && (
+        <div className="absolute inset-x-0 top-4 z-10 mx-auto max-w-xl px-4 md:top-6">
+          {streamKeyError ? (
+            <AlertCard
+              actions={
+                <Button onClick={() => window.location.reload()} size="sm" variant="outline">
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Reload page
+                </Button>
+              }
+              description={getStreamKeyErrorDescription(streamKeyError.message)}
+              icon={CircleAlert}
+              title="Could not load the stream key"
+              tone="destructive"
+            />
+          ) : null}
 
-      <Card className={statusMeta.cardClassName}>
-        <CardContent className="flex items-start gap-3 p-4">
-          <div className="flex items-start gap-3">
-            <statusMeta.icon className={`mt-0.5 h-5 w-5 shrink-0 ${statusMeta.iconClassName}`} />
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <p className="font-medium">{statusMeta.title}</p>
-                <Badge variant={statusMeta.badgeVariant}>{statusMeta.badgeLabel}</Badge>
-              </div>
-              <p className="text-sm text-muted-foreground">{statusMeta.description}</p>
+          {primaryIssue ? (
+            <AlertCard
+              actions={
+                <div className="flex flex-wrap gap-2">
+                  {!isSessionActive && primaryIssue.context === 'preview' ? (
+                    <Button
+                      onClick={previewSource}
+                      disabled={isPreviewingSource}
+                      loading={isPreviewingSource}
+                      size="sm"
+                    >
+                      Preview again
+                    </Button>
+                  ) : null}
+
+                  {!isSessionActive &&
+                  primaryIssue.context !== 'warning' &&
+                  primaryIssue.context !== 'preview' ? (
+                    <Button onClick={startPublishing} disabled={!canStartPublishing} size="sm">
+                      Try again
+                    </Button>
+                  ) : null}
+
+                  {primaryIssue.context === 'switch' && isLive ? (
+                    <Button
+                      onClick={changeSource}
+                      disabled={isSwitchingSource}
+                      loading={isSwitchingSource}
+                      size="sm"
+                    >
+                      Try switching again
+                    </Button>
+                  ) : null}
+
+                  {isSessionActive && primaryIssue.context !== 'warning' ? (
+                    <Button onClick={stopPublishing} size="sm" variant="outline">
+                      Stop stream
+                    </Button>
+                  ) : null}
+                </div>
+              }
+              description={primaryIssue.description}
+              icon={primaryIssue.tone === 'warning' ? AlertTriangle : CircleAlert}
+              title={primaryIssue.title}
+              tone={primaryIssue.tone}
+            />
+          ) : null}
+        </div>
+      )}
+
+      <div className="shrink-0 border-t border-border/50 bg-background/95 px-4 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="mx-auto flex max-w-6xl flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-5">
+            <div className="flex items-center gap-3">
+              <Video className="h-4 w-4 text-muted-foreground" />
+              <ChannelSelect
+                channelList={ownedChannels}
+                disabled={isSessionActive || isLoadingChannels || !hasChannels}
+                placeholder={channelPlaceholder}
+                value={selectedChannel || undefined}
+                onSelect={setSelectedChannel}
+                triggerClassName="w-48"
+              />
             </div>
+
+            <div className="flex items-center gap-3">
+              <Globe className="h-4 w-4 text-muted-foreground" />
+              <Select
+                value={selectedRegion}
+                onValueChange={(value) => setSelectedRegion(value as MediaMTXRegion)}
+                disabled={isSessionActive || !hasServerOptions}
+              >
+                <SelectTrigger className="w-44">
+                  <SelectValue placeholder="Select server" />
+                </SelectTrigger>
+                <SelectContent>
+                  {serverOptions.map((server) => (
+                    <SelectItem key={server.value} value={server.value}>
+                      {server.label} {server.emoji}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {!hasChannels && !isLoadingChannels ? (
+              <p className="text-xs text-muted-foreground">Create a channel to stream.</p>
+            ) : null}
           </div>
-        </CardContent>
-      </Card>
 
-      {streamKeyError ? (
-        <ActionPanel
-          actions={
-            <Button onClick={() => window.location.reload()} size="sm" variant="outline">
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Reload page
-            </Button>
-          }
-          description={getStreamKeyErrorDescription(streamKeyError.message)}
-          icon={CircleAlert}
-          title="Could not load the stream key"
-          tone="destructive"
-        />
-      ) : null}
-
-      {primaryIssue ? (
-        <ActionPanel
-          actions={
-            <>
-              {!isSessionActive && primaryIssue.context !== 'warning' ? (
-                <Button onClick={startPublishing} disabled={!canStartPublishing} size="sm">
-                  Try again
-                </Button>
-              ) : null}
-
-              {primaryIssue.context === 'switch' && isLive ? (
+          {/* Right: Actions */}
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {!isSessionActive ? (
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
-                  onClick={changeSource}
-                  disabled={isSwitchingSource}
-                  loading={isSwitchingSource}
-                  size="sm"
+                  variant="secondary"
+                  onClick={previewSource}
+                  disabled={isPreviewingSource}
+                  loading={isPreviewingSource}
+                  size="default"
                 >
-                  Try switching again
+                  <Monitor className="mr-2 h-4 w-4" />
+                  {hasPreview ? 'Change Preview' : 'Preview'}
                 </Button>
-              ) : null}
 
-              {isSessionActive && primaryIssue.context !== 'warning' ? (
-                <Button onClick={stopPublishing} size="sm" variant="outline">
-                  Stop stream
+                {hasPreview ? (
+                  <Button
+                    onClick={stopPublishing}
+                    disabled={isPreviewingSource}
+                    variant="outline"
+                    size="default"
+                  >
+                    <Square className="mr-2 h-4 w-4" />
+                    Clear Preview
+                  </Button>
+                ) : null}
+
+                <Button
+                  onClick={startPublishing}
+                  disabled={!canStartPublishing || isSwitchingSource}
+                  loading={isStarting}
+                  size="default"
+                >
+                  <Radio className="mr-2 h-4 w-4" />
+                  Start
                 </Button>
-              ) : null}
-            </>
-          }
-          description={primaryIssue.description}
-          icon={primaryIssue.tone === 'warning' ? AlertTriangle : CircleAlert}
-          title={primaryIssue.title}
-          tone={primaryIssue.tone}
-        />
-      ) : null}
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="secondary"
+                  onClick={changeSource}
+                  disabled={!isLive}
+                  loading={isSwitchingSource}
+                  size="default"
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Switch
+                </Button>
 
-      <video
-        ref={previewRef}
-        autoPlay
-        muted
-        playsInline
-        className="aspect-video w-full rounded-md bg-black"
-      />
-
-      <div className="flex gap-2">
-        <Button onClick={startPublishing} disabled={!canStartPublishing} loading={isStarting}>
-          Start
-        </Button>
-        <Button
-          variant="outline"
-          onClick={changeSource}
-          disabled={!isLive}
-          loading={isSwitchingSource}
-        >
-          Change source
-        </Button>
-        <Button onClick={stopPublishing} disabled={!isSessionActive || isSwitchingSource}>
-          Stop
-        </Button>
+                <Button
+                  onClick={stopPublishing}
+                  disabled={isPreviewingSource || isSwitchingSource}
+                  variant="outline"
+                  size="default"
+                >
+                  <Square className="mr-2 h-4 w-4" />
+                  Stop
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-function ActionPanel({ actions, description, icon: Icon, title, tone }: ActionPanelProps) {
+function AlertCard({ actions, description, icon: Icon, title, tone }: AlertCardProps) {
   const isWarning = tone === 'warning';
 
   return (
-    <div
-      className={
+    <Card
+      className={cn(
+        'overflow-hidden border-l-4 shadow-xl backdrop-blur-md',
         isWarning
-          ? 'rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-foreground'
-          : 'rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-foreground'
-      }
+          ? 'border-l-amber-500 bg-amber-500/[0.03]'
+          : 'border-l-destructive bg-destructive/[0.03]'
+      )}
     >
-      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+      <CardContent className="flex flex-col gap-4 p-4 md:flex-row md:items-start md:justify-between">
         <div className="flex items-start gap-3">
           <Icon
-            className={`mt-0.5 h-4 w-4 shrink-0 ${isWarning ? 'text-amber-500' : 'text-destructive'}`}
+            className={cn(
+              'mt-0.5 h-5 w-5 shrink-0',
+              isWarning ? 'text-amber-500' : 'text-destructive'
+            )}
           />
           <div className="space-y-1">
-            <p className="text-sm font-medium">{title}</p>
+            <p className="text-sm font-semibold">{title}</p>
             <p className="text-sm text-muted-foreground">{description}</p>
           </div>
         </div>
-
-        {actions ? <div className="flex gap-2 md:shrink-0">{actions}</div> : null}
-      </div>
-    </div>
+        {actions ? <div className="flex flex-wrap gap-2 md:shrink-0">{actions}</div> : null}
+      </CardContent>
+    </Card>
   );
-}
-
-function getStatusMeta(publishState: PublishState) {
-  switch (publishState) {
-    case 'connecting':
-      return {
-        badgeLabel: 'Starting',
-        badgeVariant: 'secondary' as const,
-        cardClassName: 'border-blue-500/30 bg-blue-500/5',
-        description: 'Approve the browser picker and keep this page open while we connect.',
-        icon: LoaderCircle,
-        iconClassName: 'animate-spin text-blue-500',
-        title: 'Preparing your stream',
-      };
-    case 'live':
-      return {
-        badgeLabel: 'Live',
-        badgeVariant: 'default' as const,
-        cardClassName: 'border-emerald-500/30 bg-emerald-500/5',
-        description: 'Your stream is live. You can switch sources without ending the broadcast.',
-        icon: Radio,
-        iconClassName: 'text-emerald-500',
-        title: 'Broadcast is live',
-      };
-    case 'switching':
-      return {
-        badgeLabel: 'Switching',
-        badgeVariant: 'secondary' as const,
-        cardClassName: 'border-amber-500/30 bg-amber-500/5',
-        description: 'Choose a new window, tab, or display in the browser picker.',
-        icon: LoaderCircle,
-        iconClassName: 'animate-spin text-amber-500',
-        title: 'Switching shared source',
-      };
-    default:
-      return {
-        badgeLabel: 'Ready',
-        badgeVariant: 'outline' as const,
-        cardClassName: '',
-        description: 'Choose a channel and server, then start sharing your screen.',
-        icon: CheckCircle2,
-        iconClassName: 'text-primary',
-        title: 'Ready to stream',
-      };
-  }
 }
 
 function getStreamKeyErrorDescription(message: string) {
@@ -302,12 +383,10 @@ function getStreamKeyErrorDescription(message: string) {
   return 'Refresh the page and try again. If it keeps failing, check channel settings and server config.';
 }
 
-type ActionPanelProps = {
+type AlertCardProps = {
   actions?: ReactNode;
   description: string;
   icon: LucideIcon;
   title: string;
   tone: 'warning' | 'destructive';
 };
-
-type PublishState = 'idle' | 'connecting' | 'live' | 'switching';

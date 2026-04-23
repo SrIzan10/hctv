@@ -31,6 +31,7 @@ export function useScreensharePublisher({
   const captureCleanupRef = useRef<(() => void) | null>(null);
   const publisherRef = useRef<MediaMTXWebRTCPublisher | null>(null);
   const [publishState, setPublishState] = useState<PublishState>('idle');
+  const [hasPreview, setHasPreview] = useState(false);
   const [issue, setIssue] = useState<PublisherIssue | null>(null);
   const browserWarning = useMemo(() => getBrowserWarning(), []);
 
@@ -49,6 +50,7 @@ export function useScreensharePublisher({
     detachCaptureCleanup();
     stopTracks(captureStreamRef.current);
     captureStreamRef.current = null;
+    setHasPreview(false);
     setPreviewStream(null);
   }, [detachCaptureCleanup, setPreviewStream]);
 
@@ -97,12 +99,28 @@ export function useScreensharePublisher({
 
       detachCaptureCleanup();
       captureStreamRef.current = nextStream;
+      setHasPreview(true);
       setPreviewStream(nextStream);
       attachCaptureStopListener(nextStream);
       stopTracks(previousStream);
     },
     [attachCaptureStopListener, detachCaptureCleanup, setPreviewStream]
   );
+
+  const previewSource = useCallback(async () => {
+    try {
+      setIssue(null);
+      setPublishState('previewing');
+
+      const stream = await requestCaptureStream();
+
+      commitCaptureStream(stream);
+      setPublishState('preview');
+    } catch (err) {
+      setPublishState(captureStreamRef.current ? 'preview' : 'idle');
+      setIssue(classifyPublisherIssue(err, 'preview'));
+    }
+  }, [commitCaptureStream]);
 
   const startPublishing = useCallback(async () => {
     if (!channelName) {
@@ -130,9 +148,12 @@ export function useScreensharePublisher({
       setPublishState('connecting');
 
       const videoCodec = await getPreferredVideoCodec();
-      const stream = await requestCaptureStream();
+      let stream = captureStreamRef.current;
 
-      commitCaptureStream(stream);
+      if (!stream) {
+        stream = await requestCaptureStream();
+        commitCaptureStream(stream);
+      }
 
       const publisher = new MediaMTXWebRTCPublisher({
         url: getWhipUrl(channelName, region),
@@ -163,11 +184,11 @@ export function useScreensharePublisher({
 
       publisherRef.current = publisher;
     } catch (err) {
-      disposeCurrentSession();
-      setPublishState('idle');
+      closePublisher();
+      setPublishState(captureStreamRef.current ? 'preview' : 'idle');
       setIssue(classifyPublisherIssue(err, 'start'));
     }
-  }, [channelName, commitCaptureStream, disposeCurrentSession, region, streamKey]);
+  }, [channelName, closePublisher, commitCaptureStream, region, streamKey]);
 
   const changeSource = useCallback(async () => {
     const publisher = publisherRef.current;
@@ -202,13 +223,18 @@ export function useScreensharePublisher({
   return {
     browserWarning,
     changeSource,
+    hasPreview,
     issue,
     isLive: publishState === 'live',
-    isSessionActive: publishState !== 'idle',
+    isPreviewReady: publishState === 'preview',
+    isPreviewingSource: publishState === 'previewing',
+    isSessionActive:
+      publishState === 'connecting' || publishState === 'live' || publishState === 'switching',
     isStarting: publishState === 'connecting',
     isSwitchingSource: publishState === 'switching',
     publishState,
     previewRef,
+    previewSource,
     startPublishing,
     stopPublishing,
   };
@@ -235,7 +261,11 @@ function getErrorMessage(error: unknown, fallback: string) {
 function classifyPublisherIssue(error: unknown, context: PublisherIssueContext): PublisherIssue {
   const message = getErrorMessage(
     error,
-    context === 'switch' ? 'Failed to change screenshare source' : 'Failed to start publishing'
+    context === 'switch'
+      ? 'Failed to change screenshare source'
+      : context === 'preview'
+        ? 'Failed to preview the selected source'
+        : 'Failed to start publishing'
   );
   const normalizedMessage = message.toLowerCase();
 
@@ -245,11 +275,15 @@ function classifyPublisherIssue(error: unknown, context: PublisherIssueContext):
       description:
         context === 'switch'
           ? 'Choose a new tab, window, or display in the browser picker to continue the broadcast.'
-          : 'Approve the browser screen-share prompt, then try again.',
+          : context === 'preview'
+            ? 'Approve the browser screen-share prompt so we can load your preview.'
+            : 'Approve the browser screen-share prompt, then try again.',
       title:
         context === 'switch'
           ? 'Source switch was cancelled or blocked'
-          : 'Screen-share permission was denied',
+          : context === 'preview'
+            ? 'Preview permission was denied'
+            : 'Screen-share permission was denied',
       tone: 'warning',
     };
   }
@@ -323,9 +357,15 @@ function classifyPublisherIssue(error: unknown, context: PublisherIssueContext):
     description:
       context === 'switch'
         ? 'Try choosing the source again. If it keeps failing, stop the stream and start a new session.'
-        : 'Try again. If it keeps failing, switch servers or reload the page.',
+        : context === 'preview'
+          ? 'Try choosing the source again. If it keeps failing, reload the page or switch browsers.'
+          : 'Try again. If it keeps failing, switch servers or reload the page.',
     title:
-      context === 'switch' ? 'Could not switch the shared source' : 'Could not start the stream',
+      context === 'switch'
+        ? 'Could not switch the shared source'
+        : context === 'preview'
+          ? 'Could not load the preview'
+          : 'Could not start the stream',
     tone: 'destructive',
   };
 }
@@ -375,7 +415,7 @@ async function getPreferredVideoCodec(): Promise<string> {
   );
 }
 
-type PublishState = 'idle' | 'connecting' | 'live' | 'switching';
+type PublishState = 'idle' | 'previewing' | 'preview' | 'connecting' | 'live' | 'switching';
 
 type UseScreensharePublisherOptions = {
   channelName: string;
@@ -390,7 +430,7 @@ type PublisherIssue = {
   tone: 'warning' | 'destructive';
 };
 
-type PublisherIssueContext = 'publish' | 'start' | 'switch' | 'warning';
+type PublisherIssueContext = 'preview' | 'publish' | 'start' | 'switch' | 'warning';
 
 type ScreenCaptureOptions = DisplayMediaStreamOptions & {
   monitorTypeSurfaces?: 'include' | 'exclude';
