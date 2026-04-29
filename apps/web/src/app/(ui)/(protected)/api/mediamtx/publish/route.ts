@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   }
   const { action: parsedAction, protocol: parsedProtocol, path, password, token } = parsed.data;
   action = parsedAction;
-  protocol = parsedProtocol ?? 'none';
+  protocol = parsedProtocol || 'none';
 
   if (parsedAction === 'publish' && (parsedProtocol === 'srt' || parsedProtocol === 'webrtc')) {
     const channelKey = await redis.get(`streamKey:${path}`);
@@ -98,7 +98,7 @@ const schema = z.object({
   ip: z.string().default(''),
   action: z.enum(['publish', 'read', 'playback', 'api', 'metrics', 'pprof']),
   path: z.string().default(''),
-  protocol: z.enum(['rtsp', 'rtmp', 'hls', 'webrtc', 'srt']).optional(),
+  protocol: z.union([z.enum(['rtsp', 'rtmp', 'hls', 'webrtc', 'srt']), z.literal('')]).optional(),
   id: z.string().nullable().default(null),
   query: z.string().default(''),
 });
