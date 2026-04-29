@@ -54,5 +54,11 @@ export function getMediamtxClientRegionOptions(): MediaMTXClientRegionOption[] {
       label: 'HQ Server A',
       whipEnabled: false,
     },
+    {
+      value: 'ethande',
+      emoji: '🇩🇪',
+      label: 'eth0\'s VPS',
+      whipEnabled: true,
+    },
   ];
 }
