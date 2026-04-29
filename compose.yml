@@ -61,6 +61,8 @@ services:
     build:
       context: .
       dockerfile: docker/mediamtx/Dockerfile
+    environment:
+      SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
     ports:
       - '8890:8890/udp'
   postgres-exporter:

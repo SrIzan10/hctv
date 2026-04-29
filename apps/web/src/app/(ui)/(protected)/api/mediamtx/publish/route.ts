@@ -22,6 +22,10 @@ export async function POST(request: NextRequest) {
   const parsed = schema.safeParse(body);
 
   if (!parsed.success) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Invalid MediaMTX auth request:', parsed.error.flatten());
+    }
+
     return finish('invalid request', 400, 'invalid_request');
   }
   const { action: parsedAction, protocol: parsedProtocol, path, password, token } = parsed.data;
@@ -91,14 +95,22 @@ export async function POST(request: NextRequest) {
   return finish('uhh', 401, 'unauthorized');
 }
 
+const emptyableString = z
+  .string()
+  .nullish()
+  .transform((value) => value ?? '');
+
 const schema = z.object({
-  user: z.string().default(''),
-  password: z.string().default(''),
-  token: z.string().default(''),
-  ip: z.string().default(''),
+  user: emptyableString,
+  password: emptyableString,
+  token: emptyableString,
+  ip: emptyableString,
   action: z.enum(['publish', 'read', 'playback', 'api', 'metrics', 'pprof']),
-  path: z.string().default(''),
-  protocol: z.union([z.enum(['rtsp', 'rtmp', 'hls', 'webrtc', 'srt']), z.literal('')]).optional(),
+  path: emptyableString,
+  protocol: z
+    .union([z.enum(['rtsp', 'rtmp', 'hls', 'webrtc', 'srt']), z.literal('')])
+    .nullish()
+    .transform((value) => value ?? ''),
   id: z.string().nullable().default(null),
-  query: z.string().default(''),
+  query: emptyableString,
 });
