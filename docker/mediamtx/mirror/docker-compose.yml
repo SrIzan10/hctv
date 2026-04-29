@@ -13,7 +13,6 @@ services:
       - --certificatesresolvers.letsencrypt.acme.dnschallenge=true
       - --certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare
       - --certificatesresolvers.letsencrypt.acme.dnschallenge.resolvers=1.1.1.1:53,1.0.0.1:53
-      - --log.level=DEBUG
     environment:
       CF_DNS_API_TOKEN: ${CF_DNS_API_TOKEN}
     ports:
@@ -27,7 +26,7 @@ services:
     restart: unless-stopped
 
   mediamtx:
-    image: bluenviron/mediamtx:1
+    image: srizan10/hclive-mediamtx
     volumes:
       - ./mediamtx.yml:/mediamtx.yml:ro
     environment:
