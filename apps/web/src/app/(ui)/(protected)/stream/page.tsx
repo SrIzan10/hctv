@@ -34,10 +34,10 @@ import type { MediaMTXRegion } from '@/lib/utils/mediamtx/regions';
 
 export default function Page() {
   const serverOptions = getMediamtxClientRegionOptions();
+  const whipEnabledServerOptions = serverOptions.filter((server) => server.whipEnabled);
+  const defaultRegion = whipEnabledServerOptions[0]?.value ?? 'hq';
   const [selectedChannel, setSelectedChannel] = useState('');
-  const [selectedRegion, setSelectedRegion] = useState<MediaMTXRegion>(
-    serverOptions[0]?.value ?? 'hq'
-  );
+  const [selectedRegion, setSelectedRegion] = useState<MediaMTXRegion>(defaultRegion);
   const { channels, isLoading: isLoadingChannels } = useOwnedChannels();
   const ownedChannels = channels.map(({ channel }) => channel);
   const {
@@ -67,12 +67,14 @@ export default function Page() {
   });
 
   const hasChannels = ownedChannels.length > 0;
-  const hasServerOptions = serverOptions.length > 0;
+  const selectedServer = whipEnabledServerOptions.find((server) => server.value === selectedRegion);
+  const hasWhipEnabledServerOptions = whipEnabledServerOptions.length > 0;
   const canStartPublishing =
     !isSessionActive &&
     !isPreviewingSource &&
     Boolean(selectedChannel) &&
     Boolean(streamKey) &&
+    Boolean(selectedServer?.whipEnabled) &&
     !isLoadingStreamKey;
   const channelPlaceholder = isLoadingChannels ? 'Loading channels...' : 'Select a channel';
   const primaryIssue = issue ?? browserWarning;
@@ -269,18 +271,14 @@ export default function Page() {
               <Select
                 value={selectedRegion}
                 onValueChange={(value) => setSelectedRegion(value as MediaMTXRegion)}
-                disabled={isSessionActive || !hasServerOptions}
+                disabled={isSessionActive || !hasWhipEnabledServerOptions}
               >
                 <SelectTrigger className="w-44">
                   <SelectValue placeholder="Select server" />
                 </SelectTrigger>
                 <SelectContent>
-                  {serverOptions.map((server) => (
-                    <SelectItem
-                      key={server.value}
-                      value={server.value}
-                      disabled={!server.whipEnabled}
-                    >
+                  {whipEnabledServerOptions.map((server) => (
+                    <SelectItem key={server.value} value={server.value}>
                       {server.label} {server.emoji}
                     </SelectItem>
                   ))}
