@@ -34,6 +34,7 @@ services:
       SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
       MTX_WEBRTCADDITIONALHOSTS: ${MEDIAMTX_WEBRTC_ADDITIONAL_HOSTS}
       MTX_AUTHHTTPADDRESS: ${MEDIAMTX_AUTH_HTTP_ADDRESS}
+      MTX_AUTHHTTPFINGERPRINT: ${MEDIAMTX_AUTH_HTTP_FINGERPRINT:-}
     labels:
       - traefik.enable=true
 
