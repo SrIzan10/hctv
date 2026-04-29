@@ -18,6 +18,7 @@ webrtcAdditionalHosts: []
 
 authMethod: http
 authHTTPAddress: https://hackclub.tv/api/mediamtx/publish
+authHTTPFingerprint:
 
 api: yes
 apiAddress: :9997
