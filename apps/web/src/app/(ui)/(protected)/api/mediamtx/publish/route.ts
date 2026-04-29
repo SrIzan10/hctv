@@ -24,9 +24,9 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return finish('invalid request', 400, 'invalid_request');
   }
-  const { action: parsedAction, protocol: parsedProtocol, path, password } = parsed.data;
+  const { action: parsedAction, protocol: parsedProtocol, path, password, token } = parsed.data;
   action = parsedAction;
-  protocol = parsedProtocol;
+  protocol = parsedProtocol ?? 'none';
 
   if (parsedAction === 'publish' && (parsedProtocol === 'srt' || parsedProtocol === 'webrtc')) {
     const channelKey = await redis.get(`streamKey:${path}`);
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
     return finish('authorized', 200, 'authorized_read');
   }
   if (parsedAction === 'api') {
-    if (password === process.env.MEDIAMTX_API_KEY) {
+    if (password === process.env.MEDIAMTX_API_KEY || token === process.env.MEDIAMTX_API_KEY) {
       return finish('authorized api', 200, 'authorized_api');
     }
 
@@ -92,13 +92,13 @@ export async function POST(request: NextRequest) {
 }
 
 const schema = z.object({
-  user: z.string(),
-  password: z.string(),
-  token: z.string(),
-  ip: z.string(),
+  user: z.string().default(''),
+  password: z.string().default(''),
+  token: z.string().default(''),
+  ip: z.string().default(''),
   action: z.enum(['publish', 'read', 'playback', 'api', 'metrics', 'pprof']),
-  path: z.string(),
-  protocol: z.enum(['rtsp', 'rtmp', 'hls', 'webrtc', 'srt']),
-  id: z.string().nullable(),
-  query: z.string(),
+  path: z.string().default(''),
+  protocol: z.enum(['rtsp', 'rtmp', 'hls', 'webrtc', 'srt']).optional(),
+  id: z.string().nullable().default(null),
+  query: z.string().default(''),
 });
