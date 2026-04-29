@@ -87,6 +87,23 @@ export default function Page() {
     }
   }, [isSessionActive, ownedChannels, selectedChannel]);
 
+  useEffect(() => {
+    if (!isLive) {
+      return;
+    }
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isLive]);
+
   const statusLabel = isLive
     ? 'LIVE'
     : isSwitchingSource
