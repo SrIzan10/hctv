@@ -90,6 +90,11 @@ export async function syncStream() {
 
       for (const r of regions) {
         const region = MEDIAMTX_SERVER_REGIONS[r];
+        if (!region) {
+          // continuing bc of the next if check
+          continue;
+        }
+
         if (!region.apiAuthHeader) {
           throw new Error('MEDIAMTX_API_KEY is required when querying the MediaMTX API');
         }
