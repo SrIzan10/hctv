@@ -11,6 +11,8 @@ hlsSegmentDuration: 2s
 hlsPartDuration: 500ms
 hlsSegmentCount: 10
 
+webrtc: yes
+
 authMethod: http
 authHTTPAddress: http://host.docker.internal:3000/api/mediamtx/publish
 

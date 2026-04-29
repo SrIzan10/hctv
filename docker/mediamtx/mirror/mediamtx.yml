@@ -20,6 +20,7 @@ authMethod: http
 authHTTPAddress: https://hackclub.tv/api/mediamtx/publish
 
 api: yes
-apiAddress: 0.0.0.0:9997
+apiAddress: :9997
+
 metrics: yes
 metricsAddress: :9998

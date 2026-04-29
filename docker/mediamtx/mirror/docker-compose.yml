@@ -1,0 +1,63 @@
+services:
+  traefik:
+    image: traefik:v3.5
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.srt.address=:8890/udp
+      - --entrypoints.webrtc-ice.address=:8189/udp
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+    ports:
+      - 80:80
+      - 443:443
+      - 8890:8890/udp
+      - 8189:8189/udp
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt
+    restart: unless-stopped
+
+  mediamtx:
+    image: bluenviron/mediamtx:1
+    volumes:
+      - ./mediamtx.yml:/mediamtx.yml:ro
+    environment:
+      MTX_WEBRTCADDITIONALHOSTS: ${MEDIAMTX_WEBRTC_ADDITIONAL_HOSTS}
+      MTX_AUTHHTTPADDRESS: ${MEDIAMTX_AUTH_HTTP_ADDRESS}
+    labels:
+      - traefik.enable=true
+
+      - traefik.http.routers.mediamtx-hls.rule=Host(`${MEDIAMTX_HLS_HOST}`)
+      - traefik.http.routers.mediamtx-hls.entrypoints=websecure
+      - traefik.http.routers.mediamtx-hls.tls.certresolver=letsencrypt
+      - traefik.http.routers.mediamtx-hls.service=mediamtx-hls
+      - traefik.http.services.mediamtx-hls.loadbalancer.server.port=8888
+
+      - traefik.http.routers.mediamtx-webrtc.rule=Host(`${MEDIAMTX_WEBRTC_HOST}`)
+      - traefik.http.routers.mediamtx-webrtc.entrypoints=websecure
+      - traefik.http.routers.mediamtx-webrtc.tls.certresolver=letsencrypt
+      - traefik.http.routers.mediamtx-webrtc.service=mediamtx-webrtc
+      - traefik.http.services.mediamtx-webrtc.loadbalancer.server.port=8889
+
+      - traefik.http.routers.mediamtx-api.rule=Host(`${MEDIAMTX_API_HOST}`)
+      - traefik.http.routers.mediamtx-api.entrypoints=websecure
+      - traefik.http.routers.mediamtx-api.tls.certresolver=letsencrypt
+      - traefik.http.routers.mediamtx-api.service=mediamtx-api
+      - traefik.http.services.mediamtx-api.loadbalancer.server.port=9997
+
+      - traefik.udp.routers.mediamtx-srt.entrypoints=srt
+      - traefik.udp.routers.mediamtx-srt.service=mediamtx-srt
+      - traefik.udp.services.mediamtx-srt.loadbalancer.server.port=8890
+
+      - traefik.udp.routers.mediamtx-webrtc-ice.entrypoints=webrtc-ice
+      - traefik.udp.routers.mediamtx-webrtc-ice.service=mediamtx-webrtc-ice
+      - traefik.udp.services.mediamtx-webrtc-ice.loadbalancer.server.port=8189
+    restart: unless-stopped
+
+volumes:
+  letsencrypt:

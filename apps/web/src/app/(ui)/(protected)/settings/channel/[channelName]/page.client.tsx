@@ -67,6 +67,7 @@ import { parseAsString, useQueryState } from 'nuqs';
 import { Write } from '@/components/ui/channel-desc-fancy-area/write';
 import { Preview } from '@/components/ui/channel-desc-fancy-area/preview';
 import { UploadButton } from '@/lib/uploadthing';
+import { useChannelStreamKey } from '@/lib/hooks/useChannelStreamKey';
 import { useOwnedChannels } from '@/lib/hooks/useUserList';
 import { ChannelSelect } from '@/components/app/ChannelSelect/ChannelSelect';
 import { useRouter } from 'next/navigation';
@@ -112,7 +113,6 @@ export default function ChannelSettingsClient({
   isPersonal,
 }: ChannelSettingsClientProps) {
   const confirm = useConfirm();
-  const [streamKey, setStreamKey] = useState(channel.streamKey?.key || '');
   const [keyVisible, setKeyVisible] = useState(false);
   const [copied, setCopied] = useState({
     streamKey: false,
@@ -123,6 +123,11 @@ export default function ChannelSettingsClient({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [region, setRegion] = useState<MediaMTXRegion>('hq');
   const channelList = useOwnedChannels();
+  const {
+    streamKey,
+    isRegenerating: isRegeneratingStreamKey,
+    regenerateStreamKey,
+  } = useChannelStreamKey(channel.name, channel.streamKey?.key);
   const router = useRouter();
   const channelSettingsFormRef = useRef<HTMLFormElement>(null);
 
@@ -185,22 +190,11 @@ export default function ChannelSettingsClient({
     }
   };
 
-  const regenerateStreamKey = async () => {
+  const handleRegenerateStreamKey = async () => {
     try {
-      const response = await fetch('/api/rtmp/streamKey', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ channel: channel.name }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setStreamKey(data.key);
-        toast.success('Stream key regenerated successfully');
-      } else {
-        toast.error('Failed to regenerate stream key');
-      }
-    } catch (error) {
+      await regenerateStreamKey();
+      toast.success('Stream key regenerated successfully');
+    } catch {
       toast.error('Failed to regenerate stream key');
     }
   };
@@ -247,6 +241,7 @@ export default function ChannelSettingsClient({
         <div>
           <ChannelSelect
             channelList={channelList.channels.map((c) => c.channel)}
+            includeCreate
             value={channel.name}
             onSelect={(value) => {
               if (value === 'create') {
@@ -561,7 +556,12 @@ export default function ChannelSettingsClient({
                           )}
                         </button>
                       </div>
-                      <Button onClick={regenerateStreamKey} variant="outline" size="smicon">
+                      <Button
+                        onClick={handleRegenerateStreamKey}
+                        variant="outline"
+                        size="smicon"
+                        loading={isRegeneratingStreamKey}
+                      >
                         <Key className="h-4 w-4" />
                       </Button>
                       <Button

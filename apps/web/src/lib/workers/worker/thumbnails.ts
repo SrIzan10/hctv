@@ -45,7 +45,8 @@ export async function registerThumbnailWorker(): Promise<void> {
           );
           return { success: true };
         } catch (ffmpegError) {
-          console.error(`FFmpeg error for ${name} on server ${server}:`, ffmpegError);
+          // commenting since its mostly due to the fact that the stream is likely offline
+          // console.error(`FFmpeg error for ${name} on server ${server}:`, ffmpegError);
           return { success: false, error: ffmpegError instanceof Error ? ffmpegError.message : String(ffmpegError) };
         }
       } catch (e) {
