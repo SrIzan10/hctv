@@ -80,6 +80,13 @@ export async function POST(request: NextRequest) {
     }
     return finish('authorized', 200, 'authorized_read');
   }
+  if (parsedAction === 'api') {
+    if (password === process.env.MEDIAMTX_API_KEY) {
+      return finish('authorized api', 200, 'authorized_api');
+    }
+
+    return finish('unauthorized api', 401, 'unauthorized_api');
+  }
 
   return finish('uhh', 401, 'unauthorized');
 }

@@ -90,7 +90,15 @@ export async function syncStream() {
 
       for (const r of regions) {
         const region = MEDIAMTX_SERVER_REGIONS[r];
-        const response = await fetch(`${region.apiUrl}/v3/paths/list?itemsPerPage=1000`);
+        if (!region.apiAuthHeader) {
+          throw new Error('MEDIAMTX_API_KEY is required when querying the MediaMTX API');
+        }
+
+        const response = await fetch(`${region.apiUrl}/v3/paths/list?itemsPerPage=1000`, {
+          headers: {
+            Authorization: region.apiAuthHeader,
+          },
+        });
 
         if (!response.ok) {
           recordStreamSyncScrape(r, 'error');

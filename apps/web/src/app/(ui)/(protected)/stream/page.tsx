@@ -259,7 +259,11 @@ export default function Page() {
                 </SelectTrigger>
                 <SelectContent>
                   {serverOptions.map((server) => (
-                    <SelectItem key={server.value} value={server.value}>
+                    <SelectItem
+                      key={server.value}
+                      value={server.value}
+                      disabled={!server.whipEnabled}
+                    >
                       {server.label} {server.emoji}
                     </SelectItem>
                   ))}
