@@ -5,11 +5,9 @@ export interface MediaMTXEnvs {
   apiAuthHeader?: string;
 }
 
-export const MEDIAMTX_SERVER_REGIONS: Record<MediaMTXRegion, MediaMTXEnvs> = {
-  hq: {
-    apiUrl: process.env.MEDIAMTX_API_HQ!,
-    apiAuthHeader: getMediamtxApiAuthHeader(),
-  },
+export const MEDIAMTX_SERVER_REGIONS: Partial<Record<MediaMTXRegion, MediaMTXEnvs>> = {
+  hq: createMediamtxEnvs(process.env.MEDIAMTX_API_HQ),
+  ethande: createMediamtxEnvs(process.env.MEDIAMTX_API_ETHANDE),
 };
 
 export function getMediamtxEnvs(region: MediaMTXRegion = 'hq'): MediaMTXEnvs {
@@ -30,4 +28,15 @@ function getMediamtxApiAuthHeader() {
   }
 
   return `Basic ${Buffer.from(`hctv-api:${apiKey}`).toString('base64')}`;
+}
+
+function createMediamtxEnvs(apiUrl?: string): MediaMTXEnvs | undefined {
+  if (!apiUrl) {
+    return undefined;
+  }
+
+  return {
+    apiUrl,
+    apiAuthHeader: getMediamtxApiAuthHeader(),
+  };
 }
