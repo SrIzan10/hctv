@@ -80,7 +80,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { getMediamtxClientEnvs } from '@/lib/utils/mediamtx/client';
+import {
+  getMediamtxClientEnvs,
+  getMediamtxClientRegionOptions,
+} from '@/lib/utils/mediamtx/client';
 import type { MediaMTXRegion } from '@/lib/utils/mediamtx/regions';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -121,6 +124,7 @@ export default function ChannelSettingsClient({
   const [selTab, setSelTab] = useQueryState('tab', parseAsString.withDefault('general'));
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const serverOptions = getMediamtxClientRegionOptions();
   const [region, setRegion] = useState<MediaMTXRegion>('hq');
   const channelList = useOwnedChannels();
   const {
@@ -587,7 +591,11 @@ export default function ChannelSettingsClient({
                           <SelectValue placeholder="Select region" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="hq">HQ Server A 🇺🇸</SelectItem>
+                          {serverOptions.map((server) => (
+                            <SelectItem key={server.value} value={server.value}>
+                              {server.label} {server.emoji}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
