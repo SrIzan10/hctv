@@ -23,8 +23,8 @@
     "sdk:example": "dotenvx run -f .env.sdk -- pnpm --filter=@hctv/sdk example"
   },
   "devDependencies": {
-    "prettier": "^3.6.2",
-    "turbo": "^2.4.4"
+    "prettier": "^3.8.3",
+    "turbo": "^2.9.7"
   },
   "packageManager": "pnpm@10.6.5"
 }
