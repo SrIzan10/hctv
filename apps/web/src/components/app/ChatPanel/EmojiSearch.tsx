@@ -9,7 +9,7 @@ interface EmojiSearchProps {
   onSelect: (emoji: string) => void;
   socket: WebSocket | null;
   emojiMap: Map<string, string>;
-  textareaRef: React.RefObject<HTMLTextAreaElement>;
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
 }
 
 export function EmojiSearch({

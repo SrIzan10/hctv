@@ -30,8 +30,11 @@ export default async function zodVerify<TSchema extends z.ZodTypeAny>(
 
   const zod = schema.safeParse(obj);
   if (!zod.success) {
+    const [issue] = zod.error.issues;
+    const path = issue.path[0] === undefined ? 'form' : String(issue.path[0]);
+
     return {
-      error: `From ${zod.error.errors[0].path[0]}: ${zod.error.errors[0].message}`,
+      error: `From ${path}: ${issue.message}`,
       success: false,
     };
   }

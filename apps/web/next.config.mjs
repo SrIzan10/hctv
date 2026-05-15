@@ -36,6 +36,9 @@ const nextConfig = {
       {
         hostname: 'eoceqrx2r7.ufs.sh'
       },
+      {
+        hostname: 'thesvg.org',
+      }
     ],
     minimumCacheTTL: 120,
   },

@@ -1118,9 +1118,7 @@ export default function ChannelSettingsClient({
                             value={
                               typeof field.value === 'string'
                                 ? field.value
-                                : Array.isArray(field.value)
-                                  ? field.value.join('\n')
-                                  : ''
+                                : ''
                             }
                             disabled={channel.is247}
                             rows={4}

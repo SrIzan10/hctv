@@ -2,7 +2,7 @@ import { uploadthingPlugin } from 'uploadthing/tw';
 import type { Config } from 'tailwindcss';
 
 const config = {
-  darkMode: ['class'],
+  darkMode: 'class',
   content: ['./src/**/*.{ts,tsx}'],
   prefix: '',
   theme: {

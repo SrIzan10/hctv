@@ -26,7 +26,6 @@ export function useProcessor(md: string) {
           mention: ["handle"],
         },
       })
-      // @ts-expect-error because mention is not valid html-tag
       .use(rehypeReact, {
         createElement,
         Fragment,
@@ -37,7 +36,7 @@ export function useProcessor(md: string) {
         },
       })
       .process(text)
-      .then((file) => {
+      .then((file: { result: React.ReactNode }) => {
         setContent(file.result);
       });
   }, [text]);

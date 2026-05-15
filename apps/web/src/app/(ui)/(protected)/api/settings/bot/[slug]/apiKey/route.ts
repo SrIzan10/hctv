@@ -19,7 +19,13 @@ export async function POST(request: NextRequest, segmentData: { params: Params }
   const body = await request.json();
   const parsedBody = bodySchema.safeParse(body);
   if (!parsedBody.success) {
-    return new Response(JSON.stringify({ success: false, error: parsedBody.error.errors.map(e => e.message).join(', ') }), { status: 400 });
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: parsedBody.error.issues.map((issue) => issue.message).join(', '),
+      }),
+      { status: 400 }
+    );
   }
 
   const { action, name } = parsedBody.data;

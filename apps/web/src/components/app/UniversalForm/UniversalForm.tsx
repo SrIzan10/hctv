@@ -1,6 +1,6 @@
 'use client';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Path, useForm } from 'react-hook-form';
+import { FieldValues, Path, useForm } from 'react-hook-form';
 import {
   Form,
   FormControl,
@@ -11,7 +11,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { z } from 'zod';
 import type { UniversalFormProps } from './types';
 import SubmitButton from '../SubmitButton/SubmitButton';
 import { useActionState } from 'react';
@@ -43,7 +42,7 @@ export const schemaDb = [
   { name: 'updateNotificationChannels', zod: updateNotificationChannelsSchema },
 ] as const;
 
-export function UniversalForm<T extends z.ZodType>({
+export function UniversalForm({
   fields,
   schemaName,
   action,
@@ -54,7 +53,7 @@ export function UniversalForm<T extends z.ZodType>({
   submitClassname,
   otherSubmitButton,
   submitButtonDivClassname,
-}: UniversalFormProps<T>) {
+}: UniversalFormProps) {
   // @ts-expect-error - idk
   const [state, formAction] = useActionState<{ success: boolean; error?: string }>(action, null);
   const schema = schemaDb.find((s) => s.name === schemaName)?.zod;
@@ -72,11 +71,9 @@ export function UniversalForm<T extends z.ZodType>({
     return { ...values, ...defaultValues };
   }, [fields, defaultValues]);
 
-  type FormData = z.infer<T>;
-
-  const form = useForm<FormData>({
+  const form = useForm<FieldValues>({
     resolver: zodResolver(schema as any),
-    defaultValues: initialValues as FormData,
+    defaultValues: initialValues,
   });
 
   React.useEffect(() => {
@@ -95,7 +92,7 @@ export function UniversalForm<T extends z.ZodType>({
           <FormField
             key={field.name}
             control={form.control}
-            name={field.name as Path<FormData>}
+            name={field.name as Path<FieldValues>}
             render={({ field: formField }) => (
               <FormItem className={field.type === 'hidden' ? 'hidden' : undefined}>
                 {field.type !== 'hidden' && field.label && <FormLabel>{field.label}</FormLabel>}
