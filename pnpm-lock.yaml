@@ -194,7 +194,7 @@ importers:
         version: 1.5.10
       hls.js:
         specifier: ^1.6.15
-        version: 1.6.15
+        version: 1.6.16
       lucia:
         specifier: ^3.2.2
         version: 3.2.2
@@ -5350,8 +5350,8 @@ packages:
   hls-video-element@1.5.10:
     resolution: {integrity: sha512-FruzD03CaQlPlNKfXO1njPbo3jCSImAtFwX1OqgFbMllTQzdYqAHODiWan0q3mr1cYCONOWiAz2/nX+2qHHC+g==}
 
-  hls.js@1.6.15:
-    resolution: {integrity: sha512-E3a5VwgXimGHwpRGV+WxRTKeSp2DW5DI5MWv34ulL3t5UNmyJWCQ1KmLEHbYzcfThfXG8amBL+fCYPneGHC4VA==}
+  hls.js@1.6.16:
+    resolution: {integrity: sha512-VSIRpLfRwlAAdGL4wiTucx2ScRipo0ed1FBatWkyt832jC4CReKstga6yIhYVwGu9LOBjuX9wzmRMeQdBJtzEA==}
 
   hoist-non-react-statics@3.3.2:
     resolution: {integrity: sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==}
@@ -14322,10 +14322,10 @@ snapshots:
   hls-video-element@1.5.10:
     dependencies:
       custom-media-element: 1.4.5
-      hls.js: 1.6.15
+      hls.js: 1.6.16
       media-tracks: 0.3.4
 
-  hls.js@1.6.15: {}
+  hls.js@1.6.16: {}
 
   hoist-non-react-statics@3.3.2:
     dependencies:
