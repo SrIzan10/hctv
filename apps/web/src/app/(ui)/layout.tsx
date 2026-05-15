@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import { cookies } from 'next/headers';
 import '../globals.css';
 import Navbar from '@/components/app/NavBar/NavBar';
@@ -9,7 +8,6 @@ import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/lib/providers/ThemeProvider';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/app/Sidebar/Sidebar';
-import { cn } from '@/lib/utils';
 import EditLivestream from '@/components/app/EditLivestream/EditLivestream';
 import { StreamInfoProvider } from '@/lib/providers/StreamInfoProvider';
 import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
@@ -18,8 +16,6 @@ import { ourFileRouter } from '@/lib/services/uploadthing/fileRouter';
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import SonnerNewVersion from '@/components/app/SonnerNewVersion/SonnerNewVersion';
 import ConfirmDialogProvider from '@/lib/providers/ConfirmProvider';
-
-const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'hackclub.tv',
@@ -37,7 +33,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className={cn('flex flex-col h-screen', inter.className)}>
+      <body className="flex h-screen flex-col">
         <SessionProvider value={sessionData}>
           <ThemeProvider
             attribute="class"

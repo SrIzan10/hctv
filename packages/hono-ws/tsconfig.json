@@ -6,6 +6,7 @@
     "module": "NodeNext",
     "declaration": true,
     "moduleResolution": "nodenext",
+    "ignoreDeprecations": "6.0",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,

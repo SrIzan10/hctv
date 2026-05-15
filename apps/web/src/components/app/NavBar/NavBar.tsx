@@ -23,7 +23,6 @@ import {
   PenSquare,
   LogOut,
   Code,
-  Github,
   Heart,
   Radio,
 } from 'lucide-react';
@@ -31,6 +30,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import Image from 'next/image';
 import Logo from '@/lib/assets/logo.webp';
 import { usePersonalChannels } from '@/lib/hooks/useUserList';
+import { JSX } from 'react';
 
 export default function Navbar(props: Props) {
   const { user } = useSession();
@@ -140,8 +140,13 @@ export default function Navbar(props: Props) {
                   </Link>
                   <div className="grid grid-cols-2 gap-1">
                     <Link href={'https://github.com/SrIzan10/hctv'} target="_blank" rel="noreferrer">
-                      <DropdownMenuItem className={`${menuItemClass} justify-center text-xs`}>
-                        <Github className="w-3.5 h-3.5 mr-1.5" />
+                      <DropdownMenuItem className={`${menuItemClass} justify-center text-xs gap-2`}>
+                        <Image
+                          src="https://thesvg.org/icons/github/dark.svg"
+                          alt="GitHub"
+                          width={14}
+                          height={14}
+                        />
                         Github
                       </DropdownMenuItem>
                     </Link>
