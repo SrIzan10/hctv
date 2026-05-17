@@ -300,7 +300,7 @@ export default function ChatPanel(props: Props) {
 
   return (
     <div
-      className={`${props.isObsPanel ? 'w-full text-white' : 'md:border-l border-border bg-mantle w-[350px] max-w-[350px]'} flex flex-col h-full`}
+      className={`${props.isObsPanel ? 'w-full text-white' : 'w-full max-w-none md:w-[350px] md:max-w-[350px] md:border-l border-border bg-mantle'} flex flex-col h-full min-w-0`}
     >
       <div
         ref={scrollRef}

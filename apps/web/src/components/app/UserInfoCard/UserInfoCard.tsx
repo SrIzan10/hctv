@@ -8,7 +8,7 @@ import { Preview } from '@/components/ui/channel-desc-fancy-area/preview';
 
 export default function UserInfoCard(props: Props) {
   return (
-    <div className="bg-mantle p-4 border-b h-48 flex flex-col">
+    <div className="bg-mantle p-4 border-b h-48 shrink-0 flex flex-col">
       <div className="flex items-start justify-between mb-4 flex-shrink-0">
         <div className="flex items-center space-x-4">
           <Avatar className="h-16 w-16">

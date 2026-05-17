@@ -177,8 +177,8 @@ export default function StreamPlayer() {
   }, [clearWaitingTimeout, playerKey, triggerRecovery]);
 
   return (
-    <div className="relative">
-      <MediaController className="w-full aspect-video">
+    <div className="relative flex h-full w-full min-w-0 items-center justify-center bg-black">
+      <MediaController className="h-full w-full">
         <HlsVideo
           key={playerKey}
           ref={videoRef}
@@ -186,6 +186,7 @@ export default function StreamPlayer() {
           crossOrigin="anonymous"
           playsInline
           autoplay
+          className="h-full w-full object-contain"
         />
         <MediaLoadingIndicator slot="centered-chrome" noAutohide />
         <MediaControlBar className="w-full px-2 sm:px-4 pb-1">
@@ -200,7 +201,10 @@ export default function StreamPlayer() {
             {(process.env.NODE_ENV === 'development' || userInfo?.isLive) && (
               <MediaChromeButton onClick={() => triggerRecovery('manual_reload')}>
                 <span className="flex h-4 w-4 items-center justify-center">
-                  <RefreshCw className={cn("h-5 w-5 shrink-0", isRecovering && "animate-spin")} strokeWidth={2.5} />
+                  <RefreshCw
+                    className={cn('h-5 w-5 shrink-0', isRecovering && 'animate-spin')}
+                    strokeWidth={2.5}
+                  />
                 </span>
                 <span slot="tooltip-content">Retry stream</span>
               </MediaChromeButton>
