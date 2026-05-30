@@ -1,4 +1,4 @@
-# Agent Guidelines for HackClub.tv
+# Agent Guidelines for tv
 
 This document provides essential information for AI coding agents working on the HackClub.tv codebase.
 

@@ -306,7 +306,7 @@ function classifyPublisherIssue(error: unknown, context: PublisherIssueContext):
     return {
       context,
       description:
-        'Use HackClub.tv over HTTPS or localhost in a Chromium-based browser, then try again.',
+        'Use the platform over HTTPS or localhost in a Chromium-based browser, then try again.',
       title: 'This browser or page cannot start screen sharing',
       tone: 'destructive',
     };
