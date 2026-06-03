@@ -89,7 +89,7 @@ services:
     extra_hosts:
       - 'host.docker.internal:host-gateway'
   grafana:
-    image: 'grafana/grafana:11.6.0'
+    image: 'grafana/grafana:11.6.15'
     depends_on:
       - prometheus
     environment:
