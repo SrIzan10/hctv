@@ -72,7 +72,7 @@ services:
     environment:
       DATA_SOURCE_NAME: 'postgresql://postgres:${PG_PASS}@postgres:5432/hctv?sslmode=disable'
   redis-exporter:
-    image: 'oliver006/redis_exporter:v1.67.0'
+    image: 'oliver006/redis_exporter:v1.86.0'
     environment:
       REDIS_ADDR: 'redis://redis:6379'
   prometheus:
