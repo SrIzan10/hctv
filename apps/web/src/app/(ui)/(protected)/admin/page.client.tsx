@@ -1209,162 +1209,137 @@ export default function AdminPanelClient({ currentUser }: AdminPanelClientProps)
                 />
 
                 <div className="space-y-5">
-                  <div className="rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background p-5 shadow-lg">
-                    <div className="mb-5 flex items-start gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 ring-2 ring-primary/20">
-                        <ShieldAlert className="h-5 w-5 text-primary" />
+                  {/* Verification Bypass */}
+                  <div className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-muted/20">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                        <ShieldAlert className="h-4 w-4 text-primary" />
                       </div>
-                      <div className="flex-1">
-                        <h3 className="text-base font-bold tracking-tight">
-                          ID Verification Bypass
-                        </h3>
-                        <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
-                          Allow existing users to bypass HCA verification and let them access the
-                          platform.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="relative mb-4">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search by email or username to manage bypass…"
-                        value={userSearch}
-                        onChange={(e) => setUserSearch(e.target.value)}
-                        className="pl-10 h-9 bg-background/50 border-2 focus:border-primary/50 transition-colors"
-                      />
-                    </div>
-
-                    {usersLoading ? (
-                      <LoadingRows cols={1} />
-                    ) : !userSearch ? (
-                      <div className="rounded-lg border-2 border-dashed border-primary/20 bg-primary/5 p-6 text-center">
-                        <div className="mx-auto w-fit rounded-full bg-primary/10 p-3 mb-2">
-                          <Search className="h-5 w-5 text-primary" />
-                        </div>
-                        <p className="text-sm font-medium text-foreground mb-1">
-                          Start searching to manage users
-                        </p>
+                      <div>
+                        <h3 className="text-sm font-semibold">ID Verification Bypass</h3>
                         <p className="text-xs text-muted-foreground">
-                          Type an email or username above to find users and toggle their
-                          verification bypass
+                          Allow existing users to bypass HCA verification and access the platform.
                         </p>
                       </div>
-                    ) : users.length === 0 ? (
-                      <div className="rounded-lg border-2 border-dashed border-border bg-muted/30 p-6 text-center">
-                        <XCircle className="mx-auto h-8 w-8 text-muted-foreground/50 mb-2" />
-                        <p className="text-sm font-medium text-foreground mb-1">No users found</p>
-                        <p className="text-xs text-muted-foreground">Try a different search term</p>
+                    </div>
+
+                    <div className="px-4 py-3">
+                      <div className="relative mb-3">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search by email or username…"
+                          value={userSearch}
+                          onChange={(e) => setUserSearch(e.target.value)}
+                          className="pl-10"
+                        />
                       </div>
-                    ) : (
-                      <>
-                        <div className="space-y-2 mb-3">
+
+                      {usersLoading ? (
+                        <LoadingRows cols={1} />
+                      ) : !userSearch ? (
+                        <EmptyState message="Search for users to manage verification bypass" />
+                      ) : users.length === 0 ? (
+                        <EmptyState message="No users found" />
+                      ) : (
+                        <div className="space-y-1.5">
                           {users.map((user) => (
                             <div
                               key={user.id}
-                              className={cn(
-                                'group relative overflow-hidden rounded-lg border-2 bg-card transition-all duration-200',
-                                user.bypassVerification
-                                  ? 'border-primary/40 bg-primary/5 hover:border-primary/50 hover:shadow-md hover:shadow-primary/5'
-                                  : 'border-border hover:border-primary/30 hover:shadow-sm'
-                              )}
+                              className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 hover:bg-muted/30 transition-colors"
                             >
-                              <div className="flex items-center gap-3 px-3 py-2.5">
-                                <Avatar className="h-9 w-9 shrink-0 ring-2 ring-background">
-                                  <AvatarImage src={user.pfpUrl} />
-                                  <AvatarFallback className="text-xs font-semibold">
-                                    {user.personalChannel?.name?.[0]?.toUpperCase() ?? 'U'}
-                                  </AvatarFallback>
-                                </Avatar>
+                              <Avatar className="h-8 w-8 shrink-0">
+                                <AvatarImage src={user.pfpUrl} />
+                                <AvatarFallback className="text-xs">
+                                  {user.personalChannel?.name?.[0]?.toUpperCase() ?? 'U'}
+                                </AvatarFallback>
+                              </Avatar>
 
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
-                                    <span className="font-semibold text-sm">
-                                      {user.personalChannel?.name ?? user.slack_id}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="font-medium text-sm">
+                                    {user.personalChannel?.name ?? user.slack_id}
+                                  </span>
+                                  {user.isAdmin && (
+                                    <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                                      <Shield className="h-2.5 w-2.5" />
+                                      Admin
                                     </span>
-                                    {user.isAdmin && (
-                                      <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/30">
-                                        <Shield className="h-2.5 w-2.5" />
-                                        Admin
-                                      </span>
-                                    )}
-                                    {user.bypassVerification && (
-                                      <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/30 animate-in fade-in zoom-in duration-200">
-                                        <CheckCircle2 className="h-2.5 w-2.5" />
-                                        Bypass Active
-                                      </span>
-                                    )}
-                                  </div>
-                                  <p className="text-xs text-muted-foreground truncate">
-                                    {user.email ?? 'No email'}
-                                  </p>
+                                  )}
+                                  {user.bypassVerification && (
+                                    <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                      <CheckCircle2 className="h-2.5 w-2.5" />
+                                      Bypass
+                                    </span>
+                                  )}
                                 </div>
-
-                                <Button
-                                  variant={user.bypassVerification ? 'outline' : 'default'}
-                                  size="sm"
-                                  onClick={() => handleToggleBypassVerification(user.id)}
-                                  className={cn(
-                                    'h-7 text-xs gap-1 shrink-0 font-semibold transition-all duration-200',
-                                    user.bypassVerification &&
-                                      'border-primary/30 hover:bg-primary/10 hover:border-primary/50'
-                                  )}
-                                >
-                                  {user.bypassVerification ? (
-                                    <>
-                                      <XCircle className="h-3 w-3" />
-                                      Disable
-                                    </>
-                                  ) : (
-                                    <>
-                                      <CheckCircle2 className="h-3 w-3" />
-                                      Enable
-                                    </>
-                                  )}
-                                </Button>
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {user.email ?? 'No email'}
+                                </p>
                               </div>
 
-                              {user.bypassVerification && (
-                                <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-primary/0 via-primary/50 to-primary/0" />
-                              )}
+                              <Button
+                                variant={user.bypassVerification ? 'outline' : 'default'}
+                                size="sm"
+                                onClick={() => handleToggleBypassVerification(user.id)}
+                                className="h-7 text-xs gap-1 shrink-0"
+                              >
+                                {user.bypassVerification ? (
+                                  <>
+                                    <XCircle className="h-3 w-3" />
+                                    Disable
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle2 className="h-3 w-3" />
+                                    Enable
+                                  </>
+                                )}
+                              </Button>
                             </div>
                           ))}
                         </div>
-                      </>
-                    )}
+                      )}
+                    </div>
                   </div>
 
-                  <div className="rounded-xl border-2 border-border bg-card p-4 shadow-lg">
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted ring-2 ring-border">
-                        <LogOut className="h-5 w-5 text-foreground" />
+                  {/* Session Management */}
+                  <div className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-muted/20">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted">
+                        <LogOut className="h-4 w-4" />
                       </div>
-                      <div className="flex-1">
-                        <h3 className="text-base font-bold tracking-tight">Session Management</h3>
-                        <p className="mt-0.5 text-xs text-muted-foreground mb-3 leading-relaxed">
-                          Force logout all other sessions except your current one. Useful for
-                          security maintenance.
+                      <div>
+                        <h3 className="text-sm font-semibold">Session Management</h3>
+                        <p className="text-xs text-muted-foreground">
+                          Force logout all other active sessions for security maintenance.
                         </p>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleLogoutOthers}
-                          disabled={loggingOutOthers}
-                          className="h-7 gap-1.5 font-semibold text-xs"
-                        >
-                          {loggingOutOthers ? (
-                            <>
-                              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                              Logging out...
-                            </>
-                          ) : (
-                            <>
-                              <LogOut className="h-3.5 w-3.5" />
-                              Logout All Other Sessions
-                            </>
-                          )}
-                        </Button>
                       </div>
+                    </div>
+
+                    <div className="px-4 py-3">
+                      <p className="text-xs text-muted-foreground mb-3">
+                        This will immediately sign out every other active session on hackclub.tv and
+                        keep only your current session active.
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleLogoutOthers}
+                        disabled={loggingOutOthers}
+                        className="h-7 gap-1.5 text-xs"
+                      >
+                        {loggingOutOthers ? (
+                          <>
+                            <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                            Logging out...
+                          </>
+                        ) : (
+                          <>
+                            <LogOut className="h-3.5 w-3.5" />
+                            Logout All Other Sessions
+                          </>
+                        )}
+                      </Button>
                     </div>
                   </div>
                 </div>
