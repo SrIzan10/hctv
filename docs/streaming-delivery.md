@@ -44,15 +44,15 @@ buffer-ahead p50 below four seconds.
 
 ## Cloudflare operations
 
-The Worker source is in `cloudflare/hls-edge/worker.js` and the deployed service is
-`hctv-hls-edge.sr-izan.workers.dev`. It is enabled directly on workers.dev because the current API
-token does not have Zone read/write permission for `hackclub.tv`.
+The Worker source is in `cloudflare/hls-edge/worker.js`. The deployed service is `hctv-hls-edge`,
+served through the Cloudflare-managed Custom Domain `hls-edge.hackclub.tv`.
 
-After granting the connector Zone permissions:
+The remaining zone-level infrastructure task is:
 
 1. Repair the origin certificate behind `whip.hackclub.tv`; Cloudflare currently returns 526.
-2. Attach a custom hostname such as `hls-edge.hackclub.tv` to `hctv-hls-edge`.
-3. Set `NEXT_PUBLIC_HLS_EDGE_URL` to that hostname and remove the workers.dev fallback after rollout.
+
+The workers.dev trigger can be disabled after the web deployment containing the Custom Domain URL
+has rolled out successfully.
 
 Do not add a Cache Everything rule directly to the MediaMTX hostnames. It would either bypass viewer
 authorization or vary the cache per session. Authentication must remain in front of the shared media

@@ -1,7 +1,7 @@
 import { MediaMTXRegion } from './regions';
 import { getEnv } from '@/lib/env';
 
-const PRODUCTION_HLS_EDGE_URL = 'https://hctv-hls-edge.sr-izan.workers.dev';
+const PRODUCTION_HLS_EDGE_URL = 'https://hls-edge.hackclub.tv';
 
 export interface MediaMTXClientEnvs {
   publicUrl: string;

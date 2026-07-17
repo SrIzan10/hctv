@@ -9,9 +9,9 @@ This Worker authenticates viewers before serving HLS and caches media at Cloudfl
 - Media cache entries are shared only after each viewer has passed authentication.
 - `hq` and `ethande` URL prefixes select the existing MediaMTX origin.
 
-The production worker is deployed as `hctv-hls-edge` in the `sr-izan.workers.dev` account. The
-web app uses it automatically on `hackclub.tv`; other deployments can set
-`NEXT_PUBLIC_HLS_EDGE_URL` explicitly.
+The production Worker is deployed as `hctv-hls-edge` with the Custom Domain
+`hls-edge.hackclub.tv`. The web app uses that hostname automatically on `hackclub.tv`; other
+deployments can set `NEXT_PUBLIC_HLS_EDGE_URL` explicitly.
 
-Zone-level routes are intentionally not required. If the Cloudflare token later receives Zone
-permissions, a custom hostname can replace the workers.dev URL without changing the Worker.
+The Custom Domain makes the Worker the origin, with DNS and its edge certificate managed by
+Cloudflare. A zone-level route and a MediaMTX origin DNS record are not required.
