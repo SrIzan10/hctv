@@ -132,6 +132,51 @@ function createMetricsStore() {
     registers: [register],
   });
 
+  const playbackEvents = new Counter({
+    name: 'hctv_web_playback_events_total',
+    help: 'Browser playback events grouped by event and stream region.',
+    labelNames: ['event', 'region'],
+    registers: [register],
+  });
+
+  const playbackErrors = new Counter({
+    name: 'hctv_web_playback_errors_total',
+    help: 'Browser HLS errors grouped by type, fatality, and stream region.',
+    labelNames: ['type', 'fatal', 'region'],
+    registers: [register],
+  });
+
+  const playbackStartupDuration = new Histogram({
+    name: 'hctv_web_playback_startup_duration_seconds',
+    help: 'Time from loading a stream to playback starting.',
+    labelNames: ['region'],
+    buckets: [0.25, 0.5, 1, 2, 4, 8, 15, 30],
+    registers: [register],
+  });
+
+  const playbackBufferAhead = new Histogram({
+    name: 'hctv_web_playback_buffer_ahead_seconds',
+    help: 'Forward playback buffer reported by browsers.',
+    labelNames: ['region'],
+    buckets: [0, 0.5, 1, 2, 4, 8, 15, 30, 60],
+    registers: [register],
+  });
+
+  const playbackBandwidth = new Histogram({
+    name: 'hctv_web_playback_bandwidth_kbps',
+    help: 'Bandwidth estimate reported by hls.js.',
+    labelNames: ['region'],
+    buckets: [128, 256, 512, 1000, 2000, 4000, 8000, 16000, 32000],
+    registers: [register],
+  });
+
+  const playbackDroppedFrames = new Counter({
+    name: 'hctv_web_playback_dropped_frames_total',
+    help: 'Dropped video frames reported by browsers in playback heartbeats.',
+    labelNames: ['region'],
+    registers: [register],
+  });
+
   return {
     register,
     activeViewers,
@@ -144,6 +189,12 @@ function createMetricsStore() {
     liveStreamTransitions,
     mediamtxAuthDuration,
     mediamtxAuthRequests,
+    playbackBandwidth,
+    playbackBufferAhead,
+    playbackDroppedFrames,
+    playbackErrors,
+    playbackEvents,
+    playbackStartupDuration,
     notificationsEnqueued,
     platformInventory,
     streamPathsSeen,
@@ -258,4 +309,47 @@ export function recordMediamtxAuth(
 ): void {
   metrics.mediamtxAuthRequests.inc({ action, protocol, outcome });
   metrics.mediamtxAuthDuration.observe({ action, protocol, outcome }, durationSeconds);
+}
+
+export function recordPlaybackMetric(metric: PlaybackMetric): void {
+  metrics.playbackEvents.inc({ event: metric.event, region: metric.region });
+
+  if (metric.event === 'error') {
+    metrics.playbackErrors.inc({
+      type: normalizePlaybackErrorType(metric.errorType),
+      fatal: metric.fatal ? 'true' : 'false',
+      region: metric.region,
+    });
+  }
+  if (metric.startupSeconds !== undefined) {
+    metrics.playbackStartupDuration.observe({ region: metric.region }, metric.startupSeconds);
+  }
+  if (metric.bufferedSeconds !== undefined) {
+    metrics.playbackBufferAhead.observe({ region: metric.region }, metric.bufferedSeconds);
+  }
+  if (metric.bandwidthKbps !== undefined) {
+    metrics.playbackBandwidth.observe({ region: metric.region }, metric.bandwidthKbps);
+  }
+  if (metric.droppedFrames !== undefined && metric.droppedFrames > 0) {
+    metrics.playbackDroppedFrames.inc({ region: metric.region }, metric.droppedFrames);
+  }
+}
+
+function normalizePlaybackErrorType(type?: string): string {
+  if (type === 'mediaError' || type === 'networkError' || type === 'keySystemError') {
+    return type;
+  }
+
+  return 'other';
+}
+
+interface PlaybackMetric {
+  event: string;
+  region: string;
+  bandwidthKbps?: number;
+  bufferedSeconds?: number;
+  droppedFrames?: number;
+  errorType?: string;
+  fatal?: boolean;
+  startupSeconds?: number;
 }

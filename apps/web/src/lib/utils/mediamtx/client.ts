@@ -1,6 +1,8 @@
 import { MediaMTXRegion } from './regions';
 import { getEnv } from '@/lib/env';
 
+const PRODUCTION_HLS_EDGE_URL = 'https://hctv-hls-edge.sr-izan.workers.dev';
+
 export interface MediaMTXClientEnvs {
   publicUrl: string;
   ingestRoute: string;
@@ -18,9 +20,10 @@ export interface MediaMTXClientRegionOption {
 }
 
 export function getMediamtxClientEnvs(region: MediaMTXRegion = 'hq'): MediaMTXClientEnvs {
+  const edgeUrl = getHlsEdgeUrl();
   const envs: Record<MediaMTXRegion, MediaMTXClientEnvs> = {
     hq: {
-      publicUrl: getEnv('NEXT_PUBLIC_MEDIAMTX_URL_HQ')!,
+      publicUrl: edgeUrl ? `${edgeUrl}/hq` : getEnv('NEXT_PUBLIC_MEDIAMTX_URL_HQ')!,
       ingestRoute: getEnv('NEXT_PUBLIC_MEDIAMTX_INGEST_ROUTE_HQ')!,
       whip: getEnv('NEXT_PUBLIC_MEDIAMTX_WHIP_ROUTE_HQ')!,
       whipEnabled: false,
@@ -28,7 +31,7 @@ export function getMediamtxClientEnvs(region: MediaMTXRegion = 'hq'): MediaMTXCl
       string: 'HQ Server A',
     },
     ethande: {
-      publicUrl: getEnv('NEXT_PUBLIC_MEDIAMTX_URL_ETHANDE')!,
+      publicUrl: edgeUrl ? `${edgeUrl}/ethande` : getEnv('NEXT_PUBLIC_MEDIAMTX_URL_ETHANDE')!,
       ingestRoute: getEnv('NEXT_PUBLIC_MEDIAMTX_INGEST_ROUTE_ETHANDE')!,
       whip: getEnv('NEXT_PUBLIC_MEDIAMTX_WHIP_ROUTE_ETHANDE')!,
       whipEnabled: true,
@@ -44,6 +47,20 @@ export function getMediamtxClientEnvs(region: MediaMTXRegion = 'hq'): MediaMTXCl
   }
 
   return regionEnvs;
+}
+
+function getHlsEdgeUrl(): string | undefined {
+  const configuredUrl = getEnv('NEXT_PUBLIC_HLS_EDGE_URL');
+
+  if (configuredUrl) {
+    return configuredUrl.replace(/\/$/, '');
+  }
+
+  if (typeof window !== 'undefined' && window.location.hostname === 'hackclub.tv') {
+    return PRODUCTION_HLS_EDGE_URL;
+  }
+
+  return undefined;
 }
 
 export function getMediamtxClientRegionOptions(): MediaMTXClientRegionOption[] {

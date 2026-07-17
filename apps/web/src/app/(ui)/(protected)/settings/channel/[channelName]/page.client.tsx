@@ -581,6 +581,10 @@ export default function ChannelSettingsClient({
                         )}
                       </Button>
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                      For reliable playback, use H.264 at 720p30, 2,000 Kbps CBR, a 2-second
+                      keyframe interval, and AAC audio at 128 Kbps.
+                    </p>
                   </div>
 
                   <div className="space-y-2">

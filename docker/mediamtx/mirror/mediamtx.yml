@@ -6,10 +6,10 @@ srt: yes
 srtAddress: :8890
 
 hls: yes
-hlsVariant: lowLatency
+hlsAlwaysRemux: yes
+hlsVariant: fmp4
 hlsSegmentDuration: 2s
-hlsPartDuration: 1s
-hlsSegmentCount: 10
+hlsSegmentCount: 15
 
 webrtc: yes
 webrtcAddress: :8889

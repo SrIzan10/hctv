@@ -45,7 +45,23 @@ _This guide demonstrates how to stream with hackclub.tv via OBS Studio. For othe
 
    (_Your OBS settings should now look like this_)
 
-8. You can now safely apply the changes in OBS and start streaming.
+8. Open `Output`, switch Output Mode to `Advanced`, and use these streaming settings:
+   - Encoder: an H.264 hardware encoder when available, otherwise x264
+   - Rate control: CBR
+   - Video bitrate: 2,000 Kbps
+   - Keyframe interval: 2 seconds
+   - Profile: High
+   - Audio: AAC at 128 Kbps
+
+   <Aside type="caution">
+     HackClub.tv currently relays the bitrate you send. Bitrates above 2,500 Kbps can make the
+     stream unwatchable for viewers on slower or long-distance connections.
+   </Aside>
+
+9. Open `Video` and set the output resolution to `1280x720` and the frame rate to `30 FPS`.
+
+10. You can now safely apply the changes in OBS and start streaming.
+
 </Steps>
 
 Thanks for using this guide and happy streaming!
