@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Live health, streaming, chat, and infrastructure metrics for HackClub.tv",
+  "description": "Live health, streaming, chat, and infrastructure metrics for hctv",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -2841,7 +2841,7 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "HackClub.tv Overview",
+  "title": "hctv Overview",
   "uid": "hctv-overview",
   "version": 4,
   "weekStart": ""

@@ -1,6 +1,6 @@
 # Streaming delivery
 
-HackClub.tv prioritizes reliable global playback over sub-second latency.
+hctv prioritizes reliable global playback over sub-second latency.
 
 ## Playback path
 

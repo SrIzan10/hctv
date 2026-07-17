@@ -2,7 +2,7 @@
 
 This Worker authenticates viewers before serving HLS and caches media at Cloudflare's edge.
 
-- Viewer credentials are validated against HackClub.tv and cached for 30 seconds by a SHA-256
+- Viewer credentials are validated against hctv and cached for 30 seconds by a SHA-256
   digest. Raw credentials are never used as cache keys.
 - Playlists and codec initialization segments are cached for one second; uniquely named media
   segments are cached for one day.

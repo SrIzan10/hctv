@@ -1,10 +1,10 @@
 # Agent Guidelines for tv
 
-This document provides essential information for AI coding agents working on the HackClub.tv codebase.
+This document provides essential information for AI coding agents working on the hctv codebase.
 
 ## Project Overview
 
-HackClub.tv is a live streaming platform built with Next.js 16, Prisma, and Turbo monorepo architecture.
+hctv is a live streaming platform built with Next.js 16, Prisma, and Turbo monorepo architecture.
 
 - **Monorepo**: Turborepo with pnpm workspaces
 - **Apps**: web (Next.js), chat (Hono), docs
