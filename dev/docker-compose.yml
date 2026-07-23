@@ -20,7 +20,7 @@ services:
     ports:
       - 6379:6379
   redis-exporter:
-    image: oliver006/redis_exporter:v1.67.0
+    image: oliver006/redis_exporter:v1.88.0
     environment:
       REDIS_ADDR: redis://redis:6379
   mediamtx:
