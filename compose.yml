@@ -65,6 +65,7 @@ services:
       SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
       MTX_AUTHHTTPADDRESS: ${MEDIAMTX_AUTH_HTTP_ADDRESS:-http://hctv:3000/api/mediamtx/publish}
       MTX_WEBRTCADDITIONALHOSTS: ${MEDIAMTX_WEBRTC_ADDITIONAL_HOSTS:-}
+      MTX_HLSCDNSECRET: ${MEDIAMTX_CDN_SECRET:-}
     ports:
       - '8890:8890/udp'
   postgres-exporter:

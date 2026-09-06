@@ -112,25 +112,23 @@ export default function StreamPlayer() {
         xhr.withCredentials = true;
         xhr.setRequestHeader('Authorization', `Basic ${credentials}`);
       },
-      lowLatencyMode: false,
+      lowLatencyMode: true,
       enableWorker: true,
       backBufferLength: 30,
       maxBufferLength: 30,
       maxMaxBufferLength: 60,
       maxBufferSize: 60 * 1000 * 1000,
       liveSyncMode: 'buffered',
-      liveSyncDurationCount: 4,
-      liveMaxLatencyDurationCount: 12,
+      liveSyncDurationCount: 2,
+      liveMaxLatencyDurationCount: 6,
       liveSyncOnStallIncrease: 1,
       maxLiveSyncPlaybackRate: 1.1,
-      capLevelToPlayerSize: true,
-      capLevelOnFPSDrop: true,
-      startLevel: -1,
-      testBandwidth: true,
+      startLevel: 0,
+      testBandwidth: false,
       fragLoadPolicy: {
         default: {
-          maxTimeToFirstByteMs: 15_000,
-          maxLoadTimeMs: 120_000,
+          maxTimeToFirstByteMs: 8_000,
+          maxLoadTimeMs: 30_000,
           timeoutRetry: {
             maxNumRetry: 4,
             retryDelayMs: 500,

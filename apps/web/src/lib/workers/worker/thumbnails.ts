@@ -3,7 +3,7 @@ import { getRedisConnection } from '@hctv/db';
 import { promisify } from 'node:util';
 import { existsSync } from 'node:fs';
 import { exec as execCallback } from 'node:child_process';
-import { getMediamtxClientEnvs } from '@/lib/utils/mediamtx/client';
+import { getMediamtxClientEnvs, getHlsEdgeUrl } from '@/lib/utils/mediamtx/client';
 const pExec = promisify(execCallback);
 
 const globalForWorker = global as unknown as {
@@ -32,12 +32,18 @@ export async function registerThumbnailWorker(): Promise<void> {
         
         const m3u8location = `${srvValues.publicUrl}/${name}/index.m3u8`;
         const thumbDir = '/dev/shm/hctv-thumb';
-        
+
         if (!existsSync(thumbDir)) {
           await pExec(`mkdir -p ${thumbDir}`);
         }
 
-        const header = `-headers "Authorization: Basic ${Buffer.from(`skibiditoilet:${process.env.MEDIAMTX_PUBLISH_KEY}`).toString('base64')}\r\n" `;
+        const edgeUrl = getHlsEdgeUrl();
+        const viaEdge = edgeUrl !== undefined && m3u8location.startsWith(edgeUrl);
+        const cdnSecret = process.env.MEDIAMTX_CDN_SECRET;
+        const header =
+          cdnSecret && !viaEdge
+            ? `-headers "Authorization: Bearer ${cdnSecret}\r\n" `
+            : `-headers "Authorization: Basic ${Buffer.from(`skibiditoilet:${process.env.MEDIAMTX_PUBLISH_KEY}`).toString('base64')}\r\n" `;
         
         try {
           await pExec(

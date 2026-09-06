@@ -1,0 +1,4 @@
+[tools]
+bun = "latest"
+node = "lts"
+pnpm = "latest"

@@ -49,7 +49,7 @@ export function getMediamtxClientEnvs(region: MediaMTXRegion = 'hq'): MediaMTXCl
   return regionEnvs;
 }
 
-function getHlsEdgeUrl(): string | undefined {
+export function getHlsEdgeUrl(): string | undefined {
   const configuredUrl = getEnv('NEXT_PUBLIC_HLS_EDGE_URL');
 
   if (configuredUrl) {

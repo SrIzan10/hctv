@@ -10,10 +10,12 @@ import { Button } from '@/components/ui/button';
 import type { StreamInfo, Channel } from '@hctv/db';
 import { useIsMobile } from '@/lib/hooks/useMobile';
 import { useAllChannels } from '@/lib/hooks/useUserList';
+import { getHlsEdgeUrl } from '@/lib/utils/mediamtx/client';
 
 export default function LiveStream(props: Props) {
   const isMobile = useIsMobile();
   const { channels, refresh } = useAllChannels(5000);
+  const hlsEdgeUrl = getHlsEdgeUrl();
   const [isRestricted, setIsRestricted] = useState(props.initialRestrictionActive);
   const [restrictionExpiresAt, setRestrictionExpiresAt] = useState<string | null>(
     props.initialRestrictionExpiresAt
@@ -62,6 +64,9 @@ export default function LiveStream(props: Props) {
 
   return (
     <div className={`${isMobile ? 'flex flex-col' : 'flex'} h-[calc(100vh-64px)] w-full min-w-0`}>
+      {hlsEdgeUrl && props.streamInfo.isLive && (
+        <link rel="preconnect" href={hlsEdgeUrl} crossOrigin="use-credentials" />
+      )}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {isRestricted && props.canViewRestrictedStream && (
           <div className="flex items-start gap-3 border-b border-amber-500/30 bg-amber-500/10 px-4 py-3 text-foreground">

@@ -1,7 +1,7 @@
 const AUTH_URL = 'https://hackclub.tv/api/mediamtx/publish';
 const AUTH_CACHE_SECONDS = 30;
 const PLAYLIST_CACHE_SECONDS = 1;
-const INIT_SEGMENT_CACHE_SECONDS = 1;
+const INIT_SEGMENT_CACHE_SECONDS = 15;
 const SEGMENT_CACHE_SECONDS = 86400;
 const ALLOWED_ORIGINS = new Set(['https://hackclub.tv', 'http://localhost:3000']);
 const MEDIA_ORIGINS = {
@@ -10,7 +10,7 @@ const MEDIA_ORIGINS = {
 };
 
 export default {
-  async fetch(request, _env, context) {
+  async fetch(request, env, context) {
     if (request.method === 'OPTIONS') {
       return corsResponse(request, new Response(null, { status: 204 }));
     }
@@ -34,11 +34,21 @@ export default {
       return corsResponse(request, new Response('Unauthorized', { status: 401 }));
     }
 
+    // Blocking playlist reloads must always reach the origin: a cached response
+    // would be stale, and `_HLS_skip` responses are delta playlists that must
+    // never be cached under the shared playlist key. Range requests must not be
+    // served from full-body cache entries.
+    const isBlockingPlaylist =
+      route.mediaPath.endsWith('.m3u8') && url.searchParams.has('_HLS_msn');
+    const isCacheable = !isBlockingPlaylist && !request.headers.has('Range');
+
     const cacheKey = createMediaCacheKey(request, route);
     const cache = caches.default;
-    const cached = await cache.match(cacheKey);
-    if (cached) {
-      return corsResponse(request, withCacheStatus(cached, 'HIT'));
+    if (isCacheable) {
+      const cached = await cache.match(cacheKey);
+      if (cached) {
+        return corsResponse(request, withCacheStatus(cached, 'HIT'));
+      }
     }
 
     const originUrl = new URL(route.mediaPath, MEDIA_ORIGINS[route.region]);
@@ -47,14 +57,18 @@ export default {
     const originHeaders = new Headers(request.headers);
     originHeaders.delete('Cookie');
     originHeaders.delete('Origin');
+    const cdnSecret = env?.HLS_CDN_SECRET;
+    if (cdnSecret) {
+      originHeaders.set('Authorization', `Bearer ${cdnSecret}`);
+    }
     const originResponse = await fetch(originUrl, {
       method: request.method,
       headers: originHeaders,
       redirect: 'follow',
     });
 
-    const response = makeCacheableResponse(originResponse, route.mediaPath);
-    if (request.method === 'GET' && response.ok && !request.headers.has('Range')) {
+    const response = makeCacheableResponse(originResponse, route.mediaPath, isBlockingPlaylist);
+    if (isCacheable && request.method === 'GET' && response.ok) {
       context.waitUntil(cache.put(cacheKey, response.clone()));
     }
 
@@ -142,17 +156,19 @@ function createMediaCacheKey(request, route) {
   return new Request(url, { method: 'GET' });
 }
 
-function makeCacheableResponse(originResponse, mediaPath) {
+function makeCacheableResponse(originResponse, mediaPath, isBlockingPlaylist) {
   const headers = new Headers(originResponse.headers);
   headers.delete('Set-Cookie');
   headers.delete('Cf-Cache-Status');
   headers.set(
     'Cache-Control',
-    mediaPath.endsWith('.m3u8')
-      ? `public, max-age=${PLAYLIST_CACHE_SECONDS}, stale-if-error=10`
-      : mediaPath.endsWith('/init.mp4')
-        ? `public, max-age=${INIT_SEGMENT_CACHE_SECONDS}`
-        : `public, max-age=${SEGMENT_CACHE_SECONDS}, immutable`
+    isBlockingPlaylist
+      ? 'no-store'
+      : mediaPath.endsWith('.m3u8')
+        ? `public, max-age=${PLAYLIST_CACHE_SECONDS}, stale-if-error=10`
+        : mediaPath.endsWith('/init.mp4')
+          ? `public, max-age=${INIT_SEGMENT_CACHE_SECONDS}`
+          : `public, max-age=${SEGMENT_CACHE_SECONDS}, immutable`
   );
 
   return new Response(originResponse.body, {
