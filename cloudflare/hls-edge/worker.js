@@ -215,7 +215,15 @@ function createMediaCacheKey(request, route) {
 function makeCacheableResponse(originResponse, mediaPath, isDirectedPlaylist) {
   const headers = new Headers(originResponse.headers);
   headers.delete('Set-Cookie');
+  // Keep the origin layer's cache status, renamed so it cannot be confused with this worker's own
+  // X-HCTV-Cache. The media origins are themselves proxied with their own cache rules, so deleting
+  // this header hid whether a miss here was also a miss there, which is the difference between a
+  // caching problem and an origin round-trip problem.
+  const originCacheStatus = headers.get('Cf-Cache-Status');
   headers.delete('Cf-Cache-Status');
+  if (originCacheStatus) {
+    headers.set('X-HCTV-Origin-Cache', originCacheStatus);
+  }
   headers.set(
     'Cache-Control',
     isDirectedPlaylist
@@ -267,7 +275,14 @@ function corsResponse(request, response) {
   }
   headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, Range');
   headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
-  headers.set('Access-Control-Expose-Headers', 'Content-Length, Content-Range, X-HCTV-Cache');
+  headers.set(
+    'Access-Control-Expose-Headers',
+    'Content-Length, Content-Range, X-HCTV-Cache, X-HCTV-Origin-Cache'
+  );
+  // Without this, Resource Timing zeroes out ttfb and transferSize for these cross-origin media
+  // requests, leaving only total duration. That blindness is why diagnosing playback latency here
+  // needed hand-rolled xhr instrumentation instead of the timing data the browser already has.
+  headers.set('Timing-Allow-Origin', origin && ALLOWED_ORIGINS.has(origin) ? origin : '*');
 
   return new Response(response.body, {
     status: response.status,

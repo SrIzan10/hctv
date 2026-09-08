@@ -29,21 +29,37 @@ import type { MediaMTXRegion } from '@/lib/utils/mediamtx/regions';
 const FATAL_RECOVERY_COOLDOWN_MS = 5000;
 const PLAYBACK_HEARTBEAT_MS = 30_000;
 // how far short of the buffer end a foreground re-sync can land. seeking to the exact end
-// leaves nothing to decode and just stalls again, so we leave one part's worth of room.
-const RESYNC_BUFFER_MARGIN_SECONDS = 0.2;
+// leaves nothing to decode and just stalls again, so we leave a little room.
+const RESYNC_BUFFER_MARGIN_SECONDS = 0.5;
 
-// mediamtx publishes 1s segments split into 200ms ll-hls parts (docker/mediamtx/mediamtx.yml),
-// so target duration is 1s. we use the seconds-based config here instead of the *durationcount
-// knobs so the latency window isn't stuck on a 1s grid.
+// why this player does not use ll-hls, measured live on hackclub.tv/hq over ~3 minutes:
 //
-// 2s is the lowest we can go without starving. hls.js keeps the playhead at
-// estimateLiveEdge() - target, and that edge estimate is extrapolated from the last playlist it
-// got, so the real distance to the publisher swings by about one edge-to-origin round trip every
-// reload. 1.4s didn't leave enough room for that swing, so the playhead kept catching up to the
-// end of the buffer and stalling several times a minute. liveSyncOnStallIncrease below treats
-// this as a floor, not a hard target: a viewer who keeps stalling gets granted more room.
-const TARGET_LATENCY_SECONDS = 2;
-const MAX_LATENCY_SECONDS = 6;
+// hls.js loads media serially per track, one request in flight at a time. instrumenting xhr on the
+// live page showed avg 3.95 / max 5 concurrent requests, which is exactly the four loaders it runs
+// (playlist and fragment, for video and audio), and media requests landed at 5.02/s across both
+// tracks. that is 2.5 parts per second per track, one per ~400ms, matching the measured ~385ms p50
+// request latency. so each track was ingesting 200ms of media per ~385ms of wall clock.
+//
+// that ratio is the whole problem. mediamtx publishes 200ms parts, and every request costs ~385ms
+// p50 / ~576ms p90 / ~1s tail, because each one is a cache MISS at the edge (unique part url, so
+// with few viewers nobody has fetched it before) and goes to the origin. ingesting at ~half of
+// real time, the playhead can never hold a spot near the live edge: it drifts back, starves,
+// force-seeks forward, and starves again. measured 47 stalls and 23 force-seeks in 56s, a median
+// forward buffer of 0.32s, and the playhead sitting ~17s behind the live edge. no value of
+// liveSyncDuration fixes that, which is why raising it from 1.4 to 2 to 3.5 kept not working.
+//
+// whole 1s segments invert the ratio: 1s of media per ~385ms request is ~2.6x real time, so the
+// player keeps up and holds its position. we give up nominal ll-hls and land around 4s of latency,
+// which is far better than the 17s it was actually achieving while stalling constantly.
+//
+// to get real low latency back, the request latency has to drop under the part duration. that is an
+// infra fix, not a player setting: cloudflare argo smart routing (not purchased on this zone), an
+// origin closer to viewers, or enough concurrent viewers per stream that edge caching starts
+// hitting. raising mediamtx's hlsPartDuration to ~1s would also make ll-hls viable again, but at
+// that size it buys nothing over plain segments.
+const USE_LOW_LATENCY_HLS = false;
+const TARGET_LATENCY_SECONDS = 4;
+const MAX_LATENCY_SECONDS = 12;
 
 const { Player, usePlayer, useMedia } = createPlayer({ features: liveVideoFeatures });
 
@@ -96,14 +112,13 @@ export default function StreamPlayer() {
             xhr.withCredentials = true;
             xhr.setRequestHeader('Authorization', `Basic ${credentials}`);
           },
-          lowLatencyMode: true,
+          lowLatencyMode: USE_LOW_LATENCY_HLS,
           enableWorker: true,
 
           // setting liveSyncDuration makes hls.js target this instead of the playlist's own
-          // part-hold-back, which floors at 3 part durations (600ms here). that's not enough
-          // slack once a blocking playlist reload has to cross the cloudflare edge to reach the
-          // origin, so we pick the budget ourselves. liveSyncOnStallIncrease below gives viewers
-          // who keep stalling a bit more room on top of it.
+          // hold-back. we pick the budget ourselves because it has to cover a full segment plus a
+          // request round trip. liveSyncOnStallIncrease below gives viewers who keep stalling a bit
+          // more room on top of it.
           liveSyncDuration: TARGET_LATENCY_SECONDS,
           liveMaxLatencyDuration: MAX_LATENCY_SECONDS,
           liveSyncOnStallIncrease: 1,
@@ -127,10 +142,10 @@ export default function StreamPlayer() {
           startLevel: 0,
           testBandwidth: false,
 
-          // how long we wait for a part's first byte. parts are only 200ms of media, so a slow
-          // one costs latency the catch-up rate has to pay back later, but a timeout is worse: the
-          // retry re-requests media we're about to need, and the playhead can run out of buffer
-          // while it waits. stay generous here and let liveMaxLatencyDuration be the real limit.
+          // how long we wait for a segment's first byte. a timeout is worse than a slow success
+          // here, because the retry re-requests media we're about to need and the playhead can run
+          // out of buffer while it waits. measured p90 is ~576ms with a ~1s tail, so 8s is far
+          // beyond anything healthy. stay generous and let liveMaxLatencyDuration be the real limit.
           fragLoadPolicy: {
             default: {
               maxTimeToFirstByteMs: 8_000,
