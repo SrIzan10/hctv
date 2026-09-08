@@ -31,13 +31,26 @@ export default {
       return corsResponse(request, new Response('Not found', { status: 404 }));
     }
 
-    // Blocking playlist reloads must always reach the origin: a cached response
-    // would be stale, and `_HLS_skip` responses are delta playlists that must
-    // never be cached under the shared playlist key. Range requests must not be
-    // served from full-body cache entries.
-    const isBlockingPlaylist =
-      route.mediaPath.endsWith('.m3u8') && url.searchParams.has('_HLS_msn');
-    const isCacheable = !isBlockingPlaylist && !request.headers.has('Range');
+    // A playlist request carrying any LL-HLS delivery directive must always reach the origin, and
+    // must never be stored: createMediaCacheKey drops the query string, so all three directives
+    // share one key with the plain playlist. `_HLS_msn`/`_HLS_part` are blocking reloads whose
+    // whole purpose is to be newer than anything cached, and `_HLS_skip` returns a delta playlist
+    // with the segments before the skip boundary omitted — cached under the shared key, that
+    // answers a later full-playlist request with a playlist full of holes.
+    //
+    // Checking only `_HLS_msn` was not enough: hls.js builds directives in
+    // PlaylistLoader.getDeliveryDirectives, which sets `skip` from CAN-SKIP-UNTIL independently of
+    // the blocking msn/part pair, and HlsUrlParameters.addDirectives omits `_HLS_msn` whenever msn
+    // is undefined. A `?_HLS_skip=YES` request with no msn is therefore reachable whenever the
+    // origin advertises CAN-SKIP-UNTIL.
+    const isPlaylist = route.mediaPath.endsWith('.m3u8');
+    const hasDeliveryDirective =
+      url.searchParams.has('_HLS_msn') ||
+      url.searchParams.has('_HLS_part') ||
+      url.searchParams.has('_HLS_skip');
+    const isDirectedPlaylist = isPlaylist && hasDeliveryDirective;
+    // Range requests must not be served from, or stored as, full-body cache entries.
+    const isCacheable = !isDirectedPlaylist && !request.headers.has('Range');
 
     const cacheKey = createMediaCacheKey(request, route);
     const cache = caches.default;
@@ -77,7 +90,7 @@ export default {
       redirect: 'follow',
     });
 
-    const response = makeCacheableResponse(originResponse, route.mediaPath, isBlockingPlaylist);
+    const response = makeCacheableResponse(originResponse, route.mediaPath, isDirectedPlaylist);
     if (isCacheable && request.method === 'GET' && response.ok) {
       context.waitUntil(cache.put(cacheKey, response.clone()));
     }
@@ -199,13 +212,13 @@ function createMediaCacheKey(request, route) {
   return new Request(url, { method: 'GET' });
 }
 
-function makeCacheableResponse(originResponse, mediaPath, isBlockingPlaylist) {
+function makeCacheableResponse(originResponse, mediaPath, isDirectedPlaylist) {
   const headers = new Headers(originResponse.headers);
   headers.delete('Set-Cookie');
   headers.delete('Cf-Cache-Status');
   headers.set(
     'Cache-Control',
-    isBlockingPlaylist
+    isDirectedPlaylist
       ? 'no-store'
       : mediaPath.endsWith('.m3u8')
         ? `public, max-age=${PLAYLIST_CACHE_SECONDS}, stale-if-error=10`

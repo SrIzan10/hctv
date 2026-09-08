@@ -28,12 +28,21 @@ import type { MediaMTXRegion } from '@/lib/utils/mediamtx/regions';
 
 const FATAL_RECOVERY_COOLDOWN_MS = 5000;
 const PLAYBACK_HEARTBEAT_MS = 30_000;
+// how far short of the buffer end a foreground re-sync can land. seeking to the exact end
+// leaves nothing to decode and just stalls again, so we leave one part's worth of room.
+const RESYNC_BUFFER_MARGIN_SECONDS = 0.2;
 
-// MediaMTX publishes 1s segments split into 200ms LL-HLS parts (docker/mediamtx/mediamtx.yml),
-// so EXT-X-TARGETDURATION is 1. That makes the `*DurationCount` knobs a 1s-per-step ruler, which
-// is too coarse to tune a sub-2s budget with, so the latency window is expressed in seconds.
-// hls.js throws if the count and seconds families are mixed in one config.
-const TARGET_LATENCY_SECONDS = 1.4;
+// mediamtx publishes 1s segments split into 200ms ll-hls parts (docker/mediamtx/mediamtx.yml),
+// so target duration is 1s. we use the seconds-based config here instead of the *durationcount
+// knobs so the latency window isn't stuck on a 1s grid.
+//
+// 2s is the lowest we can go without starving. hls.js keeps the playhead at
+// estimateLiveEdge() - target, and that edge estimate is extrapolated from the last playlist it
+// got, so the real distance to the publisher swings by about one edge-to-origin round trip every
+// reload. 1.4s didn't leave enough room for that swing, so the playhead kept catching up to the
+// end of the buffer and stalling several times a minute. liveSyncOnStallIncrease below treats
+// this as a floor, not a hard target: a viewer who keeps stalling gets granted more room.
+const TARGET_LATENCY_SECONDS = 2;
 const MAX_LATENCY_SECONDS = 6;
 
 const { Player, usePlayer, useMedia } = createPlayer({ features: liveVideoFeatures });
@@ -65,7 +74,7 @@ export default function StreamPlayer() {
         body: JSON.stringify({ event, region, ...values }),
         keepalive: true,
       }).catch(() => {
-        // QoE reporting must never interrupt playback.
+        // metrics reporting should never break playback.
       });
     },
     [region]
@@ -90,80 +99,51 @@ export default function StreamPlayer() {
           lowLatencyMode: true,
           enableWorker: true,
 
-          // Defining liveSyncDuration makes hls.js target this instead of the playlist's
-          // PART-HOLD-BACK, whose spec floor is 3 part durations (600ms here) — under a second of
-          // slack, which no viewer can hold once a blocking playlist reload has to cross the
-          // Cloudflare edge to reach the origin. So the budget is picked here instead, and
-          // liveSyncOnStallIncrease relaxes it by up to one target duration for viewers that keep
-          // stalling at this distance from the edge.
+          // setting liveSyncDuration makes hls.js target this instead of the playlist's own
+          // part-hold-back, which floors at 3 part durations (600ms here). that's not enough
+          // slack once a blocking playlist reload has to cross the cloudflare edge to reach the
+          // origin, so we pick the budget ourselves. liveSyncOnStallIncrease below gives viewers
+          // who keep stalling a bit more room on top of it.
           liveSyncDuration: TARGET_LATENCY_SECONDS,
           liveMaxLatencyDuration: MAX_LATENCY_SECONDS,
           liveSyncOnStallIncrease: 1,
-          // Catch-up rate. The latency controller ramps playbackRate on a sigmoid, so a cap this
-          // low only ever applies a gentle nudge; 1.15 closes a one-second gap in ~7s.
+          // catch-up rate. the latency controller ramps playback speed on a curve, so a cap this
+          // low is just a gentle nudge, closing a one-second gap in about 7s.
           maxLiveSyncPlaybackRate: 1.15,
-          // Re-sync inside what is already buffered rather than hard-seeking to the edge and
-          // re-buffering from empty.
+          // re-sync inside what's already buffered instead of jumping to the edge and
+          // re-buffering from nothing.
           liveSyncMode: 'buffered',
 
-          // Buffer caps. At the live edge the forward buffer is bounded by the edge itself, so
-          // these bound memory and how much catch-up material is retained, not latency.
-          backBufferLength: 10,
-          maxBufferLength: 10,
-          maxMaxBufferLength: 30,
-          maxBufferSize: 30 * 1000 * 1000,
+          // buffer caps. at the live edge the forward buffer is bounded by the edge itself, so
+          // these mostly control memory and how far back a viewer can catch up from, not latency.
+          backBufferLength: 30,
+          maxBufferLength: 30,
+          maxMaxBufferLength: 60,
+          maxBufferSize: 60 * 1000 * 1000,
 
-          // Stall handling sized for a ~1.4s buffer: the defaults wait 2s and nudge 3 times,
-          // which is longer than the whole buffer this player holds.
-          highBufferWatchdogPeriod: 1,
-          nudgeMaxRetry: 5,
-          // The 0.25s default is wider than a single 200ms part, which blurs part lookup at the edge.
-          maxFragLookUpTolerance: 0.1,
-
-          // Start playing off the first playlist rather than waiting for a bandwidth probe.
+          // start playing off the first playlist instead of waiting for a bandwidth probe.
           initialLiveManifestSize: 1,
           startFragPrefetch: true,
           startLevel: 0,
           testBandwidth: false,
 
-          // Blocking playlist reloads are long-polls held open by the origin until the next part
-          // exists, so first-byte time is legitimately ~a part duration plus the edge-to-origin
-          // round trip. Past that the publisher is the one stalling and a fresh request beats
-          // waiting out the 10s default.
-          playlistLoadPolicy: {
-            default: {
-              maxTimeToFirstByteMs: 5_000,
-              maxLoadTimeMs: 10_000,
-              timeoutRetry: {
-                maxNumRetry: 3,
-                retryDelayMs: 0,
-                maxRetryDelayMs: 0,
-              },
-              errorRetry: {
-                maxNumRetry: 3,
-                retryDelayMs: 250,
-                maxRetryDelayMs: 2000,
-                backoff: 'exponential',
-              },
-            },
-          },
-          // Parts are 200ms of media, so hanging on one is pure latency debt for the catch-up rate
-          // to pay off later: cut first-byte time to a third of what it was. Total load time stays
-          // generous on purpose — that limit catches slow-but-progressing transfers, where a retry
-          // is no faster than letting the current one finish.
+          // how long we wait for a part's first byte. parts are only 200ms of media, so a slow
+          // one costs latency the catch-up rate has to pay back later, but a timeout is worse: the
+          // retry re-requests media we're about to need, and the playhead can run out of buffer
+          // while it waits. stay generous here and let liveMaxLatencyDuration be the real limit.
           fragLoadPolicy: {
             default: {
-              maxTimeToFirstByteMs: 3_000,
+              maxTimeToFirstByteMs: 8_000,
               maxLoadTimeMs: 30_000,
               timeoutRetry: {
                 maxNumRetry: 4,
-                retryDelayMs: 250,
-                maxRetryDelayMs: 2000,
+                retryDelayMs: 500,
+                maxRetryDelayMs: 4000,
                 backoff: 'exponential',
               },
               errorRetry: {
                 maxNumRetry: 6,
-                retryDelayMs: 500,
+                retryDelayMs: 1000,
                 maxRetryDelayMs: 8000,
                 backoff: 'exponential',
               },
@@ -249,7 +229,7 @@ function StreamPlayerContent({
     reportPlayback('load');
 
     void media.play().catch(() => {
-      // Autoplay can be rejected; the controls remain available for manual playback.
+      // autoplay can get rejected, that's fine, the controls are still there for manual playback.
     });
   }, [media, reportPlayback, source]);
 
@@ -266,7 +246,14 @@ function StreamPlayerContent({
         return;
       }
       lastStallAt = now;
-      reportPlayback('stall', { bufferedSeconds: getBufferedAhead(media) });
+      // we sample latency here too, not just on the heartbeat, since the heartbeat's 30s cadence
+      // never lines up with a stall. without this we can't tell if the playhead starved because
+      // it was too close to the edge or because a load was just slow.
+      const engine: Hls | null = media.engine;
+      reportPlayback('stall', {
+        bufferedSeconds: getBufferedAhead(media),
+        latencySeconds: engine?.latency || undefined,
+      });
     };
 
     const handlePlaying = () => {
@@ -330,19 +317,27 @@ function StreamPlayerContent({
         return;
       }
 
-      // Backgrounded tabs get throttled and drift behind the edge, but hls.js only force-seeks
-      // once latency passes liveMaxLatencyDuration. Anything between the target and that ceiling
-      // is left to the catch-up playback rate, which needs tens of seconds to claw back the
-      // seconds a background pause adds. Seeking on the way back is instant instead.
+      // backgrounded tabs get throttled and drift behind the edge, but hls.js only force-seeks
+      // once latency passes liveMaxLatencyDuration. anything between the target and that ceiling
+      // gets left to the catch-up playback rate, which can take tens of seconds to claw back what
+      // a background pause adds. we seek on the way back instead so it's instant.
       if (engine.latency <= targetLatency + details.targetduration) {
         return;
       }
-      if (syncPosition <= videoElement.currentTime) {
+
+      // stay inside what's already buffered here too, same idea as liveSyncMode: 'buffered'
+      // above. a throttled tab can leave the buffer ending well short of the sync position, and
+      // seeking past it just trades a gradual catch-up for an immediate re-buffer, which is the
+      // spinner we're trying to avoid. landing just inside the buffer end recovers what we can
+      // for free and leaves the rest to the catch-up rate.
+      const bufferedEnd = videoElement.currentTime + getBufferedAhead(media);
+      const seekTarget = Math.min(syncPosition, bufferedEnd - RESYNC_BUFFER_MARGIN_SECONDS);
+      if (seekTarget <= videoElement.currentTime) {
         return;
       }
 
       reportPlayback('resync', { latencySeconds: engine.latency });
-      videoElement.currentTime = syncPosition;
+      videoElement.currentTime = seekTarget;
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
