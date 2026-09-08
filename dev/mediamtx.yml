@@ -10,7 +10,7 @@ hlsAlwaysRemux: yes
 hlsVariant: lowLatency
 hlsSegmentDuration: 1s
 hlsSegmentCount: 15
-hlsPartDuration: 200ms
+hlsPartDuration: 1s
 
 webrtc: yes
 
