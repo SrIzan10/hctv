@@ -180,87 +180,35 @@
   }
 }
 
-media-controller {
-  --media-primary-color: #ffffff;
-  --media-secondary-color: transparent;
-  --media-control-background: transparent;
-  --media-control-hover-background: color-mix(in oklab, var(--primary) 40%, transparent);
-  
-  /* Range colors */
-  --media-range-track-background: hsla(0, 0%, 100%, 0.3);
-  --media-range-bar-color: var(--primary);
-  --media-range-thumb-background: var(--primary);
-  --media-range-thumb-border-radius: 50%;
-  --media-range-thumb-height: 12px;
-  --media-range-thumb-width: 12px;
-  --media-range-track-height: 4px;
-  
-  /* Layout & structure */
+.stream-player-container {
   border-radius: calc(var(--radius) * 1.5);
   overflow: hidden;
   border: 1px solid color-mix(in oklab, var(--border) 20%, transparent);
   background-color: #000;
-  box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
 }
 
-media-control-bar {
-  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
+.stream-control-bar {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0) 100%);
   backdrop-filter: blur(4px);
   -webkit-mask-image: linear-gradient(to top, black 50%, transparent 100%);
   mask-image: linear-gradient(to top, black 50%, transparent 100%);
-  width: 100%;
-  box-sizing: border-box;
-  justify-content: space-between;
-  padding: 2rem 0.75rem 0.75rem;
-  align-items: center;
 }
 
-media-time-range {
-  --media-preview-background: color-mix(in oklab, var(--card) 95%, transparent);
-  --media-preview-border-radius: var(--radius);
-  --media-time-display-color: var(--foreground);
-}
-
-media-time-display {
-  --media-text-color: #ffffff;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.5px;
-}
-
-media-controller::part(centered-layer) {
-  background-color: transparent;
-  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-media-controller:not([mediapaused])[userinactive]::part(centered-layer) {
-  opacity: 0;
-  transition: opacity 0.8s ease;
-}
-
-media-loading-indicator {
-  --media-loading-icon-width: 56px;
-  --media-loading-icon-height: 56px;
-  --media-loading-icon-color: var(--primary);
+.stream-buffering-indicator {
   filter: drop-shadow(0 0 8px color-mix(in oklab, var(--primary) 40%, transparent));
 }
 
-media-play-button,
-media-mute-button,
-media-fullscreen-button,
-media-chrome-button {
+.stream-control-button {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: var(--radius);
   margin: 0 2px;
 }
 
-media-play-button:hover,
-media-mute-button:hover,
-media-fullscreen-button:hover,
-media-chrome-button:hover {
+.stream-control-button:hover {
   transform: scale(1.1);
-  --media-control-background: color-mix(in oklab, var(--primary) 85%, transparent);
-  --media-button-icon-color: #ffffff;
+  background-color: color-mix(in oklab, var(--primary) 85%, transparent);
+  color: #ffffff;
 }
 
 /* A pulse animation for the live/retry indicator if needed */
@@ -270,9 +218,4 @@ media-chrome-button:hover {
 }
 .stream-live-indicator {
   animation: stream-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-media-volume-range {
-  width: 90px;
-  height: 40px; /* Aligns with standard media button heights */
 }

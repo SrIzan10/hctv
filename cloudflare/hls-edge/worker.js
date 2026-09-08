@@ -1,5 +1,7 @@
 const AUTH_URL = 'https://hackclub.tv/api/mediamtx/publish';
-const AUTH_CACHE_SECONDS = 30;
+const AUTH_TIMESTAMP_HEADER = 'X-HCTV-Authorized-At';
+const AUTH_FRESH_SECONDS = 30;
+const AUTH_ENTRY_SECONDS = 300;
 const PLAYLIST_CACHE_SECONDS = 1;
 const INIT_SEGMENT_CACHE_SECONDS = 15;
 const SEGMENT_CACHE_SECONDS = 86400;
@@ -29,11 +31,6 @@ export default {
       return corsResponse(request, new Response('Not found', { status: 404 }));
     }
 
-    const authorization = request.headers.get('Authorization');
-    if (!authorization || !(await isAuthorized(authorization, route.mediaPath, url.origin))) {
-      return corsResponse(request, new Response('Unauthorized', { status: 401 }));
-    }
-
     // Blocking playlist reloads must always reach the origin: a cached response
     // would be stale, and `_HLS_skip` responses are delta playlists that must
     // never be cached under the shared playlist key. Range requests must not be
@@ -44,11 +41,24 @@ export default {
 
     const cacheKey = createMediaCacheKey(request, route);
     const cache = caches.default;
-    if (isCacheable) {
-      const cached = await cache.match(cacheKey);
-      if (cached) {
-        return corsResponse(request, withCacheStatus(cached, 'HIT'));
-      }
+    // Start the media lookup alongside authentication rather than behind it. For a part already
+    // held at this colo the two local cache reads are the entire request, so serialising them
+    // doubles the time to first byte for every cache hit.
+    const cachedMedia = isCacheable
+      ? cache.match(cacheKey).catch(() => undefined)
+      : Promise.resolve(undefined);
+
+    const authorization = request.headers.get('Authorization');
+    if (
+      !authorization ||
+      !(await isAuthorized(authorization, route.mediaPath, url.origin, context))
+    ) {
+      return corsResponse(request, new Response('Unauthorized', { status: 401 }));
+    }
+
+    const cached = await cachedMedia;
+    if (cached) {
+      return corsResponse(request, withCacheStatus(cached, 'HIT'));
     }
 
     const originUrl = new URL(route.mediaPath, MEDIA_ORIGINS[route.region]);
@@ -57,7 +67,7 @@ export default {
     const originHeaders = new Headers(request.headers);
     originHeaders.delete('Cookie');
     originHeaders.delete('Origin');
-    const cdnSecret = env?.HLS_CDN_SECRET;
+    const cdnSecret = getCdnSecret(env, route.region);
     if (cdnSecret) {
       originHeaders.set('Authorization', `Bearer ${cdnSecret}`);
     }
@@ -76,14 +86,57 @@ export default {
   },
 };
 
-async function isAuthorized(authorization, mediaPath, workerOrigin) {
+async function isAuthorized(authorization, mediaPath, workerOrigin, context) {
   const credentialHash = await sha256(authorization);
   const authCacheKey = new Request(`${workerOrigin}/__auth/${credentialHash}`);
   const cached = await caches.default.match(authCacheKey);
+
   if (cached) {
+    const authorizedAt = Number(cached.headers.get(AUTH_TIMESTAMP_HEADER)) || 0;
+    if (Date.now() - authorizedAt <= AUTH_FRESH_SECONDS * 1000) {
+      return true;
+    }
+
+    // The entry outlives its freshness window so that re-checking it never puts a round trip to
+    // hctv in front of a blocking playlist reload. At 200ms parts a viewer makes ~5 media
+    // requests a second, so a blocking re-check lands as a visible mid-stream latency spike every
+    // AUTH_FRESH_SECONDS. Revalidate behind the response instead; a viewer whose session hctv now
+    // rejects loses the entry and is turned away on their next request.
+    context.waitUntil(revalidateAuthorization(authorization, mediaPath, authCacheKey));
     return true;
   }
 
+  if (!(await verifyWithOrigin(authorization, mediaPath))) {
+    return false;
+  }
+
+  await storeAuthorization(authCacheKey);
+  return true;
+}
+
+async function revalidateAuthorization(authorization, mediaPath, authCacheKey) {
+  // Refresh the timestamp before the round trip, so the requests arriving while it is in flight
+  // read the entry as fresh instead of each queueing a revalidation of their own.
+  await storeAuthorization(authCacheKey);
+
+  if (!(await verifyWithOrigin(authorization, mediaPath))) {
+    await caches.default.delete(authCacheKey);
+  }
+}
+
+function storeAuthorization(authCacheKey) {
+  return caches.default.put(
+    authCacheKey,
+    new Response('ok', {
+      headers: {
+        'Cache-Control': `max-age=${AUTH_ENTRY_SECONDS}`,
+        [AUTH_TIMESTAMP_HEADER]: String(Date.now()),
+      },
+    })
+  );
+}
+
+async function verifyWithOrigin(authorization, mediaPath) {
   const credentials = parseBasicAuthorization(authorization);
   if (!credentials) {
     return false;
@@ -106,17 +159,7 @@ async function isAuthorized(authorization, mediaPath, workerOrigin) {
     }),
   });
 
-  if (!response.ok) {
-    return false;
-  }
-
-  await caches.default.put(
-    authCacheKey,
-    new Response('ok', {
-      headers: { 'Cache-Control': `max-age=${AUTH_CACHE_SECONDS}` },
-    })
-  );
-  return true;
+  return response.ok;
 }
 
 function parseBasicAuthorization(authorization) {
@@ -176,6 +219,19 @@ function makeCacheableResponse(originResponse, mediaPath, isBlockingPlaylist) {
     statusText: originResponse.statusText,
     headers,
   });
+}
+
+function getCdnSecret(env, region) {
+  if (!env) {
+    return undefined;
+  }
+
+  const regionSecret = env[`HLS_CDN_SECRET_${region.toUpperCase()}`];
+  if (regionSecret) {
+    return regionSecret;
+  }
+
+  return env.HLS_CDN_SECRET;
 }
 
 function withCacheStatus(response, status) {

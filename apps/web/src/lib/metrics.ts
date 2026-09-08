@@ -162,6 +162,14 @@ function createMetricsStore() {
     registers: [register],
   });
 
+  const playbackLatency = new Histogram({
+    name: 'hctv_web_playback_latency_seconds',
+    help: 'Distance from the live edge reported by hls.js.',
+    labelNames: ['region'],
+    buckets: [0.5, 1, 1.5, 2, 3, 4, 6, 10, 20],
+    registers: [register],
+  });
+
   const playbackBandwidth = new Histogram({
     name: 'hctv_web_playback_bandwidth_kbps',
     help: 'Bandwidth estimate reported by hls.js.',
@@ -194,6 +202,7 @@ function createMetricsStore() {
     playbackDroppedFrames,
     playbackErrors,
     playbackEvents,
+    playbackLatency,
     playbackStartupDuration,
     notificationsEnqueued,
     platformInventory,
@@ -327,6 +336,9 @@ export function recordPlaybackMetric(metric: PlaybackMetric): void {
   if (metric.bufferedSeconds !== undefined) {
     metrics.playbackBufferAhead.observe({ region: metric.region }, metric.bufferedSeconds);
   }
+  if (metric.latencySeconds !== undefined) {
+    metrics.playbackLatency.observe({ region: metric.region }, metric.latencySeconds);
+  }
   if (metric.bandwidthKbps !== undefined) {
     metrics.playbackBandwidth.observe({ region: metric.region }, metric.bandwidthKbps);
   }
@@ -351,5 +363,6 @@ interface PlaybackMetric {
   droppedFrames?: number;
   errorType?: string;
   fatal?: boolean;
+  latencySeconds?: number;
   startupSeconds?: number;
 }

@@ -2,8 +2,11 @@
 
 This Worker authenticates viewers before serving HLS and caches media at Cloudflare's edge.
 
-- Viewer credentials are validated against hctv and cached for 30 seconds by a SHA-256
-  digest. Raw credentials are never used as cache keys.
+- Viewer credentials are validated against hctv and cached by a SHA-256 digest. Raw
+  credentials are never used as cache keys. An entry is trusted outright for 30 seconds
+  and then revalidated in the background for up to five minutes, so re-checking a session
+  never blocks a blocking playlist reload; a session hctv rejects is turned away on the
+  request after its revalidation fails.
 - Media cache entries are shared only after each viewer has passed authentication.
 - `hq` and `ethande` URL prefixes select the existing MediaMTX origin.
 - Low-Latency HLS is passed through end to end: blocking playlist reloads
