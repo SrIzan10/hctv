@@ -69,15 +69,15 @@ services:
     ports:
       - '8890:8890/udp'
   postgres-exporter:
-    image: 'prometheuscommunity/postgres-exporter:v0.17.1'
+    image: 'prometheuscommunity/postgres-exporter:v0.20.1'
     environment:
       DATA_SOURCE_NAME: 'postgresql://postgres:${PG_PASS}@postgres:5432/hctv?sslmode=disable'
   redis-exporter:
-    image: 'oliver006/redis_exporter:v1.67.0'
+    image: 'oliver006/redis_exporter:v1.91.1'
     environment:
       REDIS_ADDR: 'redis://redis:6379'
   prometheus:
-    image: 'prom/prometheus:v3.4.2'
+    image: 'prom/prometheus:v3.14.0'
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -90,7 +90,7 @@ services:
     extra_hosts:
       - 'host.docker.internal:host-gateway'
   grafana:
-    image: 'grafana/grafana:11.6.0'
+    image: 'grafana/grafana:11.6.16'
     depends_on:
       - prometheus
     environment:
