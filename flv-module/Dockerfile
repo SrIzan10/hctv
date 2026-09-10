@@ -1,4 +1,4 @@
-FROM alpine:3.19 AS builder
+FROM alpine:3.24 AS builder
 
 RUN apk add --no-cache \
     build-base \
@@ -15,7 +15,7 @@ RUN apk add --no-cache \
     make -j$(nproc) && make install && \
     rm -rf /nginx-1.26.3.tar.gz /nginx-1.26.3 /nginx-http-flv-module
 
-FROM alpine:3.19
+FROM alpine:3.24
 
 COPY --from=builder /usr/local/nginx /usr/local/nginx
 
