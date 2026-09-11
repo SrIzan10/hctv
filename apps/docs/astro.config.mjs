@@ -32,11 +32,11 @@ export default defineConfig({
       sidebar: [
         {
           label: 'API',
-          autogenerate: { directory: 'api' },
+          items: [{ autogenerate: { directory: 'api' } }],
         },
         {
           label: 'Guides',
-          autogenerate: { directory: 'guides' },
+          items: [{ autogenerate: { directory: 'guides' } }],
         },
         typeDocSidebarGroup,
       ],
