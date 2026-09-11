@@ -3,7 +3,7 @@
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type Hls from 'hls.js';
-import type { HlsJsMedia, HlsSource } from '@videojs/media/dom/hls-js';
+import type { HlsJsAdapter, HlsSource } from '@videojs/hlsjs-video';
 import {
   BufferingIndicator,
   Container,
@@ -195,7 +195,7 @@ function StreamPlayerContent({
   isLive: boolean;
   reportPlayback: (event: PlaybackMetricEvent, values?: PlaybackMetricValues) => void;
 }) {
-  const media = useMedia() as HlsJsMedia | null;
+  const media = useMedia() as HlsJsAdapter | null;
   const error = usePlayer(selectError);
   const quality = usePlayer(selectQuality);
   const videoElementRef = useRef<HTMLVideoElement | null>(null);
@@ -485,7 +485,7 @@ function StreamPlayerContent({
   );
 }
 
-function getBufferedAhead(media: HlsJsMedia): number {
+function getBufferedAhead(media: HlsJsAdapter): number {
   for (let index = 0; index < media.buffered.length; index += 1) {
     if (
       media.currentTime >= media.buffered.start(index) &&

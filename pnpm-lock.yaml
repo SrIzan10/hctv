@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  hls.js: ^1.6.16
+
 importers:
 
   .:
@@ -5837,9 +5840,6 @@ packages:
   highlight.js@11.12.0:
     resolution: {integrity: sha512-nbfWpyRMcMrPMmDwJB+dhX/eiaPKtc2RB+0QZskqJ3WjRA/FDS0e9hZrx8EC/lbEv8gXy98FcDbNa/dspAaJMg==}
     engines: {node: '>=12.0.0'}
-
-  hls.js@1.6.7:
-    resolution: {integrity: sha512-QW2fnwDGKGc9DwQUGLbmMOz8G48UZK7PVNJPcOUql1b8jubKx4/eMHNP5mGqr6tYlJNDG1g10Lx2U/qPzL6zwQ==}
 
   hls.js@1.7.2:
     resolution: {integrity: sha512-CW/pPvSOFIRsosbwxrYaE9ERmpTo5fbTqL7wCvuCFlqW1Bmb1K5fXsY7yiH95rmlr4rVuA7UXHbM/cIXQ6AXwg==}
@@ -12396,7 +12396,7 @@ snapshots:
       '@videojs/media': 10.0.0-rc.2
       '@videojs/native-hls-video': 10.0.0-rc.2
       '@videojs/utils': 10.0.0-rc.2
-      hls.js: 1.6.7
+      hls.js: 1.7.2
 
   '@videojs/media@10.0.0-rc.2':
     dependencies:
@@ -14778,8 +14778,6 @@ snapshots:
   highlight.js@11.11.2: {}
 
   highlight.js@11.12.0: {}
-
-  hls.js@1.6.7: {}
 
   hls.js@1.7.2: {}
 
