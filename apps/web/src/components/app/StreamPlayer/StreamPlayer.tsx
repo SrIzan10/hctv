@@ -28,6 +28,8 @@ import type { MediaMTXRegion } from '@/lib/utils/mediamtx/regions';
 
 const FATAL_RECOVERY_COOLDOWN_MS = 5000;
 const PLAYBACK_HEARTBEAT_MS = 30_000;
+const CATCH_UP_ARM_DELAY_MS = 8000;
+const CATCH_UP_PLAYBACK_RATE = 1.15;
 // how far short of the buffer end a foreground re-sync can land. seeking to the exact end
 // leaves nothing to decode and just stalls again, so we leave a little room.
 const RESYNC_BUFFER_MARGIN_SECONDS = 0.5;
@@ -127,9 +129,7 @@ export default function StreamPlayer() {
           liveSyncDuration: TARGET_LATENCY_SECONDS,
           liveMaxLatencyDuration: MAX_LATENCY_SECONDS,
           liveSyncOnStallIncrease: 1,
-          // catch-up rate. the latency controller ramps playback speed on a curve, so a cap this
-          // low is just a gentle nudge, closing a one-second gap in about 7s.
-          maxLiveSyncPlaybackRate: 1.15,
+          maxLiveSyncPlaybackRate: 1,
           // re-sync inside what's already buffered instead of jumping to the edge and
           // re-buffering from nothing.
           liveSyncMode: 'buffered',
@@ -206,7 +206,20 @@ function StreamPlayerContent({
   const lastRenditionCountRef = useRef(0);
   const lastActiveRenditionKeyRef = useRef<string | undefined>(undefined);
   const lastDroppedFramesRef = useRef(0);
+  const catchUpArmTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isRecovering, setIsRecovering] = useState(false);
+
+  const disarmCatchUp = useCallback(() => {
+    if (catchUpArmTimeoutRef.current) {
+      clearTimeout(catchUpArmTimeoutRef.current);
+      catchUpArmTimeoutRef.current = null;
+    }
+
+    const engine: Hls | null | undefined = media?.engine;
+    if (engine) {
+      engine.config.maxLiveSyncPlaybackRate = 1;
+    }
+  }, [media]);
 
   const triggerRecovery = useCallback(
     (reason: 'fatal' | 'manual') => {
@@ -225,9 +238,10 @@ function StreamPlayerContent({
       lastDroppedFramesRef.current = 0;
       setIsRecovering(true);
       reportPlayback('recovery', { recoveryReason: reason });
+      disarmCatchUp();
       void media.load();
     },
-    [media, reportPlayback]
+    [disarmCatchUp, media, reportPlayback]
   );
 
   useEffect(() => {
@@ -247,11 +261,12 @@ function StreamPlayerContent({
     playbackStartedAtRef.current = performance.now();
     hasReportedPlayingRef.current = false;
     reportPlayback('load');
+    disarmCatchUp();
 
     void media.play().catch(() => {
       // autoplay can get rejected, that's fine, the controls are still there for manual playback.
     });
-  }, [media, reportPlayback, source]);
+  }, [disarmCatchUp, media, reportPlayback, source]);
 
   useEffect(() => {
     if (!media) {
@@ -283,6 +298,13 @@ function StreamPlayerContent({
         reportPlayback('playing', {
           startupSeconds: (performance.now() - playbackStartedAtRef.current) / 1000,
         });
+
+        catchUpArmTimeoutRef.current = setTimeout(() => {
+          const engine: Hls | null | undefined = media.engine;
+          if (engine) {
+            engine.config.maxLiveSyncPlaybackRate = CATCH_UP_PLAYBACK_RATE;
+          }
+        }, CATCH_UP_ARM_DELAY_MS);
       }
     };
 
@@ -294,6 +316,10 @@ function StreamPlayerContent({
       media.removeEventListener('waiting', handleWaiting);
       media.removeEventListener('stalled', handleWaiting);
       media.removeEventListener('playing', handlePlaying);
+      if (catchUpArmTimeoutRef.current) {
+        clearTimeout(catchUpArmTimeoutRef.current);
+        catchUpArmTimeoutRef.current = null;
+      }
     };
   }, [media, reportPlayback]);
 

@@ -14,6 +14,9 @@ export const HCID_AUTH_URL = 'https://auth.hackclub.com/oauth/authorize';
 export const HCID_TOKEN_URL = 'https://auth.hackclub.com/oauth/token';
 export const HCID_USER_INFO_URL = 'https://auth.hackclub.com/api/v1/me';
 
+export const OAUTH_STATE_COOKIE = 'hackclub_oauth_state';
+export const OAUTH_STATE_TTL_SECONDS = 60 * 60;
+
 export const lucia = new Lucia(adapter, {
   sessionCookie: {
     // this sets cookies with super long expiration

@@ -1,5 +1,12 @@
 import slackNotifier from '@/lib/services/slackNotifier';
-import { hackClub, lucia, HCID_TOKEN_URL, HCID_USER_INFO_URL } from '@hctv/auth';
+import {
+  hackClub,
+  lucia,
+  HCID_TOKEN_URL,
+  HCID_USER_INFO_URL,
+  OAUTH_STATE_COOKIE,
+  OAUTH_STATE_TTL_SECONDS,
+} from '@hctv/auth';
 import { cookies as nextCookies } from 'next/headers';
 import { OAuth2RequestError } from 'arctic';
 import { generateIdFromEntropySize } from 'lucia';
@@ -11,12 +18,44 @@ export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
   const state = url.searchParams.get('state');
-  const storedState = cookies.get('hackclub_oauth_state')?.value ?? null;
-  if (!code || !state || !storedState || state !== storedState) {
-    console.log('invalid state stuff');
-    return new Response(null, {
+  const storedState = cookies.get(OAUTH_STATE_COOKIE)?.value ?? null;
+
+  const providerError = url.searchParams.get('error');
+  if (providerError) {
+    console.warn('[auth/callback] rejected: provider returned an error', {
+      error: providerError,
+      description: url.searchParams.get('error_description'),
+    });
+    return new Response('Hack Club Identity declined the sign in request. Please try again.', {
       status: 400,
     });
+  }
+
+  if (!code || !state) {
+    console.warn('[auth/callback] rejected: callback is missing code/state params', {
+      hasCode: Boolean(code),
+      hasState: Boolean(state),
+      params: [...url.searchParams.keys()],
+    });
+    return new Response('That sign in link was incomplete. Please start again.', { status: 400 });
+  }
+
+  if (!storedState) {
+    console.warn('[auth/callback] rejected: no state cookie on the callback request', {
+      callbackHost: url.host,
+      ttlSeconds: OAUTH_STATE_TTL_SECONDS,
+    });
+    return new Response('Your sign in attempt expired. Please try again.', { status: 400 });
+  }
+
+  if (state !== storedState) {
+    console.warn('[auth/callback] rejected: state cookie was replaced mid-flow', {
+      callbackHost: url.host,
+    });
+    return new Response(
+      'Another sign in attempt replaced this one. Please try again in a single tab.',
+      { status: 400 }
+    );
   }
 
   try {
@@ -114,14 +153,16 @@ export async function GET(request: Request): Promise<Response> {
       },
     });
   } catch (e) {
-    console.error(e);
-    // the specific error message depends on the provider
     if (e instanceof OAuth2RequestError) {
-      // invalid code
-      return new Response(null, {
+      console.error('[auth/callback] rejected: token exchange failed', {
+        code: e.code,
+        description: e.description,
+      });
+      return new Response('Hack Club Identity rejected this sign in. Please try again.', {
         status: 400,
       });
     }
+    console.error('[auth/callback] unhandled failure', e);
     return new Response(null, {
       status: 500,
     });
