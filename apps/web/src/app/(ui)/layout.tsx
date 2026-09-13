@@ -55,9 +55,9 @@ export default async function RootLayout({
                   <StreamInfoProvider>
                     {/* this promise is ugly but i'm lazy to fix the type errors */}
                     <Navbar editLivestream={Promise.resolve(<EditLivestream />)} />
-                    <div className="flex flex-1 pt-16 min-h-0 min-w-0">
-                      {/* pt-16 for navbar height */}
-                      <Sidebar className="pt-16" />
+                    <div className="flex flex-1 pt-14 md:pt-16 min-h-0 min-w-0">
+                      {/* pt-14/pt-16 matches the navbar's h-14/h-16 breakpoints */}
+                      <Sidebar className="pt-14 md:pt-16" />
                       <main className="flex-1 min-w-0">{children}</main>
                     </div>
                     <Toaster />

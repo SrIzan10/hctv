@@ -11,6 +11,7 @@ hlsVariant: lowLatency
 hlsSegmentDuration: 1s
 hlsSegmentCount: 15
 hlsPartDuration: 1s
+hlsAllowOrigins: ['http://localhost:3000']
 
 webrtc: yes
 

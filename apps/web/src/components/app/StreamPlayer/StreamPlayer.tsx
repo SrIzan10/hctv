@@ -445,12 +445,12 @@ function StreamPlayerContent({
         }
       />
       <Controls.Root>
-        <Controls.Content className="stream-control-bar absolute inset-x-0 bottom-0 box-border flex w-full items-center justify-between px-2 pt-8 pb-1 sm:px-4">
+        <Controls.Content className="stream-control-bar absolute inset-x-0 bottom-0 box-border flex w-full items-center justify-between px-2 pt-8 pb-2 sm:px-4 sm:pb-1">
           <Tooltip.Provider>
             <div className="flex items-center gap-1 sm:gap-4">
               <div className="flex items-center">
                 <PlayButton
-                  className="stream-control-button"
+                  className="stream-control-button flex h-9 w-9 items-center justify-center"
                   render={(props, state) => (
                     <button {...props} type="button">
                       {state.paused ? <Play className="h-5 w-5" /> : <Pause className="h-5 w-5" />}
@@ -458,18 +458,18 @@ function StreamPlayerContent({
                   )}
                 />
                 <MuteButton
-                  className="stream-control-button"
+                  className="stream-control-button flex h-9 w-9 items-center justify-center"
                   render={(props, state) => (
                     <button {...props} type="button">
                       {state.muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
                     </button>
                   )}
                 />
-                <VolumeSlider.Root className="hidden h-10 w-[90px] items-center pl-4 opacity-80 transition-opacity hover:opacity-100 sm:flex">
+                <VolumeSlider.Root className="relative hidden h-10 w-[90px] items-center pl-4 opacity-80 transition-opacity hover:opacity-100 sm:flex">
                   <VolumeSlider.Track className="relative h-1 w-full rounded-full bg-white/30">
-                    <VolumeSlider.Fill className="absolute h-full rounded-full bg-primary" />
+                    <VolumeSlider.Fill className="absolute h-full w-[var(--media-slider-fill)] rounded-full bg-primary" />
                   </VolumeSlider.Track>
-                  <VolumeSlider.Thumb className="h-3 w-3 rounded-full bg-primary" />
+                  <VolumeSlider.Thumb className="absolute left-[var(--media-slider-fill)] h-3 w-3 -translate-x-1/2 rounded-full bg-primary" />
                 </VolumeSlider.Root>
               </div>
             </div>
@@ -496,7 +496,12 @@ function StreamPlayerContent({
                 </Tooltip.Root>
               )}
               <FullscreenButton
-                className={(state) => cn('stream-control-button', state.hidden && 'hidden')}
+                className={(state) =>
+                  cn(
+                    'stream-control-button flex h-9 w-9 items-center justify-center',
+                    state.hidden && 'hidden'
+                  )
+                }
                 render={(props, state) => (
                   <button {...props} type="button">
                     {state.fullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}

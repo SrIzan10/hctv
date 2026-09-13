@@ -7,6 +7,7 @@ import StreamPlayer from '../StreamPlayer/StreamPlayer';
 import UserInfoCard from '../UserInfoCard/UserInfoCard';
 import ChatPanel from '../ChatPanel/ChatPanel';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { StreamInfo, Channel } from '@hctv/db';
 import { useIsMobile } from '@/lib/hooks/useMobile';
 import { useAllChannels } from '@/lib/hooks/useUserList';
@@ -44,7 +45,7 @@ export default function LiveStream(props: Props) {
 
   if (isRestricted && !props.canViewRestrictedStream) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] p-4">
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-56px)] md:h-[calc(100vh-64px)] p-4">
         <h1 className="text-2xl font-bold text-destructive mb-2">Channel Restricted</h1>
         <p className="text-muted-foreground text-center max-w-md mb-4">
           This channel has been restricted by a moderator and is no longer available for viewing.
@@ -62,45 +63,70 @@ export default function LiveStream(props: Props) {
     );
   }
 
+  const restrictionBanner = isRestricted && props.canViewRestrictedStream && (
+    <div className="flex items-start gap-3 border-b border-amber-500/30 bg-amber-500/10 px-4 py-3 text-foreground">
+      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+      <div className="text-sm">
+        <p className="font-medium">Restricted stream override</p>
+        <p>
+          This channel is restricted and unavailable to regular viewers. You are watching it
+          because you are a platform admin.
+        </p>
+        {restrictionExpiresAt && (
+          <p className="mt-1 text-muted-foreground">
+            Restriction lifts: {format(new Date(restrictionExpiresAt), 'PPP p')}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <div className="flex h-[calc(100vh-56px)] w-full min-w-0 flex-col">
+        {hlsEdgeUrl && props.streamInfo.isLive && (
+          <link rel="preconnect" href={hlsEdgeUrl} crossOrigin="use-credentials" />
+        )}
+        <div className="aspect-video max-h-[42vh] w-full shrink-0 bg-black">
+          <StreamPlayer />
+        </div>
+        {restrictionBanner}
+        <Tabs defaultValue="chat" className="min-h-0 flex-1 gap-0">
+          <TabsList className="w-full shrink-0 rounded-none border-b bg-mantle p-1">
+            <TabsTrigger value="chat">Chat</TabsTrigger>
+            <TabsTrigger value="about">About</TabsTrigger>
+          </TabsList>
+          <TabsContent
+            value="chat"
+            forceMount
+            className="min-h-0 overflow-hidden data-[state=inactive]:hidden"
+          >
+            <ChatPanel />
+          </TabsContent>
+          <TabsContent value="about" className="min-h-0 overflow-y-auto">
+            <UserInfoCard streamInfo={props.streamInfo} />
+          </TabsContent>
+        </Tabs>
+      </div>
+    );
+  }
+
   return (
-    <div className={`${isMobile ? 'flex flex-col' : 'flex'} h-[calc(100vh-64px)] w-full min-w-0`}>
+    <div className="flex h-[calc(100vh-64px)] w-full min-w-0">
       {hlsEdgeUrl && props.streamInfo.isLive && (
         <link rel="preconnect" href={hlsEdgeUrl} crossOrigin="use-credentials" />
       )}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {isRestricted && props.canViewRestrictedStream && (
-          <div className="flex items-start gap-3 border-b border-amber-500/30 bg-amber-500/10 px-4 py-3 text-foreground">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-            <div className="text-sm">
-              <p className="font-medium">Restricted stream override</p>
-              <p>
-                This channel is restricted and unavailable to regular viewers. You are watching it
-                because you are a platform admin.
-              </p>
-              {restrictionExpiresAt && (
-                <p className="mt-1 text-muted-foreground">
-                  Restriction lifts: {format(new Date(restrictionExpiresAt), 'PPP p')}
-                </p>
-              )}
-            </div>
-          </div>
-        )}
+        {restrictionBanner}
         <div className="min-h-0 flex-1 overflow-hidden bg-black">
           <StreamPlayer />
         </div>
-        {isMobile && (
-          <div className="w-full min-w-0 flex-1 min-h-[250px] max-h-[400px] border-t border-border">
-            <ChatPanel />
-          </div>
-        )}
         <UserInfoCard streamInfo={props.streamInfo} />
       </div>
 
-      {!isMobile && (
-        <div className="h-full shrink-0">
-          <ChatPanel />
-        </div>
-      )}
+      <div className="h-full shrink-0">
+        <ChatPanel />
+      </div>
     </div>
   );
 }
