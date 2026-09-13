@@ -8,6 +8,7 @@ services:
       - --entrypoints.websecure.address=:443
       - --entrypoints.srt.address=:8890/udp
       - --entrypoints.webrtc-ice.address=:8189/udp
+      - --entrypoints.rtmp.address=:1935
       - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}
       - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
       - --certificatesresolvers.letsencrypt.acme.dnschallenge=true
@@ -20,6 +21,7 @@ services:
       - 443:443
       - 8890:8890/udp
       - 8189:8189/udp
+      - 1935:1935
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - letsencrypt:/letsencrypt
@@ -63,6 +65,11 @@ services:
       - traefik.udp.routers.mediamtx-webrtc-ice.entrypoints=webrtc-ice
       - traefik.udp.routers.mediamtx-webrtc-ice.service=mediamtx-webrtc-ice
       - traefik.udp.services.mediamtx-webrtc-ice.loadbalancer.server.port=8189
+
+      - traefik.tcp.routers.mediamtx-rtmp.rule=HostSNI(`*`)
+      - traefik.tcp.routers.mediamtx-rtmp.entrypoints=rtmp
+      - traefik.tcp.routers.mediamtx-rtmp.service=mediamtx-rtmp
+      - traefik.tcp.services.mediamtx-rtmp.loadbalancer.server.port=1935
     restart: unless-stopped
 
 volumes:

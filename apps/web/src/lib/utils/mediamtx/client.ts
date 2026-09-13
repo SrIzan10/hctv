@@ -6,6 +6,7 @@ const PRODUCTION_HLS_EDGE_URL = 'https://hls-edge.hackclub.tv';
 export interface MediaMTXClientEnvs {
   publicUrl: string;
   ingestRoute: string;
+  rtmpRoute: string;
   whip: string;
   whipEnabled: boolean;
   emoji: string;
@@ -25,6 +26,7 @@ export function getMediamtxClientEnvs(region: MediaMTXRegion = 'hq'): MediaMTXCl
     hq: {
       publicUrl: edgeUrl ? `${edgeUrl}/hq` : getEnv('NEXT_PUBLIC_MEDIAMTX_URL_HQ')!,
       ingestRoute: getEnv('NEXT_PUBLIC_MEDIAMTX_INGEST_ROUTE_HQ')!,
+      rtmpRoute: getEnv('NEXT_PUBLIC_MEDIAMTX_RTMP_ROUTE_HQ')!,
       whip: getEnv('NEXT_PUBLIC_MEDIAMTX_WHIP_ROUTE_HQ')!,
       whipEnabled: false,
       emoji: '🇺🇸',
@@ -33,6 +35,7 @@ export function getMediamtxClientEnvs(region: MediaMTXRegion = 'hq'): MediaMTXCl
     ethande: {
       publicUrl: edgeUrl ? `${edgeUrl}/ethande` : getEnv('NEXT_PUBLIC_MEDIAMTX_URL_ETHANDE')!,
       ingestRoute: getEnv('NEXT_PUBLIC_MEDIAMTX_INGEST_ROUTE_ETHANDE')!,
+      rtmpRoute: getEnv('NEXT_PUBLIC_MEDIAMTX_RTMP_ROUTE_ETHANDE')!,
       whip: getEnv('NEXT_PUBLIC_MEDIAMTX_WHIP_ROUTE_ETHANDE')!,
       whipEnabled: true,
       emoji: '🇩🇪',

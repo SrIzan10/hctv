@@ -80,10 +80,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  getMediamtxClientEnvs,
-  getMediamtxClientRegionOptions,
-} from '@/lib/utils/mediamtx/client';
+import { getMediamtxClientEnvs, getMediamtxClientRegionOptions } from '@/lib/utils/mediamtx/client';
 import type { MediaMTXRegion } from '@/lib/utils/mediamtx/regions';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -120,12 +117,15 @@ export default function ChannelSettingsClient({
   const [copied, setCopied] = useState({
     streamKey: false,
     streamUrl: false,
+    rtmpServer: false,
+    rtmpStreamKey: false,
   });
   const [selTab, setSelTab] = useQueryState('tab', parseAsString.withDefault('general'));
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const serverOptions = getMediamtxClientRegionOptions();
   const [region, setRegion] = useState<MediaMTXRegion>('hq');
+  const [ingestProtocol, setIngestProtocol] = useState<'srt' | 'rtmp'>('srt');
   const channelList = useOwnedChannels();
   const {
     streamKey,
@@ -219,6 +219,39 @@ export default function ChannelSettingsClient({
       setCopied({ ...copied, streamUrl: true });
       toast.success('Stream URL copied to clipboard');
       setTimeout(() => setCopied({ ...copied, streamUrl: false }), 2000);
+    }
+  };
+
+  const generateRtmpServerUrl = () => {
+    const { rtmpRoute } = getMediamtxClientEnvs(region);
+    return `rtmp://${rtmpRoute}`;
+  };
+
+  const generateRtmpStreamKey = () => {
+    if (!streamKey) {
+      toast.error('Stream key not available');
+      return '';
+    }
+    return `${channel.name}?user=thisusernameislongonpurposesoyoudontaccidentallyleakyourstreamkey&pass=${streamKey}`;
+  };
+
+  const copyRtmpServer = async () => {
+    const url = generateRtmpServerUrl();
+    if (url) {
+      await navigator.clipboard.writeText(url);
+      setCopied({ ...copied, rtmpServer: true });
+      toast.success('Server URL copied to clipboard');
+      setTimeout(() => setCopied({ ...copied, rtmpServer: false }), 2000);
+    }
+  };
+
+  const copyRtmpStreamKey = async () => {
+    const key = generateRtmpStreamKey();
+    if (key) {
+      await navigator.clipboard.writeText(key);
+      setCopied({ ...copied, rtmpStreamKey: true });
+      toast.success('Stream key copied to clipboard');
+      setTimeout(() => setCopied({ ...copied, rtmpStreamKey: false }), 2000);
     }
   };
 
@@ -589,42 +622,113 @@ export default function ChannelSettingsClient({
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium">Stream URL (for OBS)</label>
-                      <Select value={region} onValueChange={(v) => setRegion(v as MediaMTXRegion)}>
-                        <SelectTrigger className="w-[180px] h-8">
-                          <SelectValue placeholder="Select region" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {serverOptions.map((server) => (
-                            <SelectItem key={server.value} value={server.value}>
-                              {server.label} {server.emoji}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="relative flex-1">
-                        <input
-                          type="text"
-                          value={generateStreamUrl()}
-                          readOnly
-                          className="w-full px-3 py-2 border rounded-md bg-mantle font-mono text-xs"
-                        />
+                      <label className="text-sm font-medium">
+                        {ingestProtocol === 'srt'
+                          ? 'Stream URL (for OBS)'
+                          : 'Stream Settings (for OBS)'}
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <Select
+                          value={ingestProtocol}
+                          onValueChange={(v) => setIngestProtocol(v as 'srt' | 'rtmp')}
+                        >
+                          <SelectTrigger className="w-[100px] h-8">
+                            <SelectValue placeholder="Protocol" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="srt">SRT</SelectItem>
+                            <SelectItem value="rtmp">RTMP</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Select
+                          value={region}
+                          onValueChange={(v) => setRegion(v as MediaMTXRegion)}
+                        >
+                          <SelectTrigger className="w-[180px] h-8">
+                            <SelectValue placeholder="Select region" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {serverOptions.map((server) => (
+                              <SelectItem key={server.value} value={server.value}>
+                                {server.label} {server.emoji}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="smicon"
-                        onClick={copyStreamUrl}
-                        disabled={!streamKey}
-                      >
-                        {copied.streamUrl ? (
-                          <Check className="h-4 w-4" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
-                      </Button>
                     </div>
+                    {ingestProtocol === 'srt' ? (
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <input
+                            type="text"
+                            value={generateStreamUrl()}
+                            readOnly
+                            className="w-full px-3 py-2 border rounded-md bg-mantle font-mono text-xs"
+                          />
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="smicon"
+                          onClick={copyStreamUrl}
+                          disabled={!streamKey}
+                        >
+                          {copied.streamUrl ? (
+                            <Check className="h-4 w-4" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Server</p>
+                          <div className="flex items-center gap-2">
+                            <div className="relative flex-1">
+                              <input
+                                type="text"
+                                value={generateRtmpServerUrl()}
+                                readOnly
+                                className="w-full px-3 py-2 border rounded-md bg-mantle font-mono text-xs"
+                              />
+                            </div>
+                            <Button variant="outline" size="smicon" onClick={copyRtmpServer}>
+                              {copied.rtmpServer ? (
+                                <Check className="h-4 w-4" />
+                              ) : (
+                                <Copy className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Stream Key</p>
+                          <div className="flex items-center gap-2">
+                            <div className="relative flex-1">
+                              <input
+                                type={keyVisible ? 'text' : 'password'}
+                                value={generateRtmpStreamKey()}
+                                readOnly
+                                className="w-full px-3 py-2 border rounded-md bg-mantle font-mono text-xs"
+                              />
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="smicon"
+                              onClick={copyRtmpStreamKey}
+                              disabled={!streamKey}
+                            >
+                              {copied.rtmpStreamKey ? (
+                                <Check className="h-4 w-4" />
+                              ) : (
+                                <Copy className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
@@ -1101,7 +1205,7 @@ export default function ChannelSettingsClient({
                       size="smicon"
                       onClick={() => setKeyVisible(!keyVisible)}
                     >
-                      {keyVisible ? <EyeOff className='size-4' /> : <Eye className='size-4' />}
+                      {keyVisible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </Button>
                   </div>
                 </div>
@@ -1116,14 +1220,10 @@ export default function ChannelSettingsClient({
                       textAreaRows: 4,
                       component: ({ field }) => (
                         <div>
-                      <Textarea
+                          <Textarea
                             name={field.name}
                             ref={field.ref}
-                            value={
-                              typeof field.value === 'string'
-                                ? field.value
-                                : ''
-                            }
+                            value={typeof field.value === 'string' ? field.value : ''}
                             disabled={channel.is247}
                             rows={4}
                             placeholder={

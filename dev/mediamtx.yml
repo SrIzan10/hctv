@@ -15,6 +15,9 @@ hlsAllowOrigins: ['http://localhost:3000']
 
 webrtc: yes
 
+rtmp: yes
+rtmpAddress: :1935
+
 authMethod: http
 authHTTPAddress: http://host.docker.internal:3000/api/mediamtx/publish
 

@@ -68,6 +68,7 @@ services:
       MTX_HLSCDNSECRET: ${MEDIAMTX_CDN_SECRET:-}
     ports:
       - '8890:8890/udp'
+      - '1935:1935'
   postgres-exporter:
     image: 'prometheuscommunity/postgres-exporter:v0.20.1'
     environment:

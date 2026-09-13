@@ -17,6 +17,9 @@ webrtcAddress: :8889
 webrtcLocalUDPAddress: :8189
 webrtcAdditionalHosts: []
 
+rtmp: yes
+rtmpAddress: :1935
+
 authMethod: http
 authHTTPAddress: https://hackclub.tv/api/mediamtx/publish
 

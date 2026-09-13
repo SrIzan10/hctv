@@ -31,6 +31,7 @@ services:
       - 8889:8889
       - 9997:9997
       - 9998:9998
+      - 1935:1935
     volumes:
       - ./mediamtx.yml:/mediamtx.yml
     extra_hosts:
