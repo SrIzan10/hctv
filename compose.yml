@@ -97,6 +97,9 @@ services:
       GF_SECURITY_ADMIN_USER: '${GRAFANA_ADMIN_USER:-admin}'
       GF_SECURITY_ADMIN_PASSWORD: '${GRAFANA_ADMIN_PASSWORD:-admin}'
       GF_USERS_DEFAULT_THEME: light
+      GF_SERVER_ROOT_URL: https://grafana.hackclub.tv
+      GF_SERVER_DOMAIN: grafana.hackclub.tv
+      GF_SERVER_COOKIE_SECURE: true
     volumes:
       - './observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro'
       - './observability/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro'
