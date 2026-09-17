@@ -26,7 +26,7 @@
     "prettier": "^3.8.3",
     "turbo": "^2.9.7"
   },
-  "packageManager": "pnpm@10.34.5",
+  "packageManager": "pnpm@12.4.1",
   "pnpm": {
     "overrides": {
       "hls.js": "^1.6.16"
