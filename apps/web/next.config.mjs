@@ -8,14 +8,17 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const LIVE_SERVER_URL =
-  process.env.NODE_ENV === 'production'
+  process.env.LIVE_SERVER_URL ??
+  (process.env.NODE_ENV === 'production'
     ? 'http://nginx-rtmp:8888'
-    : 'http://localhost:8888';
+    : 'http://localhost:8888');
 
 const packageJson = JSON.parse(readFileSync('./package.json', 'utf8'));
 const { version } = packageJson;
-const commit = process.env.commit || execSync('git rev-parse --short HEAD')
-  .toString().trim();
+const commit =
+  process.env.commit ||
+  process.env.VERCEL_GIT_COMMIT_SHA ||
+  execSync('git rev-parse --short HEAD').toString().trim();
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -48,14 +51,19 @@ const nextConfig = {
     version,
   },
   reactStrictMode: false,
-  output: 'standalone',
+  // Vercel builds/runs Next.js via its own adapter; `standalone` output is only
+  // needed for the self-hosted Docker image (see apps/web/Dockerfile).
+  output: process.env.VERCEL ? undefined : 'standalone',
   outputFileTracingRoot: path.join(__dirname, '../../'),
   serverExternalPackages: ['bullmq'],
   async rewrites() {
+    const chatServerUrl =
+      process.env.CHAT_SERVER_URL ??
+      `http://${process.env.NODE_ENV === 'production' ? 'chat' : 'localhost'}:8000`;
     return [
       {
         source: '/api/stream/chat/:path*',
-        destination: `http://${process.env.NODE_ENV === 'production' ? 'chat' : 'localhost'}:8000/:path*`,
+        destination: `${chatServerUrl}/:path*`,
       },
     ];
   },
