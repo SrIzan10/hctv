@@ -190,14 +190,14 @@ export async function syncStream() {
             queue.add(`streamStartChannel:${existingStream.username}`, {
               text: `${existingStream.username} is now *live*, streaming *${existingStream.title}* (${existingStream.category})!\n<https://hackclub.tv/${existingStream.username}|Go check them out>`,
               channel: process.env.NOTIFICATION_CHANNEL_ID!,
-              unfurl_links: false,
+              unfurl_links: true,
             });
 
             for (const channelId of existingStream.channel.notifChannels) {
               queue.add(`streamStartChannel:${existingStream.username}`, {
                 text: `${existingStream.username} is now *live*, streaming *${existingStream.title}* (${existingStream.category})!\n<https://hackclub.tv/${existingStream.username}|Go check them out>`,
                 channel: channelId,
-                unfurl_links: false,
+                unfurl_links: true,
                 metadata: {
                   type: 'custom_stream_announcement',
                   managedChannelId: existingStream.channel.id,
@@ -213,7 +213,7 @@ export async function syncStream() {
               queue.add(`streamStartDm:${follower.user.id}`, {
                 text: `${existingStream.username} is now *live*, streaming *${existingStream.title}* (${existingStream.category})!\n<https://hackclub.tv/${existingStream.username}|Go check them out>\n_Stream notifications are enabled for this user. If you want to disable them, you can do so in \`Profile > Follows\`._`,
                 channel: follower.user.slack_id,
-                unfurl_links: false,
+                unfurl_links: true,
               });
             }
           }
