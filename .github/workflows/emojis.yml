@@ -38,7 +38,7 @@ jobs:
       
       - name: Create GitHub Release
         id: create_release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: emoji-importer-v${{ steps.get_version.outputs.version }}
           name: Slack Emoji Importer v${{ steps.get_version.outputs.version }}
