@@ -51,7 +51,7 @@ jobs:
           cp emojis.json apps/web/
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./apps/web/Dockerfile
@@ -87,7 +87,7 @@ jobs:
           tags: latest
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./apps/chat/Dockerfile
@@ -122,7 +122,7 @@ jobs:
           tags: latest
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./docker/mediamtx/Dockerfile
