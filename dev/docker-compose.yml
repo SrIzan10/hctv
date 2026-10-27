@@ -14,7 +14,7 @@ services:
     environment:
       DATA_SOURCE_NAME: postgresql://postgres:skbiditoilet@psql:5432/postgres?sslmode=disable
   redis:
-    image: redis:7.4-alpine
+    image: redis:8.10-alpine
     volumes:
       - ./redis:/data
     ports:
