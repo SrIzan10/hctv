@@ -1,0 +1,369 @@
+import { collectDefaultMetrics, Counter, Gauge, Histogram, Registry } from 'prom-client';
+
+function createMetricsStore() {
+  const register = new Registry();
+  register.setDefaultLabels({ app: 'web' });
+
+  collectDefaultMetrics({
+    prefix: 'hctv_web_',
+    register,
+  });
+
+  const backgroundJobRuns = new Counter({
+    name: 'hctv_web_background_job_runs_total',
+    help: 'Total number of background jobs run by the web app.',
+    labelNames: ['job', 'status'],
+    registers: [register],
+  });
+
+  const backgroundJobDuration = new Histogram({
+    name: 'hctv_web_background_job_duration_seconds',
+    help: 'Background job execution time in seconds.',
+    labelNames: ['job', 'status'],
+    buckets: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30],
+    registers: [register],
+  });
+
+  const liveStreams = new Gauge({
+    name: 'hctv_web_live_streams',
+    help: 'Current number of live streams grouped by MediaMTX region.',
+    labelNames: ['region'],
+    registers: [register],
+  });
+
+  const streamPathsSeen = new Gauge({
+    name: 'hctv_web_stream_paths_seen',
+    help: 'Current number of ready MediaMTX paths seen during the latest sync.',
+    labelNames: ['region'],
+    registers: [register],
+  });
+
+  const liveStreamTransitions = new Counter({
+    name: 'hctv_web_live_stream_transitions_total',
+    help: 'Live stream state transitions observed by the web app.',
+    labelNames: ['transition', 'region'],
+    registers: [register],
+  });
+
+  const streamSyncScrapes = new Counter({
+    name: 'hctv_web_stream_sync_scrapes_total',
+    help: 'MediaMTX region scrapes attempted by stream sync.',
+    labelNames: ['region', 'status'],
+    registers: [register],
+  });
+
+  const activeViewers = new Gauge({
+    name: 'hctv_web_active_viewers',
+    help: 'Current number of active viewers across all live streams.',
+    registers: [register],
+  });
+
+  const activeViewersByRegion = new Gauge({
+    name: 'hctv_web_active_viewers_by_region',
+    help: 'Current number of active viewers grouped by stream region.',
+    labelNames: ['region'],
+    registers: [register],
+  });
+
+  const viewerCountTrackedStreams = new Gauge({
+    name: 'hctv_web_viewer_count_tracked_streams',
+    help: 'Number of live streams included in the latest viewer sync.',
+    registers: [register],
+  });
+
+  const streamsWithViewers = new Gauge({
+    name: 'hctv_web_streams_with_viewers',
+    help: 'Current number of live streams with at least one viewer.',
+    registers: [register],
+  });
+
+  const hottestStreamViewers = new Gauge({
+    name: 'hctv_web_hottest_stream_viewers',
+    help: 'Current viewer count of the most watched live stream.',
+    registers: [register],
+  });
+
+  const thumbnailJobsEnqueued = new Counter({
+    name: 'hctv_web_thumbnail_jobs_enqueued_total',
+    help: 'Total thumbnail refresh jobs enqueued by region.',
+    labelNames: ['region'],
+    registers: [register],
+  });
+
+  const thumbnailRefreshTargets = new Gauge({
+    name: 'hctv_web_thumbnail_refresh_targets',
+    help: 'Number of live streams targeted in the latest thumbnail refresh run.',
+    registers: [register],
+  });
+
+  const notificationsEnqueued = new Counter({
+    name: 'hctv_web_notifications_enqueued_total',
+    help: 'Notification jobs enqueued when streams go live.',
+    labelNames: ['target'],
+    registers: [register],
+  });
+
+  const cacheEntries = new Gauge({
+    name: 'hctv_web_cache_entries',
+    help: 'Current number of records mirrored into Redis by cache-sync jobs.',
+    labelNames: ['cache'],
+    registers: [register],
+  });
+
+  const platformInventory = new Gauge({
+    name: 'hctv_web_platform_inventory',
+    help: 'High-level counts of important platform records.',
+    labelNames: ['entity'],
+    registers: [register],
+  });
+
+  const mediamtxAuthRequests = new Counter({
+    name: 'hctv_web_mediamtx_auth_requests_total',
+    help: 'Total MediaMTX auth decisions handled by the web app.',
+    labelNames: ['action', 'protocol', 'outcome', 'region'],
+    registers: [register],
+  });
+
+  const mediamtxAuthDuration = new Histogram({
+    name: 'hctv_web_mediamtx_auth_duration_seconds',
+    help: 'MediaMTX auth request duration in seconds.',
+    labelNames: ['action', 'protocol', 'outcome', 'region'],
+    buckets: [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5],
+    registers: [register],
+  });
+
+  const playbackEvents = new Counter({
+    name: 'hctv_web_playback_events_total',
+    help: 'Browser playback events grouped by event and stream region.',
+    labelNames: ['event', 'region'],
+    registers: [register],
+  });
+
+  const playbackErrors = new Counter({
+    name: 'hctv_web_playback_errors_total',
+    help: 'Browser HLS errors grouped by type, fatality, and stream region.',
+    labelNames: ['type', 'fatal', 'region'],
+    registers: [register],
+  });
+
+  const playbackStartupDuration = new Histogram({
+    name: 'hctv_web_playback_startup_duration_seconds',
+    help: 'Time from loading a stream to playback starting.',
+    labelNames: ['region'],
+    buckets: [0.25, 0.5, 1, 2, 4, 8, 15, 30],
+    registers: [register],
+  });
+
+  const playbackBufferAhead = new Histogram({
+    name: 'hctv_web_playback_buffer_ahead_seconds',
+    help: 'Forward playback buffer reported by browsers.',
+    labelNames: ['region'],
+    buckets: [0, 0.5, 1, 2, 4, 8, 15, 30, 60],
+    registers: [register],
+  });
+
+  const playbackLatency = new Histogram({
+    name: 'hctv_web_playback_latency_seconds',
+    help: 'Distance from the live edge reported by hls.js.',
+    labelNames: ['region'],
+    buckets: [0.5, 1, 1.5, 2, 3, 4, 6, 10, 20],
+    registers: [register],
+  });
+
+  const playbackBandwidth = new Histogram({
+    name: 'hctv_web_playback_bandwidth_kbps',
+    help: 'Bandwidth estimate reported by hls.js.',
+    labelNames: ['region'],
+    buckets: [128, 256, 512, 1000, 2000, 4000, 8000, 16000, 32000],
+    registers: [register],
+  });
+
+  const playbackDroppedFrames = new Counter({
+    name: 'hctv_web_playback_dropped_frames_total',
+    help: 'Dropped video frames reported by browsers in playback heartbeats.',
+    labelNames: ['region'],
+    registers: [register],
+  });
+
+  return {
+    register,
+    activeViewers,
+    activeViewersByRegion,
+    backgroundJobDuration,
+    backgroundJobRuns,
+    cacheEntries,
+    hottestStreamViewers,
+    liveStreams,
+    liveStreamTransitions,
+    mediamtxAuthDuration,
+    mediamtxAuthRequests,
+    playbackBandwidth,
+    playbackBufferAhead,
+    playbackDroppedFrames,
+    playbackErrors,
+    playbackEvents,
+    playbackLatency,
+    playbackStartupDuration,
+    notificationsEnqueued,
+    platformInventory,
+    streamPathsSeen,
+    streamsWithViewers,
+    streamSyncScrapes,
+    thumbnailRefreshTargets,
+    thumbnailJobsEnqueued,
+    viewerCountTrackedStreams,
+  };
+}
+
+const globalForMetrics = globalThis as typeof globalThis & {
+  __hctvWebMetrics?: ReturnType<typeof createMetricsStore>;
+};
+
+const metrics = (globalForMetrics.__hctvWebMetrics ??= createMetricsStore());
+
+export const webMetricsRegistry = metrics.register;
+
+export async function trackWebJob<T>(job: string, fn: () => Promise<T>): Promise<T> {
+  const stopTimer = metrics.backgroundJobDuration.startTimer({ job });
+  let status = 'success';
+
+  try {
+    return await fn();
+  } catch (error) {
+    status = 'error';
+    throw error;
+  } finally {
+    metrics.backgroundJobRuns.inc({ job, status });
+    stopTimer({ job, status });
+  }
+}
+
+export function setLiveStreamsByRegion(streamsByRegion: Record<string, number>): void {
+  metrics.liveStreams.reset();
+
+  for (const [region, count] of Object.entries(streamsByRegion)) {
+    metrics.liveStreams.set({ region }, count);
+  }
+}
+
+export function setStreamPathsByRegion(pathsByRegion: Record<string, number>): void {
+  metrics.streamPathsSeen.reset();
+
+  for (const [region, count] of Object.entries(pathsByRegion)) {
+    metrics.streamPathsSeen.set({ region }, count);
+  }
+}
+
+export function recordLiveStreamTransition(transition: 'online' | 'offline', region: string): void {
+  metrics.liveStreamTransitions.inc({ transition, region });
+}
+
+export function recordStreamSyncScrape(region: string, status: 'success' | 'error'): void {
+  metrics.streamSyncScrapes.inc({ region, status });
+}
+
+export function setViewerSnapshot(snapshot: {
+  totalViewers: number;
+  trackedStreams: number;
+  viewersByRegion: Record<string, number>;
+  streamsWithViewers: number;
+  hottestStreamViewers: number;
+}): void {
+  metrics.activeViewers.set(snapshot.totalViewers);
+  metrics.viewerCountTrackedStreams.set(snapshot.trackedStreams);
+  metrics.streamsWithViewers.set(snapshot.streamsWithViewers);
+  metrics.hottestStreamViewers.set(snapshot.hottestStreamViewers);
+  metrics.activeViewersByRegion.reset();
+
+  for (const [region, count] of Object.entries(snapshot.viewersByRegion)) {
+    metrics.activeViewersByRegion.set({ region }, count);
+  }
+}
+
+export function recordThumbnailJobsEnqueued(jobsByRegion: Record<string, number>): void {
+  for (const [region, count] of Object.entries(jobsByRegion)) {
+    if (count > 0) {
+      metrics.thumbnailJobsEnqueued.inc({ region }, count);
+    }
+  }
+}
+
+export function setThumbnailRefreshTargets(count: number): void {
+  metrics.thumbnailRefreshTargets.set(count);
+}
+
+export function recordNotificationsEnqueued(target: 'channel' | 'dm', count: number): void {
+  if (count > 0) {
+    metrics.notificationsEnqueued.inc({ target }, count);
+  }
+}
+
+export function setCacheEntryCount(cache: 'sessions' | 'stream_keys', count: number): void {
+  metrics.cacheEntries.set({ cache }, count);
+}
+
+export function setPlatformInventory(snapshot: Record<string, number>): void {
+  metrics.platformInventory.reset();
+
+  for (const [entity, count] of Object.entries(snapshot)) {
+    metrics.platformInventory.set({ entity }, count);
+  }
+}
+
+export function recordMediamtxAuth(
+  action: string,
+  protocol: string,
+  outcome: string,
+  region: string,
+  durationSeconds: number
+): void {
+  metrics.mediamtxAuthRequests.inc({ action, protocol, outcome, region });
+  metrics.mediamtxAuthDuration.observe({ action, protocol, outcome, region }, durationSeconds);
+}
+
+export function recordPlaybackMetric(metric: PlaybackMetric): void {
+  metrics.playbackEvents.inc({ event: metric.event, region: metric.region });
+
+  if (metric.event === 'error') {
+    metrics.playbackErrors.inc({
+      type: normalizePlaybackErrorType(metric.errorType),
+      fatal: metric.fatal ? 'true' : 'false',
+      region: metric.region,
+    });
+  }
+  if (metric.startupSeconds !== undefined) {
+    metrics.playbackStartupDuration.observe({ region: metric.region }, metric.startupSeconds);
+  }
+  if (metric.bufferedSeconds !== undefined) {
+    metrics.playbackBufferAhead.observe({ region: metric.region }, metric.bufferedSeconds);
+  }
+  if (metric.latencySeconds !== undefined) {
+    metrics.playbackLatency.observe({ region: metric.region }, metric.latencySeconds);
+  }
+  if (metric.bandwidthKbps !== undefined) {
+    metrics.playbackBandwidth.observe({ region: metric.region }, metric.bandwidthKbps);
+  }
+  if (metric.droppedFrames !== undefined && metric.droppedFrames > 0) {
+    metrics.playbackDroppedFrames.inc({ region: metric.region }, metric.droppedFrames);
+  }
+}
+
+function normalizePlaybackErrorType(type?: string): string {
+  if (type === 'mediaError' || type === 'networkError' || type === 'keySystemError') {
+    return type;
+  }
+
+  return 'other';
+}
+
+interface PlaybackMetric {
+  event: string;
+  region: string;
+  bandwidthKbps?: number;
+  bufferedSeconds?: number;
+  droppedFrames?: number;
+  errorType?: string;
+  fatal?: boolean;
+  latencySeconds?: number;
+  startupSeconds?: number;
+}

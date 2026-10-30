@@ -1,0 +1,232 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@font-face {
+  font-family: 'Phantom Sans';
+  src:
+    url('https://assets.hackclub.com/fonts/Phantom_Sans_0.7/Regular.woff2') format('woff2'),
+    url('https://assets.hackclub.com/fonts/Phantom_Sans_0.7/Regular.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Phantom Sans';
+  src:
+    url('https://assets.hackclub.com/fonts/Phantom_Sans_0.7/Italic.woff2') format('woff2'),
+    url('https://assets.hackclub.com/fonts/Phantom_Sans_0.7/Italic.woff') format('woff');
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Phantom Sans';
+  src:
+    url('https://assets.hackclub.com/fonts/Phantom_Sans_0.7/Bold.woff2') format('woff2'),
+    url('https://assets.hackclub.com/fonts/Phantom_Sans_0.7/Bold.woff') format('woff');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --background: hsl(350 59% 98%);
+  --foreground: hsl(351 34% 30%);
+  --muted: hsl(350 40% 93%);
+  --muted-foreground: hsl(350 30% 45%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(351 34% 30%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(351 34% 30%);
+  --border: hsl(350 30% 85%);
+  --input: hsl(350 30% 85%);
+  --primary: hsl(350 70% 50%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(350 40% 93%);
+  --secondary-foreground: hsl(351 34% 30%);
+  --accent: hsl(350 70% 40%);
+  --accent-foreground: hsl(0 0% 100%);
+  --destructive: hsl(350 70% 55%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --ring: hsl(350 70% 50%);
+  --surface-1: hsl(350 40% 93%);
+  --surface-2: hsl(350 35% 88%);
+  --mantle: hsl(350 59% 98%);
+  --mantle-foreground: hsl(351 34% 30%);
+  --radius: 0.5rem;
+  --sidebar-background: hsl(350 59% 98%);
+  --sidebar-foreground: hsl(351 34% 30%);
+  --sidebar-primary: hsl(350 70% 50%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(350 40% 93%);
+  --sidebar-accent-foreground: hsl(351 34% 30%);
+  --sidebar-border: hsl(350 30% 85%);
+  --sidebar-ring: hsl(350 70% 50%);
+}
+
+.dark {
+  --background: hsl(350 20% 15%);
+  --foreground: hsl(350 30% 92%);
+  --muted: hsl(350 20% 25%);
+  --muted-foreground: hsl(350 30% 75%);
+  --popover: hsl(350 20% 15%);
+  --popover-foreground: hsl(350 30% 92%);
+  --card: hsl(350 20% 15%);
+  --card-foreground: hsl(350 30% 92%);
+  --border: hsl(350 20% 35%);
+  --input: hsl(350 20% 35%);
+  --primary: hsl(350 100% 75%);
+  --primary-foreground: hsl(350 20% 15%);
+  --secondary: hsl(350 20% 25%);
+  --secondary-foreground: hsl(350 30% 92%);
+  --accent: hsl(350 100% 80%);
+  --accent-foreground: hsl(350 20% 15%);
+  --destructive: hsl(350 100% 70%);
+  --destructive-foreground: hsl(350 20% 15%);
+  --ring: hsl(350 100% 75%);
+  --surface-1: hsl(350 20% 25%);
+  --surface-2: hsl(350 20% 35%);
+  --mantle: hsl(350 20% 12%);
+  --mantle-foreground: hsl(350 30% 92%);
+  --sidebar-background: hsl(350 20% 12%);
+  --sidebar-foreground: hsl(350 30% 92%);
+  --sidebar-primary: hsl(350 100% 75%);
+  --sidebar-primary-foreground: hsl(350 20% 15%);
+  --sidebar-accent: hsl(350 20% 25%);
+  --sidebar-accent-foreground: hsl(350 30% 92%);
+  --sidebar-border: hsl(350 20% 35%);
+  --sidebar-ring: hsl(350 100% 75%);
+}
+
+@theme inline {
+  --font-sans: 'Phantom Sans', ui-sans-serif, system-ui, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-ring: var(--ring);
+  --color-surface1: var(--surface-1);
+  --color-surface2: var(--surface-2);
+  --color-mantle: var(--mantle);
+  --color-mantle-foreground: var(--mantle-foreground);
+  --color-sidebar: var(--sidebar-background);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+}
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--reka-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--reka-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    font-family: 'Phantom Sans', ui-sans-serif, system-ui, sans-serif;
+    @apply bg-background text-foreground;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+.stream-player-container {
+  border-radius: calc(var(--radius) * 1.5);
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--border) 20%, transparent);
+  background-color: #000;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+}
+
+.stream-control-bar {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0) 100%);
+  backdrop-filter: blur(4px);
+  -webkit-mask-image: linear-gradient(to top, black 50%, transparent 100%);
+  mask-image: linear-gradient(to top, black 50%, transparent 100%);
+}
+
+.stream-buffering-indicator {
+  filter: drop-shadow(0 0 8px color-mix(in oklab, var(--primary) 40%, transparent));
+}
+
+.stream-control-button {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--radius);
+  margin: 0 2px;
+}
+
+.stream-control-button:hover {
+  transform: scale(1.1);
+  background-color: color-mix(in oklab, var(--primary) 85%, transparent);
+  color: #ffffff;
+}
+
+/* A pulse animation for the live/retry indicator if needed */
+@keyframes stream-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.stream-live-indicator {
+  animation: stream-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* tailwind v3 `container` (centered, 2rem padding, 1400px at 2xl) from the old tailwind.config */
+@utility container {
+  margin-inline: auto;
+  padding-inline: 2rem;
+  width: 100%;
+  @media (width >= 40rem) { max-width: 40rem; }
+  @media (width >= 48rem) { max-width: 48rem; }
+  @media (width >= 64rem) { max-width: 64rem; }
+  @media (width >= 80rem) { max-width: 80rem; }
+  @media (width >= 87.5rem) { max-width: 87.5rem; }
+}
