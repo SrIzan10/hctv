@@ -10,7 +10,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import StreamerItem from './StreamerItem.vue';
 
@@ -28,9 +27,9 @@ const liveStreamers = computed(() => stream.value.filter((s) => s.isLive && !s.c
 const offlineStreamers = computed(() => stream.value.filter((s) => !s.isLive));
 
 const labelClass =
-  'text-xs font-semibold uppercase text-muted-foreground group-data-[collapsible=icon]:opacity-0 transition-opacity duration-200';
+  'text-xs font-medium text-muted-foreground group-data-[collapsible=icon]:opacity-0 transition-opacity duration-200';
 const countClass =
-  'text-xs text-muted-foreground group-data-[collapsible=icon]:opacity-0 transition-opacity duration-200';
+  'text-xs tabular-nums text-muted-foreground group-data-[collapsible=icon]:opacity-0 transition-opacity duration-200';
 </script>
 
 <template>
@@ -58,8 +57,6 @@ const countClass =
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
-
-      <Separator class="group-data-[collapsible=icon]:block hidden" />
 
       <SidebarGroup>
         <SidebarGroupLabel class="px-2 py-1.5">
@@ -90,7 +87,7 @@ const countClass =
     <SidebarContent>
       <SidebarGroup>
         <SidebarGroupLabel class="flex items-center justify-between px-2 py-1.5">
-          <span :class="labelClass">Live Channels</span>
+          <span :class="labelClass">Live</span>
           <span :class="countClass">{{ liveStreamers.length }}</span>
         </SidebarGroupLabel>
 
@@ -98,9 +95,9 @@ const countClass =
           <SidebarMenu>
             <div
               v-if="liveStreamers.length === 0 && !isCollapsed"
-              class="px-4 py-2 text-sm text-muted-foreground"
+              class="px-2 py-1 text-sm text-muted-foreground"
             >
-              No channels live
+              Nobody's live right now
             </div>
             <StreamerItem
               v-for="streamer in liveStreamers"
@@ -112,21 +109,13 @@ const countClass =
         </SidebarGroupContent>
       </SidebarGroup>
 
-      <Separator class="group-data-[collapsible=icon]:block hidden" />
-
-      <SidebarGroup>
+      <SidebarGroup v-if="alwaysOnStreamers.length > 0">
         <SidebarGroupLabel class="flex items-center justify-between px-2 py-1.5">
-          <span :class="labelClass">24/7 Channels</span>
+          <span :class="labelClass">Always on</span>
           <span :class="countClass">{{ alwaysOnStreamers.length }}</span>
         </SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
-            <div
-              v-if="alwaysOnStreamers.length === 0 && !isCollapsed"
-              class="px-4 py-2 text-sm text-muted-foreground"
-            >
-              No 24/7 channels
-            </div>
             <StreamerItem
               v-for="streamer in alwaysOnStreamers"
               :key="streamer.id"
@@ -137,11 +126,10 @@ const countClass =
         </SidebarGroupContent>
       </SidebarGroup>
 
-      <Separator class="group-data-[collapsible=icon]:block hidden" />
-
       <SidebarGroup>
         <SidebarGroupLabel class="flex items-center justify-between px-2 py-1.5">
-          <span :class="labelClass">Offline Channels</span>
+          <span :class="labelClass">Offline</span>
+          <span :class="countClass">{{ offlineStreamers.length }}</span>
         </SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>

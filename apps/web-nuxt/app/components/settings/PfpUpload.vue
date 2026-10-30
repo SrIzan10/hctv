@@ -45,8 +45,8 @@ async function onChange(event: Event) {
     <input ref="inputRef" type="file" accept="image/*" class="hidden" @change="onChange" />
     <Button
       type="button"
-      variant="secondary"
-      class="bg-mantle text-mantle-foreground"
+      variant="outline"
+      size="sm"
       :disabled="isUploading"
       @click="inputRef?.click()"
     >

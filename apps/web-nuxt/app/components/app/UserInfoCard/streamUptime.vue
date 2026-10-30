@@ -34,11 +34,11 @@ const label = computed(() => {
 </script>
 
 <template>
-  <div
+  <span
     v-if="!isLoading && startedAt"
-    class="flex items-center space-x-2 text-sm text-muted-foreground"
+    class="inline-flex items-center gap-1 tabular-nums text-muted-foreground"
   >
-    <Clock3 class="h-4 w-4" />
-    <span>{{ label }}</span>
-  </div>
+    <Clock3 class="h-3.5 w-3.5" />
+    {{ label }}
+  </span>
 </template>

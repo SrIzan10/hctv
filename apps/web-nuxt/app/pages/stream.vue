@@ -206,7 +206,7 @@ const primaryIconComponent = computed<Component>(() =>
                 :class="
                   cn(
                     'gap-2 px-3 py-1 text-xs font-semibold shadow-lg backdrop-blur-md transition-all',
-                    isLive && 'bg-red-500 text-white hover:bg-red-600',
+                    isLive && 'bg-live text-live-foreground hover:bg-live/90',
                     !isLive && !hasPreview && 'border-zinc-800 bg-black/50 text-zinc-400'
                   )
                 "

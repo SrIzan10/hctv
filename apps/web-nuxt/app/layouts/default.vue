@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { SidebarProvider } from '@/components/ui/sidebar';
 import AccountSuspended from '~/components/app/AccountSuspended.vue';
-import EditLivestream from '~/components/app/EditLivestream/EditLivestream.vue';
 import NavBar from '~/components/app/NavBar/NavBar.vue';
 import Sidebar from '~/components/app/Sidebar/Sidebar.vue';
 import SonnerNewVersion from '~/components/app/SonnerNewVersion/SonnerNewVersion.vue';
@@ -26,11 +25,7 @@ const ban = useState<{ reason: string; expiresAt: string | null } | null>(
     <ClientOnly>
       <SonnerNewVersion />
     </ClientOnly>
-    <NavBar>
-      <template #editLivestream>
-        <EditLivestream />
-      </template>
-    </NavBar>
+    <NavBar />
     <div class="flex flex-1 pt-14 md:pt-16 min-h-0 min-w-0">
       <!-- pt-14/pt-16 matches the navbar's h-14/h-16 breakpoints -->
       <Sidebar class="pt-14 md:pt-16" />

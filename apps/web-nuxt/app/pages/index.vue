@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Button } from '~/components/ui/button';
 import ConfusedDino from '~/components/ui/confuseddino/ConfusedDino.vue';
 import LandingPage from '~/components/app/LandingPage/LandingPage.vue';
 import StreamGrid from '~/components/app/StreamGrid/StreamGrid.vue';
@@ -27,17 +28,14 @@ const offlineStreams = computed(() => (streams.value ?? []).filter((stream) => !
   >
     <ConfusedDino class="h-28 w-28 opacity-80" />
     <div class="space-y-1.5">
-      <h2 class="pb-0 text-2xl font-semibold tracking-tight">Nothing live right now</h2>
-      <p class="text-sm text-muted-foreground">Nobody's streaming yet — why not be the first?</p>
+      <h1 class="text-2xl font-bold">Nobody's streaming right now</h1>
+      <p class="text-muted-foreground">Go live and show people what you're building.</p>
     </div>
-    <NuxtLink
-      to="/settings/channel"
-      class="inline-flex h-9 items-center justify-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      Start streaming
+    <NuxtLink to="/stream">
+      <Button class="bg-live text-live-foreground hover:bg-live/90">Go live</Button>
     </NuxtLink>
   </div>
-  <div v-else class="p-3 md:p-6">
+  <div v-else class="mx-auto w-full max-w-[1600px] px-4 py-6 md:px-8 md:py-8">
     <StreamGrid :live-streams="liveStreams" :offline-streams="offlineStreams" />
   </div>
 </template>

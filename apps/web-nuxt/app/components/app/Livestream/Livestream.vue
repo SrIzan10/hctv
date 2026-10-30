@@ -98,7 +98,7 @@ interface Props {
       </div>
     </div>
     <Tabs default-value="chat" class="min-h-0 flex-1 gap-0">
-      <TabsList class="w-full shrink-0 rounded-none border-b bg-mantle p-1">
+      <TabsList class="w-full shrink-0 bg-mantle">
         <TabsTrigger value="chat">Chat</TabsTrigger>
         <TabsTrigger value="about">About</TabsTrigger>
       </TabsList>
@@ -122,7 +122,7 @@ interface Props {
       :href="hlsEdgeUrl"
       crossorigin="use-credentials"
     />
-    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
       <div
         v-if="isRestricted && canViewRestrictedStream"
         class="flex items-start gap-3 border-b border-amber-500/30 bg-amber-500/10 px-4 py-3 text-foreground"
@@ -139,7 +139,7 @@ interface Props {
           </p>
         </div>
       </div>
-      <div class="min-h-0 flex-1 overflow-hidden bg-black">
+      <div class="aspect-video max-h-[calc(100vh-64px-7rem)] w-full shrink-0 bg-black">
         <StreamPlayer />
       </div>
       <UserInfoCard :stream-info="streamInfo" />

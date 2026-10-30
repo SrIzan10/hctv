@@ -22,17 +22,21 @@ const { data: following } = await useFetch<FollowWithChannel[]>('/api/pages/sett
 <template>
   <div
     v-if="!following?.length"
-    class="flex flex-col items-center justify-center w-full h-full"
+    class="flex h-full w-full flex-col items-center justify-center gap-5 px-4 text-center"
   >
-    <h1 class="text-2xl font-bold">No channels followed</h1>
-    <p class="text-muted-foreground">Go follow some first?</p>
+    <div class="space-y-1.5">
+      <h1 class="text-2xl font-bold">You're not following anyone yet</h1>
+      <p class="text-muted-foreground">
+        Follow a channel to get notified when it goes live.
+      </p>
+    </div>
     <NuxtLink to="/">
-      <Button>Back home</Button>
+      <Button>Browse channels</Button>
     </NuxtLink>
   </div>
-  <div v-else class="container py-10">
-    <h1 class="text-2xl font-bold mb-6">Followed Channels</h1>
-    <Table class="max-w-2xl mx-auto outline-surface bg-mantle rounded-md overflow-hidden">
+  <div v-else class="mx-auto w-full max-w-2xl px-4 py-8">
+    <h1 class="mb-6 text-2xl font-bold">Following</h1>
+    <Table class="rounded-xl border bg-card">
       <TableHeader>
         <TableRow>
           <TableHead>Channel</TableHead>

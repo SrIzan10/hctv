@@ -1,67 +1,54 @@
 <script setup lang="ts">
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
-import { Badge } from '~/components/ui/badge';
 import type { Channel, StreamInfo } from '@hctv/db';
 
 defineProps<{ stream: StreamInfo & { channel: Channel } }>();
 </script>
 
 <template>
-  <div
-    class="overflow-hidden rounded-lg border border-border bg-card shadow-sm transition-shadow duration-200 group-hover:shadow-md"
-  >
-    <div class="relative aspect-video overflow-hidden bg-muted">
+  <div class="flex flex-col gap-3">
+    <div
+      class="relative aspect-video overflow-hidden rounded-xl bg-muted ring-1 ring-border transition-[box-shadow] duration-150 group-hover:ring-2 group-hover:ring-foreground/30"
+    >
       <img
         :src="`/api/stream/thumb/${stream.channel.name}`"
         :alt="stream.title"
-        class="absolute inset-0 object-cover"
+        class="absolute inset-0 h-full w-full object-cover"
         loading="lazy"
         decoding="async"
       />
-      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-      <template v-if="stream.isLive">
-        <div class="absolute bottom-1.5 left-1.5 md:bottom-2 md:left-2">
-          <span
-            class="flex items-center gap-1 rounded-full bg-red-600 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white"
-          >
-            <span class="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
-            Live
-          </span>
-        </div>
-        <div class="absolute bottom-1.5 right-1.5 md:bottom-2 md:right-2">
-          <span
-            class="flex items-center gap-1 rounded-full bg-black/70 px-1.5 py-0.5 text-[9px] font-medium text-white backdrop-blur-sm"
-          >
-            <span class="inline-block h-1.5 w-1.5 rounded-full bg-red-400" />
-            {{ stream.viewers.toLocaleString() }}
-          </span>
-        </div>
-      </template>
+      <div v-if="stream.isLive" class="absolute inset-x-2 top-2 flex items-center justify-between">
+        <span
+          class="rounded-md bg-live px-1.5 py-0.5 text-xs font-bold leading-none text-live-foreground"
+        >
+          {{ stream.channel.is247 ? '24/7' : 'Live' }}
+        </span>
+      </div>
+      <span
+        v-if="stream.isLive"
+        class="absolute bottom-2 right-2 rounded-md bg-black/70 px-1.5 py-0.5 text-xs font-medium leading-none tabular-nums text-white"
+      >
+        {{ stream.viewers.toLocaleString() }} watching
+      </span>
     </div>
-    <div class="flex items-start gap-2 p-2 md:gap-3 md:p-3">
-      <Avatar class="h-7 w-7 shrink-0 ring-1 ring-primary/20 md:h-8 md:w-8">
+    <div class="flex items-start gap-3">
+      <Avatar class="h-9 w-9 shrink-0">
         <AvatarImage
           :src="stream.channel.pfpUrl"
           :alt="stream.channel.name"
           loading="lazy"
           decoding="async"
         />
-        <AvatarFallback class="text-[10px]">
+        <AvatarFallback class="text-xs">
           {{ stream.channel.name.slice(0, 2).toUpperCase() }}
         </AvatarFallback>
       </Avatar>
       <div class="min-w-0 flex-1">
-        <p class="truncate text-xs font-medium leading-snug md:text-sm">{{ stream.title }}</p>
-        <p class="truncate text-[10px] text-muted-foreground md:text-xs">
-          {{ stream.channel.name }}
-        </p>
-        <Badge
-          v-if="stream.category"
-          variant="secondary"
-          class="mt-1 rounded-full px-1.5 py-0 text-[9px] font-medium md:mt-1.5 md:px-2 md:text-[10px]"
-        >
+        <p class="truncate text-[15px] font-bold leading-snug">{{ stream.title }}</p>
+        <p class="truncate text-sm text-muted-foreground">{{ stream.channel.name }}</p>
+        <p v-if="stream.category" class="truncate text-sm text-muted-foreground">
           {{ stream.category }}
-        </Badge>
+        </p>
       </div>
     </div>
   </div>

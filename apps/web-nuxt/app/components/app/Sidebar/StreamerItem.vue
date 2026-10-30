@@ -18,30 +18,26 @@ const router = useRouter();
       @click="router.push(`/${streamer.username}`)"
     >
       <button class="flex w-full items-center gap-3">
-        <div class="relative flex-shrink-0">
-          <img
-            :src="streamer.channel.pfpUrl"
-            :alt="streamer.username"
-            class="h-8 w-8 rounded-full object-cover"
-            loading="lazy"
-          />
-          <span
-            v-if="streamer.isLive"
-            class="absolute -bottom-0.5 -right-0.5 flex h-3 w-3 items-center justify-center rounded-full bg-background ring-2 ring-background"
-          >
-            <span class="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-          </span>
-        </div>
+        <img
+          :src="streamer.channel.pfpUrl"
+          :alt="streamer.username"
+          :class="[
+            'h-8 w-8 flex-shrink-0 rounded-full object-cover',
+            streamer.isLive
+              ? 'ring-2 ring-live ring-offset-2 ring-offset-sidebar'
+              : 'opacity-60 grayscale-[40%]',
+          ]"
+          loading="lazy"
+        />
 
         <div v-if="!isCollapsed" class="flex flex-1 flex-col items-start overflow-hidden">
           <div class="flex w-full items-center justify-between">
             <span class="truncate font-medium text-sm leading-none">
               {{ streamer.username }}
             </span>
-            <div v-if="streamer.isLive" class="flex items-center gap-1 text-xs text-red-500">
-              <span class="h-1.5 w-1.5 rounded-full bg-red-500" />
-              <span>{{ streamer.viewers }}</span>
-            </div>
+            <span v-if="streamer.isLive" class="text-xs tabular-nums text-muted-foreground">
+              {{ streamer.viewers.toLocaleString() }}
+            </span>
           </div>
           <span class="truncate text-xs text-muted-foreground w-full text-left">
             {{ streamer.isLive ? streamer.title || streamer.category || 'Live' : 'Offline' }}

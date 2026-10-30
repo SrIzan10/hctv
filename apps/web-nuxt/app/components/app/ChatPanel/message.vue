@@ -45,6 +45,16 @@ const ROLE_META: Record<ChannelRole, { label: string; icon: Component; className
   botModerator: { label: 'Bot Mod', icon: ShieldCheck, className: 'text-cyan-500' },
 };
 
+// Hack Club palette, darkened for contrast on the light theme
+const NAME_COLORS = [
+  'text-[#c25e14] dark:text-[#ff8c37]',
+  'text-[#8a6d00] dark:text-[#f1c40f]',
+  'text-[#128a68] dark:text-[#33d6a6]',
+  'text-[#1f7fa0] dark:text-[#5bc0de]',
+  'text-[#2470b8] dark:text-[#6aaff0]',
+  'text-[#8a24b8] dark:text-[#c27ae8]',
+];
+
 const props = defineProps<MessageProps>();
 const emit = defineEmits<{ (e: 'moderationCommand', command: ChatModerationCommand): void }>();
 
@@ -52,6 +62,12 @@ const reportOpen = ref(false);
 const reportReason = ref('');
 const isSubmittingReport = ref(false);
 const displayName = computed(() => props.user?.displayName || props.user?.username);
+const nameColor = computed(() => {
+  const key = props.user?.username || displayName.value || '';
+  let hash = 0;
+  for (const char of key) hash = (hash * 31 + char.charCodeAt(0)) | 0;
+  return NAME_COLORS[Math.abs(hash) % NAME_COLORS.length];
+});
 const role = computed(() => (props.user?.channelRole ? ROLE_META[props.user.channelRole] : null));
 
 const showActions = computed(
@@ -140,7 +156,7 @@ interface MessageProps {
   </div>
 
   <template v-else>
-    <div class="group hover:bg-primary/5 rounded px-2 py-1 -mx-2 transition-colors">
+    <div class="group hover:bg-foreground/5 rounded-md px-2 py-1 -mx-2 transition-colors">
       <div class="flex items-start gap-1.5">
         <div
           lang="en"
@@ -172,7 +188,7 @@ interface MessageProps {
               </TooltipTrigger>
               <TooltipContent side="top">Platform Admin</TooltipContent>
             </Tooltip>
-            <span class="font-semibold text-primary">{{ displayName }}</span>
+            <span :class="cn('font-semibold', nameColor)">{{ displayName }}</span>
             <span class="font-normal text-muted-foreground select-none">: </span>
           </TooltipProvider>
           <span class="whitespace-pre-wrap break-words">

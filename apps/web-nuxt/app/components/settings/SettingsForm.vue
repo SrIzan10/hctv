@@ -87,7 +87,7 @@ defineExpose({ submit });
 </script>
 
 <template>
-  <form class="space-y-2" @submit.prevent="submit">
+  <form class="space-y-5" @submit.prevent="submit">
     <div v-for="field in fields" :key="field.name" :class="field.type === 'hidden' ? 'hidden' : 'grid gap-2'">
       <Label v-if="field.type !== 'hidden' && field.label">{{ field.label }}</Label>
       <slot

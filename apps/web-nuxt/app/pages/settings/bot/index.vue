@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { Bot, Calendar, Hash, Plus } from '@lucide/vue';
+import { Bot, ChevronRight, Plus } from '@lucide/vue';
 import type { BotAccount } from '@hctv/db';
 import { Button } from '~/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card';
-import { Separator } from '~/components/ui/separator';
 
 definePageMeta({ middleware: 'protected' });
 
@@ -19,68 +17,63 @@ type Serialized<T> = { [K in keyof T]: T[K] extends Date ? string : T[K] };
 </script>
 
 <template>
-  <div class="container mx-auto py-6 space-y-6">
-    <div class="flex items-center justify-between">
+  <div class="mx-auto w-full max-w-3xl space-y-6 px-4 py-8">
+    <div class="flex flex-wrap items-center justify-between gap-4">
       <div>
-        <h1 class="text-3xl font-bold tracking-tight">Bot Accounts</h1>
-        <p class="text-muted-foreground">Manage your automated bot accounts</p>
+        <h1 class="text-2xl font-bold">Bot accounts</h1>
+        <p class="text-muted-foreground">Bots post in chat using an API key.</p>
       </div>
-      <NuxtLink to="/settings/bot/create">
+      <NuxtLink v-if="data?.botAccounts.length" to="/settings/bot/create">
         <Button>
-          <Plus class="mr-2 h-4 w-4" />
-          Create Bot
+          <Plus />
+          Create bot
         </Button>
       </NuxtLink>
     </div>
 
-    <Separator />
-
-    <div v-if="data?.botAccounts.length" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <NuxtLink v-for="bot in data.botAccounts" :key="bot.id" :to="`/settings/bot/${bot.slug}`">
-        <Card class="hover:shadow-md transition-shadow">
-          <CardHeader class="pb-3">
-            <div class="flex items-center space-x-2">
-              <img
-                :src="bot.pfpUrl"
-                alt="Bot Avatar"
-                width="32"
-                height="32"
-                class="rounded-full"
-              />
-              <CardTitle class="text-lg">{{ bot.displayName }}</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent class="space-y-3">
-            <div class="flex items-center space-x-2 text-sm text-muted-foreground">
-              <Hash class="h-4 w-4" />
-              <span>{{ bot.slug }}</span>
-            </div>
-            <div class="flex items-center space-x-2 text-sm text-muted-foreground">
-              <Calendar class="h-4 w-4" />
-              <ClientOnly>
-                <span>{{ new Date(bot.createdAt).toLocaleDateString() }}</span>
-              </ClientOnly>
-            </div>
-          </CardContent>
-        </Card>
+    <ul v-if="data?.botAccounts.length" class="divide-y rounded-xl border bg-card">
+      <li v-for="bot in data.botAccounts" :key="bot.id">
+        <NuxtLink
+          :to="`/settings/bot/${bot.slug}`"
+          class="flex items-center gap-3 px-4 py-3 transition-colors first:rounded-t-xl last:rounded-b-xl hover:bg-accent"
+        >
+          <img
+            :src="bot.pfpUrl"
+            alt=""
+            width="36"
+            height="36"
+            class="h-9 w-9 shrink-0 rounded-full object-cover"
+          />
+          <div class="min-w-0 flex-1">
+            <p class="truncate font-bold">{{ bot.displayName }}</p>
+            <p class="truncate text-sm text-muted-foreground">{{ bot.slug }}</p>
+          </div>
+          <ClientOnly>
+            <span class="hidden text-sm tabular-nums text-muted-foreground sm:inline">
+              Created {{ new Date(bot.createdAt).toLocaleDateString() }}
+            </span>
+          </ClientOnly>
+          <ChevronRight class="h-4 w-4 text-muted-foreground" />
+        </NuxtLink>
+      </li>
+    </ul>
+    <div
+      v-else
+      class="flex flex-col items-center gap-4 rounded-xl border border-dashed px-6 py-12 text-center"
+    >
+      <Bot class="h-10 w-10 text-muted-foreground" />
+      <div class="space-y-1">
+        <p class="font-bold">No bots yet</p>
+        <p class="text-sm text-muted-foreground">
+          Create a bot to get an API key for posting in chat.
+        </p>
+      </div>
+      <NuxtLink to="/settings/bot/create">
+        <Button>
+          <Plus />
+          Create bot
+        </Button>
       </NuxtLink>
     </div>
-    <Card v-else class="text-center py-8">
-      <CardContent class="space-y-4">
-        <Bot class="mx-auto h-12 w-12 text-muted-foreground" />
-        <div>
-          <CardTitle>No bot accounts yet</CardTitle>
-          <CardDescription class="mt-2">
-            Get started by creating your first bot account
-          </CardDescription>
-        </div>
-        <NuxtLink to="/settings/bot/create">
-          <Button>
-            <Plus class="mr-2 h-4 w-4" />
-            Create Your First Bot
-          </Button>
-        </NuxtLink>
-      </CardContent>
-    </Card>
   </div>
 </template>

@@ -263,7 +263,7 @@ async function handleStreamInfoActionComplete(result: SettingsFormResult) {
           Need help getting started? Check out our
           <a
             href="https://docs.hackclub.tv/guides/start-stream/"
-            class="text-primary hover:underline"
+            class="text-link hover:underline"
             target="_blank"
             rel="noopener noreferrer"
             >streaming guide</a

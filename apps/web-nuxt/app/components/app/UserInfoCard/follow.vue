@@ -60,13 +60,23 @@ interface Props {
 <template>
   <Button
     ref="buttonRef"
-    size="icon"
-    variant="outlineMantle"
+    size="sm"
+    :variant="following ? 'outline' : 'default'"
     :disabled="isMutating || isLoadingFollowing"
-    :class="bye ? 'hidden' : ''"
+    :class="['min-w-[104px]', bye && 'hidden']"
     @click="toggleFollow"
   >
-    <HeartCrack v-if="isHovering && following" class="text-destructive" />
-    <Heart v-else :class="following ? 'text-destructive' : 'text-white'" />
+    <template v-if="following && isHovering">
+      <HeartCrack />
+      Unfollow
+    </template>
+    <template v-else-if="following">
+      <Heart class="fill-current" />
+      Following
+    </template>
+    <template v-else>
+      <Heart />
+      Follow
+    </template>
   </Button>
 </template>

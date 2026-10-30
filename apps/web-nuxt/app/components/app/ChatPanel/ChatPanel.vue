@@ -307,6 +307,12 @@ interface Props {
     ]"
   >
     <div
+      v-if="!props.isObsPanel"
+      class="hidden md:flex h-11 shrink-0 items-center border-b border-border px-4 text-sm font-semibold"
+    >
+      Chat
+    </div>
+    <div
       ref="scrollRef"
       :class="[
         'flex-1 px-4 py-2 overflow-y-auto overflow-x-hidden',
@@ -344,7 +350,7 @@ interface Props {
           ref="textareaComponent"
           :model-value="message"
           placeholder="Send a message..."
-          class="flex-1 bg-background/50 border-border focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 min-h-[40px] max-h-[100px] resize-none py-2 text-sm"
+          class="flex-1 bg-background dark:bg-background min-h-[40px] max-h-[100px] resize-none rounded-[20px] px-4 py-2.5 text-sm"
           :rows="1"
           :disabled="!chatAccess.canSend"
           @input="onInput"
@@ -354,7 +360,7 @@ interface Props {
         />
         <Button
           size="icon"
-          class="shrink-0 transition-colors"
+          class="size-10 shrink-0"
           :disabled="!message.trim() || !chatAccess.canSend"
           @click="sendMessage"
         >

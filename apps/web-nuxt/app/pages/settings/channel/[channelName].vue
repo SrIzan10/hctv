@@ -3,7 +3,6 @@ import { computed } from 'vue';
 import { Bell, Key, MessageSquareWarning, Settings, Users, Wrench } from '@lucide/vue';
 import type { Channel, StreamInfo } from '@hctv/db';
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
-import { Badge } from '~/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs';
 import ChannelSelect from '~/components/app/ChannelSelect/ChannelSelect.vue';
 import GeneralTab from '~/components/settings/channel/GeneralTab.vue';
@@ -65,59 +64,46 @@ async function onChannelSelect(value: string) {
 
 <template>
   <div v-if="data" :key="data.channel.id" class="container max-w-4xl mx-auto py-6 px-4">
-    <div class="mb-6 flex">
-      <div class="flex items-center gap-4 mb-4">
-        <Avatar class="h-16 w-16">
-          <AvatarImage :src="data.channel.pfpUrl" :alt="data.channel.name" />
-          <AvatarFallback>{{ data.channel.name[0]?.toUpperCase() }}</AvatarFallback>
-        </Avatar>
-        <div>
-          <h1 class="text-3xl font-bold">{{ data.channel.name }}</h1>
-          <p class="text-mantle-foreground">Channel Settings</p>
-          <div class="flex items-center gap-2 mt-2">
-            <Badge variant="secondary">
-              {{ data.channel.followers.length }} follower{{
-                data.channel.followers.length !== 1 ? 's' : ''
-              }}
-            </Badge>
-            <Badge v-if="data.isOwner" variant="outline">Owner</Badge>
-          </div>
-        </div>
+    <div class="mb-8 flex flex-wrap items-center gap-4">
+      <Avatar class="h-14 w-14">
+        <AvatarImage :src="data.channel.pfpUrl" :alt="data.channel.name" />
+        <AvatarFallback>{{ data.channel.name[0]?.toUpperCase() }}</AvatarFallback>
+      </Avatar>
+      <div class="min-w-0 flex-1">
+        <h1 class="truncate text-2xl font-bold leading-tight">{{ data.channel.name }}</h1>
+        <p class="text-sm text-muted-foreground">Channel settings</p>
       </div>
-      <div class="flex-1" />
-      <div>
-        <ChannelSelect
-          :channel-list="ownedChannels"
-          include-create
-          :value="data.channel.name"
-          @select="onChannelSelect"
-        />
-      </div>
+      <ChannelSelect
+        :channel-list="ownedChannels"
+        include-create
+        :value="data.channel.name"
+        @select="onChannelSelect"
+      />
     </div>
 
     <Tabs v-model="selTab" class="w-full">
-      <TabsList :class="`grid w-full ${data.isPersonal ? 'grid-cols-5' : 'grid-cols-6'}`">
-        <TabsTrigger value="general" class="flex items-center gap-2">
+      <TabsList class="mb-6 w-full justify-start overflow-x-auto scrollbar-hide">
+        <TabsTrigger value="general" class="flex-none">
           <Settings class="h-4 w-4" />
           General
         </TabsTrigger>
-        <TabsTrigger value="stream" class="flex items-center gap-2">
+        <TabsTrigger value="stream" class="flex-none">
           <Key class="h-4 w-4" />
           Streaming
         </TabsTrigger>
-        <TabsTrigger v-if="!data.isPersonal" value="managers" class="flex items-center gap-2">
+        <TabsTrigger v-if="!data.isPersonal" value="managers" class="flex-none">
           <Users class="h-4 w-4" />
           Managers
         </TabsTrigger>
-        <TabsTrigger value="notifications" class="flex items-center gap-2">
+        <TabsTrigger value="notifications" class="flex-none">
           <Bell class="h-4 w-4" />
           Notifications
         </TabsTrigger>
-        <TabsTrigger value="moderation" class="flex items-center gap-2">
+        <TabsTrigger value="moderation" class="flex-none">
           <MessageSquareWarning class="h-4 w-4" />
           Moderation
         </TabsTrigger>
-        <TabsTrigger value="integrations" class="flex items-center gap-2">
+        <TabsTrigger value="integrations" class="flex-none">
           <Wrench class="size-4" />
           Integrations
         </TabsTrigger>

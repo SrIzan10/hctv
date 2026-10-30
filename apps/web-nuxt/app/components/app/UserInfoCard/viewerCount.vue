@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { User } from '@lucide/vue';
+import { Eye } from '@lucide/vue';
 
 const route = useRoute();
 const username = computed(() => String(route.params.username ?? ''));
@@ -7,8 +7,11 @@ const { stream, isLoading } = useStreamLive(username);
 </script>
 
 <template>
-  <div v-if="!isLoading" class="flex items-center space-x-2 *:text-destructive">
-    <span class="text-sm font-semibold"><User /></span>
-    <span class="text-sm">{{ stream?.viewers }}</span>
-  </div>
+  <span
+    v-if="!isLoading && stream?.isLive"
+    class="inline-flex items-center gap-1 tabular-nums text-muted-foreground"
+  >
+    <Eye class="h-3.5 w-3.5" />
+    {{ stream.viewers.toLocaleString() }} watching
+  </span>
 </template>

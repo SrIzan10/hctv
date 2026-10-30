@@ -63,6 +63,7 @@ const { data: sessionData } = useFetch<{ sessionId: string | null }>('/api/pages
 
 const region = computed(() => userInfo.value?.streamRegion as MediaMTXRegion | undefined);
 const isLive = computed(() => Boolean(userInfo.value?.isLive));
+const isOffline = computed(() => Boolean(userInfo.value) && !userInfo.value?.isLive);
 const sessionId = computed(() => sessionData.value?.sessionId ?? null);
 
 const streamSrc = computed(() => {
@@ -542,9 +543,34 @@ interface PlaybackMetricValues {
       v-if="isBuffering"
       class="pointer-events-none absolute inset-0 flex items-center justify-center"
     >
-      <Loader2 class="stream-buffering-indicator h-14 w-14 animate-spin text-primary" />
+      <Loader2 class="stream-buffering-indicator h-14 w-14 animate-spin text-white" />
     </div>
     <div
+      v-if="isOffline"
+      class="absolute inset-0 flex flex-col items-center justify-center gap-4 overflow-hidden px-6 text-center text-white"
+    >
+      <img
+        v-if="userInfo?.channel?.pfpUrl"
+        :src="userInfo.channel.pfpUrl"
+        alt=""
+        aria-hidden="true"
+        class="absolute inset-0 h-full w-full scale-125 object-cover opacity-30 blur-3xl"
+      />
+      <img
+        v-if="userInfo?.channel?.pfpUrl"
+        :src="userInfo.channel.pfpUrl"
+        :alt="resolvedUsername"
+        class="relative h-16 w-16 rounded-full object-cover ring-1 ring-white/20 md:h-24 md:w-24"
+      />
+      <div class="relative">
+        <p class="text-lg font-bold md:text-2xl">{{ resolvedUsername }} is offline</p>
+        <p class="mt-1 text-sm text-white/70">
+          Follow to get notified next time they go live.
+        </p>
+      </div>
+    </div>
+    <div
+      v-else
       class="stream-control-bar absolute inset-x-0 bottom-0 box-border flex w-full items-center justify-between px-2 pt-8 pb-2 sm:px-4 sm:pb-1"
     >
       <TooltipProvider>
@@ -580,12 +606,12 @@ interface PlaybackMetricValues {
             >
               <div data-volume-track class="relative h-1 w-full rounded-full bg-white/30">
                 <div
-                  class="absolute h-full rounded-full bg-primary"
+                  class="absolute h-full rounded-full bg-white"
                   :style="{ width: volumeFill }"
                 />
               </div>
               <div
-                class="pointer-events-none absolute h-3 w-3 -translate-x-1/2 rounded-full bg-primary"
+                class="pointer-events-none absolute h-3 w-3 -translate-x-1/2 rounded-full bg-white"
                 :style="{ left: `calc(1rem + (100% - 1rem) * ${(isMuted ? 0 : volume)})` }"
               />
             </div>
