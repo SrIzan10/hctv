@@ -38,8 +38,8 @@ function add() {
   <Dialog v-model:open="open">
     <DialogTrigger as-child>
       <Button size="sm">
-        <UserPlus class="h-4 w-4 mr-2" />
-        Add Manager
+        <UserPlus />
+        Add manager
       </Button>
     </DialogTrigger>
     <DialogContent>

@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { Pencil } from '@lucide/vue';
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
-import { Button } from '~/components/ui/button';
 import type { StreamInfo, Channel } from '@hctv/db';
 import FollowButton from './follow.vue';
 import FollowCountText from './followCount.vue';
@@ -12,11 +10,7 @@ import Preview from '~/components/ui/channel-desc-fancy-area/Preview.vue';
 const props = defineProps<Props>();
 
 const { stream } = useStreamLive(() => props.streamInfo.username);
-const { channels: personalChannels } = usePersonalChannels();
 const isLive = computed(() => stream.value?.isLive ?? props.streamInfo.isLive);
-const canEdit = computed(() =>
-  personalChannels.value.some((channel) => channel.username === props.streamInfo.username)
-);
 
 interface Props {
   streamInfo: StreamInfo & { channel: Channel };
@@ -49,12 +43,6 @@ interface Props {
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <NuxtLink v-if="canEdit" :to="`/settings/channel/${streamInfo.username}?tab=stream`">
-          <Button variant="outline" size="sm">
-            <Pencil />
-            Edit stream
-          </Button>
-        </NuxtLink>
         <FollowButton :channel="streamInfo.username" />
       </div>
     </div>

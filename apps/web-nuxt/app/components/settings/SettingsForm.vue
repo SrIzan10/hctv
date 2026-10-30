@@ -40,6 +40,8 @@ const props = withDefaults(
     submitText?: string;
     submitClass?: string;
     submitButtonDivClass?: string;
+    // lay short fields out side by side; text areas and custom fields span both columns
+    twoColumn?: boolean;
   }>(),
   { submitText: 'Submit' }
 );
@@ -87,8 +89,19 @@ defineExpose({ submit });
 </script>
 
 <template>
-  <form class="space-y-5" @submit.prevent="submit">
-    <div v-for="field in fields" :key="field.name" :class="field.type === 'hidden' ? 'hidden' : 'grid gap-2'">
+  <form :class="twoColumn ? 'grid gap-5 sm:grid-cols-2' : 'space-y-5'" @submit.prevent="submit">
+    <div
+      v-for="field in fields"
+      :key="field.name"
+      :class="
+        field.type === 'hidden'
+          ? 'hidden'
+          : cn(
+              'grid content-start gap-2',
+              twoColumn && (field.textArea || field.custom) && 'sm:col-span-2'
+            )
+      "
+    >
       <Label v-if="field.type !== 'hidden' && field.label">{{ field.label }}</Label>
       <slot
         v-if="field.custom"
@@ -115,14 +128,11 @@ defineExpose({ submit });
         :maxlength="field.maxChars"
         @update:model-value="(v: string | number) => onInput(field, v)"
       />
-      <p
-        v-if="field.type !== 'hidden' && field.description"
-        class="text-sm text-muted-foreground"
-      >
+      <p v-if="field.type !== 'hidden' && field.description" class="text-sm text-muted-foreground">
         {{ field.description }}
       </p>
     </div>
-    <div :class="cn('flex gap-2 py-2', submitButtonDivClass)">
+    <div :class="cn('flex gap-2 py-2', twoColumn && 'sm:col-span-2', submitButtonDivClass)">
       <slot name="other-submit" />
       <Button type="submit" :class="submitClass" :disabled="isPending">
         <Loader2 v-if="isPending" class="size-4 animate-spin" />

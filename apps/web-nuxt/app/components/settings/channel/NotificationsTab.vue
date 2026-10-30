@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
-import { Badge } from '~/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card';
-import { Separator } from '~/components/ui/separator';
+import { BellOff, BellRing } from '@lucide/vue';
 import { Switch } from '~/components/ui/switch';
+import PersonRow from '~/components/settings/PersonRow.vue';
+import SettingsSection from '~/components/settings/SettingsSection.vue';
 import { runToastAction } from './actions';
 import type { ChannelSettingsChannel } from './types';
 
@@ -19,67 +18,68 @@ function toggleGlobalNotifs() {
     { channelId: props.channel.id },
     {
       loading: 'Updating notifications...',
-      success: (data) =>
-        `${data.toggle ? 'Enabled' : 'Disabled'} global notifications for this channel.`,
-      error: 'Failed to update notifications',
+      success: (data) => `Go-live notifications turned ${data.toggle ? 'on' : 'off'}`,
+      error: 'Could not update notifications. Try again.',
     }
   );
 }
 </script>
 
 <template>
-  <Card>
-    <CardHeader>
-      <CardTitle>Notification Settings</CardTitle>
-      <CardDescription>
-        Configure when and how followers are notified about your streams.
-      </CardDescription>
-    </CardHeader>
-    <CardContent class="space-y-6">
-      <div class="space-y-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="font-medium">Stream Notifications</h3>
-            <p class="text-sm text-mantle-foreground">
-              Send notifications to followers when you go live
-            </p>
-          </div>
-          <Switch
-            :model-value="channel.streamInfo[0]?.enableNotifications ?? true"
-            @update:model-value="toggleGlobalNotifs"
-          />
-        </div>
+  <div>
+    <SettingsSection
+      title="Go-live notifications"
+      description="Followers who turned on notifications get a Slack DM when this channel goes live."
+    >
+      <label
+        class="flex cursor-pointer items-start justify-between gap-6 rounded-xl border bg-card p-4"
+      >
+        <span>
+          <span class="block text-sm font-bold">Notify followers when I go live</span>
+          <span class="mt-0.5 block text-sm text-muted-foreground">
+            Each follower can still turn these off for themselves.
+          </span>
+        </span>
+        <Switch
+          class="mt-0.5"
+          :model-value="channel.streamInfo[0]?.enableNotifications ?? true"
+          @update:model-value="toggleGlobalNotifs"
+        />
+      </label>
+    </SettingsSection>
 
-        <Separator />
-
-        <div>
-          <h3 class="font-medium mb-3">Followers ({{ channel.followers.length }})</h3>
-          <div class="space-y-2 max-h-60 overflow-y-auto">
-            <div
-              v-for="follower in channel.followers"
-              :key="follower.id"
-              class="flex items-center justify-between p-2 border rounded"
-            >
-              <div class="flex items-center gap-2">
-                <Avatar class="h-8 w-8">
-                  <AvatarFallback>{{ personalChannelOf(follower.user.id)?.name }}</AvatarFallback>
-                  <AvatarImage
-                    :src="personalChannelOf(follower.user.id)?.pfpUrl ?? ''"
-                    :alt="personalChannelOf(follower.user.id)?.name"
-                  />
-                </Avatar>
-                <span class="text-sm">{{ personalChannelOf(follower.user.id)?.name }}</span>
-              </div>
-              <Badge :variant="follower.notifyStream ? 'default' : 'secondary'">
-                {{ follower.notifyStream ? 'Notifications On' : 'Notifications Off' }}
-              </Badge>
-            </div>
-            <p v-if="channel.followers.length === 0" class="text-mantle-foreground text-center py-4">
-              No followers yet.
-            </p>
-          </div>
-        </div>
+    <SettingsSection
+      title="Followers"
+      :description="`${channel.followers.length} ${channel.followers.length === 1 ? 'person follows' : 'people follow'} this channel.`"
+    >
+      <ul
+        v-if="channel.followers.length > 0"
+        class="max-h-[28rem] divide-y overflow-y-auto rounded-xl border bg-card"
+      >
+        <PersonRow
+          v-for="follower in channel.followers"
+          :key="follower.id"
+          :name="personalChannelOf(follower.user.id)?.name"
+          :pfp-url="personalChannelOf(follower.user.id)?.pfpUrl"
+        >
+          <span
+            :class="[
+              'inline-flex items-center gap-1.5 text-xs',
+              follower.notifyStream ? 'text-foreground' : 'text-muted-foreground',
+            ]"
+          >
+            <BellRing v-if="follower.notifyStream" class="h-3.5 w-3.5" />
+            <BellOff v-else class="h-3.5 w-3.5" />
+            {{ follower.notifyStream ? 'Notified' : 'Muted' }}
+          </span>
+        </PersonRow>
+      </ul>
+      <div
+        v-else
+        class="rounded-xl border border-dashed px-6 py-10 text-center text-sm text-muted-foreground"
+      >
+        No followers yet. They'll show up here once people follow your channel.
       </div>
-    </CardContent>
-  </Card>
+    </SettingsSection>
+  </div>
 </template>

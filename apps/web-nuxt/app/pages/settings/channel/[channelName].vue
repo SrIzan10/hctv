@@ -63,7 +63,7 @@ async function onChannelSelect(value: string) {
 </script>
 
 <template>
-  <div v-if="data" :key="data.channel.id" class="container max-w-4xl mx-auto py-6 px-4">
+  <div v-if="data" :key="data.channel.id" class="mx-auto w-full max-w-5xl px-4 py-8 md:px-8">
     <div class="mb-8 flex flex-wrap items-center gap-4">
       <Avatar class="h-14 w-14">
         <AvatarImage :src="data.channel.pfpUrl" :alt="data.channel.name" />
@@ -82,7 +82,7 @@ async function onChannelSelect(value: string) {
     </div>
 
     <Tabs v-model="selTab" class="w-full">
-      <TabsList class="mb-6 w-full justify-start overflow-x-auto scrollbar-hide">
+      <TabsList class="mb-4 w-full justify-start overflow-x-auto scrollbar-hide">
         <TabsTrigger value="general" class="flex-none">
           <Settings class="h-4 w-4" />
           General

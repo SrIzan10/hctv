@@ -6,7 +6,7 @@ import type { ourFileRouter } from '~~/server/utils/fileRouter';
 import { Button } from '~/components/ui/button';
 
 // replacement for uploadthing's <UploadButton endpoint="pfpUpload">
-const props = defineProps<{ hasValue: boolean }>();
+const props = defineProps<{ hasValue: boolean; hideHint?: boolean }>();
 const emit = defineEmits<{
   (e: 'uploaded', url: string): void;
   (e: 'uploadBegin'): void;
@@ -41,7 +41,7 @@ async function onChange(event: Event) {
 </script>
 
 <template>
-  <div class="mt-2 flex flex-col items-start gap-1">
+  <div class="flex flex-col items-start gap-1">
     <input ref="inputRef" type="file" accept="image/*" class="hidden" @change="onChange" />
     <Button
       type="button"
@@ -50,8 +50,8 @@ async function onChange(event: Event) {
       :disabled="isUploading"
       @click="inputRef?.click()"
     >
-      {{ props.hasValue ? 'Upload new image' : 'Upload profile picture' }}
+      {{ props.hasValue ? 'Upload new image' : 'Upload image' }}
     </Button>
-    <p class="text-xs text-muted-foreground/70">Image (1MB max)</p>
+    <p v-if="!hideHint" class="text-xs text-muted-foreground">Any image up to 1 MB.</p>
   </div>
 </template>

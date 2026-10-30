@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { UserMinus } from '@lucide/vue';
 import { toast } from 'vue-sonner';
-import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
 import { Button } from '~/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card';
-import { Separator } from '~/components/ui/separator';
+import PersonRow from '~/components/settings/PersonRow.vue';
 import SettingsForm from '~/components/settings/SettingsForm.vue';
+import SettingsSection from '~/components/settings/SettingsSection.vue';
 import type { SettingsFormField, SettingsFormResult } from '~/components/settings/SettingsForm.vue';
 import AddChatBotModeratorDialog from './AddChatBotModeratorDialog.vue';
 import AddChatModeratorDialog from './AddChatModeratorDialog.vue';
@@ -23,28 +22,28 @@ const moderationFields: SettingsFormField[] = [
     label: 'Slow mode (seconds)',
     type: 'number',
     value: props.channel.chatSettings?.slowModeSeconds ?? 0,
-    description: 'Users can send one message per interval. Set 0 to disable.',
+    description: 'Seconds each person waits between messages. 0 turns it off.',
   },
   {
     name: 'maxMessageLength',
     label: 'Max message length',
     type: 'number',
     value: props.channel.chatSettings?.maxMessageLength ?? 400,
-    description: 'Maximum allowed message length in characters.',
+    description: 'Longest message allowed, in characters.',
   },
   {
     name: 'rateLimitCount',
     label: 'Messages per window',
     type: 'number',
     value: props.channel.chatSettings?.rateLimitCount ?? 8,
-    description: 'How many messages a user can send in the rate limit window.',
+    description: 'Messages one person can send within the rate window.',
   },
   {
     name: 'rateLimitWindowSeconds',
     label: 'Rate window (seconds)',
     type: 'number',
     value: props.channel.chatSettings?.rateLimitWindowSeconds ?? 10,
-    description: 'Window size used for spam protection.',
+    description: 'How long the messages-per-window limit counts over.',
   },
   {
     name: 'blockedTerms',
@@ -53,11 +52,14 @@ const moderationFields: SettingsFormField[] = [
     textArea: true,
     textAreaRows: 8,
     description:
-      'One term per line (or comma-separated). Messages containing these terms are blocked.',
+      'One per line, or separated by commas. Messages containing any of them are blocked.',
   },
 ];
 
-function personalChannelOf(list: (typeof props.channel)['managerPersonalChannels'], userId: string) {
+function personalChannelOf(
+  list: (typeof props.channel)['managerPersonalChannels'],
+  userId: string
+) {
   return list.find((candidate) => candidate?.ownerId === userId);
 }
 
@@ -68,7 +70,7 @@ function removeModerator(userId: string) {
     {
       loading: 'Removing moderator...',
       success: 'Moderator removed',
-      error: 'Failed to remove moderator',
+      error: 'Could not remove the moderator. Try again.',
     }
   );
 }
@@ -79,145 +81,111 @@ function removeBotModerator(botId: string) {
     { channelId: props.channel.id, botId },
     {
       loading: 'Removing bot moderator...',
-      success: 'Bot moderator removed',
-      error: 'Failed to remove bot moderator',
+      success: 'Bot removed from moderators',
+      error: 'Could not remove the bot. Try again.',
     }
   );
 }
 
 async function handleModerationActionComplete(result: SettingsFormResult) {
   if (result?.success) {
-    toast.success('Moderation settings updated');
+    toast.success('Chat rules saved');
     await refreshNuxtData();
   }
 }
 </script>
 
 <template>
-  <Card>
-    <CardHeader>
-      <CardTitle>Chat Moderation</CardTitle>
-      <CardDescription>
-        Configure rate limits, slow mode, and blocked words for this channel's live chat.
-      </CardDescription>
-    </CardHeader>
-    <CardContent class="space-y-6">
-      <div class="space-y-4">
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold">Moderators</h3>
-          <div class="flex gap-2">
-            <AddChatModeratorDialog
-              :channel-id="channel.id"
-              :existing-moderators="[
-                channel.owner.id,
-                ...channel.managers.map((manager) => manager.id),
-                ...channel.chatModerators.map((moderator) => moderator.id),
-              ]"
-            />
-            <AddChatBotModeratorDialog
-              :channel-id="channel.id"
-              :bot-accounts="channel.allBotAccounts"
-              :existing-bot-moderators="channel.chatModeratorBots.map((bot) => bot.id)"
-            />
-          </div>
+  <div>
+    <SettingsSection
+      title="Moderators"
+      description="Moderators can delete messages, time people out and ban them from chat. Owners and managers are moderators automatically."
+    >
+      <template #aside>
+        <div class="flex flex-wrap gap-2">
+          <AddChatModeratorDialog
+            :channel-id="channel.id"
+            :existing-moderators="[
+              channel.owner.id,
+              ...channel.managers.map((manager) => manager.id),
+              ...channel.chatModerators.map((moderator) => moderator.id),
+            ]"
+          />
+          <AddChatBotModeratorDialog
+            :channel-id="channel.id"
+            :bot-accounts="channel.allBotAccounts"
+            :existing-bot-moderators="channel.chatModeratorBots.map((bot) => bot.id)"
+          />
         </div>
+      </template>
 
-        <div class="space-y-3">
-          <div class="flex items-center justify-between p-3 border rounded-lg">
-            <div class="flex items-center gap-3">
-              <Avatar class="h-10 w-10">
-                <AvatarImage :src="channel.owner.pfpUrl" />
-                <AvatarFallback>{{ channel.owner.slack_id[0]?.toUpperCase() }}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p class="font-medium">{{ channel.ownerPersonalChannel?.name }}</p>
-                <p class="text-sm text-mantle-foreground">Owner</p>
-              </div>
-            </div>
-            <ChannelRoleBadges :roles="withPlatformAdmin(['owner', 'chatModerator'], channel.owner.isAdmin)" />
-          </div>
-
-          <div
-            v-for="manager in channel.managers"
-            :key="manager.id"
-            class="flex items-center justify-between p-3 border rounded-lg"
+      <ul class="divide-y rounded-xl border bg-card">
+        <PersonRow
+          :name="channel.ownerPersonalChannel?.name"
+          :pfp-url="channel.owner.pfpUrl"
+          subtitle="Owner"
+        >
+          <ChannelRoleBadges :roles="withPlatformAdmin(['owner'], channel.owner.isAdmin)" />
+        </PersonRow>
+        <PersonRow
+          v-for="manager in channel.managers"
+          :key="manager.id"
+          :name="personalChannelOf(channel.managerPersonalChannels, manager.id)?.name"
+          :pfp-url="manager.pfpUrl"
+          subtitle="Manager"
+        >
+          <ChannelRoleBadges :roles="withPlatformAdmin(['manager'], manager.isAdmin)" />
+        </PersonRow>
+        <PersonRow
+          v-for="moderator in channel.chatModerators"
+          :key="moderator.id"
+          :name="personalChannelOf(channel.chatModeratorPersonalChannels, moderator.id)?.name"
+          :pfp-url="moderator.pfpUrl"
+          subtitle="Chat moderator"
+        >
+          <ChannelRoleBadges :roles="withPlatformAdmin(['chatModerator'], moderator.isAdmin)" />
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            class="text-muted-foreground hover:text-destructive"
+            :aria-label="`Remove ${personalChannelOf(channel.chatModeratorPersonalChannels, moderator.id)?.name ?? 'moderator'}`"
+            @click="removeModerator(moderator.id)"
           >
-            <div class="flex items-center gap-3">
-              <Avatar class="h-10 w-10">
-                <AvatarImage :src="manager.pfpUrl" />
-                <AvatarFallback>{{ personalChannelOf(channel.managerPersonalChannels, manager.id)?.name }}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p class="font-medium">{{ personalChannelOf(channel.managerPersonalChannels, manager.id)?.name }}</p>
-                <p class="text-sm text-mantle-foreground">Manager</p>
-              </div>
-            </div>
-            <ChannelRoleBadges :roles="withPlatformAdmin(['manager', 'chatModerator'], manager.isAdmin)" />
-          </div>
-
-          <div
-            v-for="moderator in channel.chatModerators"
-            :key="moderator.id"
-            class="flex items-center justify-between p-3 border rounded-lg"
+            <UserMinus />
+          </Button>
+        </PersonRow>
+        <PersonRow
+          v-for="botAccount in channel.chatModeratorBots"
+          :key="botAccount.id"
+          :name="botAccount.displayName"
+          :pfp-url="botAccount.pfpUrl"
+          :subtitle="`@${botAccount.slug}`"
+        >
+          <ChannelRoleBadges :roles="['botModerator']" />
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            class="text-muted-foreground hover:text-destructive"
+            :aria-label="`Remove ${botAccount.displayName}`"
+            @click="removeBotModerator(botAccount.id)"
           >
-            <div class="flex items-center gap-3">
-              <Avatar class="h-10 w-10">
-                <AvatarImage :src="moderator.pfpUrl" />
-                <AvatarFallback>{{ personalChannelOf(channel.chatModeratorPersonalChannels, moderator.id)?.name }}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p class="font-medium">{{ personalChannelOf(channel.chatModeratorPersonalChannels, moderator.id)?.name }}</p>
-                <p class="text-sm text-mantle-foreground">Chat moderator</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <ChannelRoleBadges :roles="withPlatformAdmin(['chatModerator'], moderator.isAdmin)" />
-              <Button variant="outline" size="sm" @click="removeModerator(moderator.id)">
-                <UserMinus class="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+            <UserMinus />
+          </Button>
+        </PersonRow>
+      </ul>
+    </SettingsSection>
 
-          <div
-            v-for="botAccount in channel.chatModeratorBots"
-            :key="botAccount.id"
-            class="flex items-center justify-between p-3 border rounded-lg"
-          >
-            <div class="flex items-center gap-3">
-              <Avatar class="h-10 w-10">
-                <AvatarImage :src="botAccount.pfpUrl" />
-                <AvatarFallback>{{ botAccount.slug[0]?.toUpperCase() }}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p class="font-medium">{{ botAccount.displayName }}</p>
-                <p class="text-sm text-mantle-foreground">@{{ botAccount.slug }}</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <ChannelRoleBadges :roles="['botModerator']" />
-              <Button variant="outline" size="sm" @click="removeBotModerator(botAccount.id)">
-                <UserMinus class="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
-          <p
-            v-if="channel.chatModerators.length === 0 && channel.chatModeratorBots.length === 0"
-            class="text-mantle-foreground text-center py-4"
-          >
-            No extra chat moderators yet.
-          </p>
-        </div>
-      </div>
-
-      <Separator />
-
+    <SettingsSection
+      title="Chat rules"
+      description="Moderators skip slow mode and rate limits. The length limit and blocked terms apply to everyone."
+    >
       <SettingsForm
         :fields="moderationFields"
+        two-column
         action="updateChatModeration"
-        submit-text="Save moderation settings"
+        submit-text="Save chat rules"
         @action-complete="handleModerationActionComplete"
       />
-    </CardContent>
-  </Card>
+    </SettingsSection>
+  </div>
 </template>

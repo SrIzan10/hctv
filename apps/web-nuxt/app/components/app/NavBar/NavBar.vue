@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { callAction } from '~/lib/actions';
+import EditLivestream from '../EditLivestream/EditLivestream.vue';
 import ThemeSwitcher from '../ThemeSwitcher/ThemeSwitcher.vue';
 
 const { user } = useUser();
@@ -55,6 +56,7 @@ async function logout() {
     </div>
 
     <div class="flex items-center gap-2 md:gap-3 shrink-0">
+      <EditLivestream class="hidden sm:block" />
       <NuxtLink v-if="user" to="/stream">
         <Button size="sm" class="bg-live text-live-foreground hover:bg-live/90">
           <Radio />

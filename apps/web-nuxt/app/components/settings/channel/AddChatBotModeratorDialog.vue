@@ -43,8 +43,8 @@ function add() {
   <Dialog v-model:open="open">
     <DialogTrigger as-child>
       <Button size="sm" variant="outline">
-        <Bot class="h-4 w-4 mr-2" />
-        Add Bot Moderator
+        <Bot />
+        Add bot
       </Button>
     </DialogTrigger>
     <DialogContent>
