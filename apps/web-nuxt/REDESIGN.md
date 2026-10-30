@@ -73,13 +73,13 @@ Built from Hack Club's own palette instead of a rose tint, so it stays on-brand.
 | `border`     | `#2c2e3a` | `#e0e6ed` | hairlines                                              |
 | `muted-fg`   | `#8492a6` | `#5b6678` | secondary text                                         |
 | `foreground` | `#e8ecf2` | `#1f2d3d` | text                                                   |
-| `live`       | `#ec3750` | `#ec3750` | live badges, "Go live", on-air ring on avatars. Only.  |
-| `primary`    | `#e8ecf2` | `#1f2d3d` | primary buttons are ink-on-paper (inverted foreground) |
+| `primary`    | `#ec3750` | `#ec3750` | Hack Club Red: primary buttons, active tabs, focus     |
+| `live`       | `#ec3750` | `#ec3750` | live badges, "Go live", on-air ring on avatars        |
 | `link`       | `#5bc0de` | `#338eda` | links, focus ring, slider fill                         |
 
-- Primary buttons become the inverted foreground (white button in dark, ink button in light). Red
-  is reserved for going live and live state, destructive actions use a separate darker red only in
-  confirm dialogs.
+- Red is the hero, as in Hack Club's brand guide: primary buttons, the active tab underline, focus
+  rings and the volume slider. `live` is its own token so it can diverge later. Destructive uses a
+  darker red (`#c8233a` light / `#ff6b7f` dark) so it doesn't read as a normal primary action.
 - Chat usernames get a stable color per user from Hack Club's secondary colors (orange `#ff8c37`,
   yellow `#f1c40f`, green `#33d6a6`, cyan `#5bc0de`, blue `#338eda`, purple `#a633d6`) instead of
   all being pink. That makes chat readable at a glance.

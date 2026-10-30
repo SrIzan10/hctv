@@ -606,7 +606,7 @@ interface PlaybackMetricValues {
             >
               <div data-volume-track class="relative h-1 w-full rounded-full bg-white/30">
                 <div
-                  class="absolute h-full rounded-full bg-white"
+                  class="absolute h-full rounded-full bg-primary"
                   :style="{ width: volumeFill }"
                 />
               </div>

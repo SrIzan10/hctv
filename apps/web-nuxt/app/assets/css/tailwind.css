@@ -44,15 +44,15 @@
   --card-foreground: #1f2d3d;
   --border: #e0e6ed;
   --input: #d3dae3;
-  --primary: #1f2d3d;
+  --primary: #ec3750;
   --primary-foreground: #ffffff;
   --secondary: #eef1f5;
   --secondary-foreground: #1f2d3d;
   --accent: #eef1f5;
   --accent-foreground: #1f2d3d;
-  --destructive: #d92f47;
+  --destructive: #c8233a;
   --destructive-foreground: #ffffff;
-  --ring: #338eda;
+  --ring: #ec3750;
   --live: #ec3750;
   --live-foreground: #ffffff;
   --link: #338eda;
@@ -63,34 +63,34 @@
   --radius: 0.75rem;
   --sidebar-background: #ffffff;
   --sidebar-foreground: #1f2d3d;
-  --sidebar-primary: #1f2d3d;
+  --sidebar-primary: #ec3750;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #eef1f5;
   --sidebar-accent-foreground: #1f2d3d;
   --sidebar-border: #e0e6ed;
-  --sidebar-ring: #338eda;
+  --sidebar-ring: #ec3750;
 }
 
 .dark {
   --background: #17171d;
   --foreground: #e8ecf2;
   --muted: #22232b;
-  --muted-foreground: #8f9bb0;
+  --muted-foreground: #8492a6;
   --popover: #1f2029;
   --popover-foreground: #e8ecf2;
   --card: #1f2029;
   --card-foreground: #e8ecf2;
   --border: #2b2d38;
   --input: #363845;
-  --primary: #e8ecf2;
-  --primary-foreground: #17171d;
+  --primary: #ec3750;
+  --primary-foreground: #ffffff;
   --secondary: #26272f;
   --secondary-foreground: #e8ecf2;
   --accent: #292a33;
   --accent-foreground: #f3f5f8;
-  --destructive: #f25a6e;
+  --destructive: #ff6b7f;
   --destructive-foreground: #17171d;
-  --ring: #5bc0de;
+  --ring: #ec3750;
   --live: #ec3750;
   --live-foreground: #ffffff;
   --link: #5bc0de;
@@ -100,12 +100,12 @@
   --mantle-foreground: #e8ecf2;
   --sidebar-background: #111116;
   --sidebar-foreground: #e8ecf2;
-  --sidebar-primary: #e8ecf2;
-  --sidebar-primary-foreground: #17171d;
+  --sidebar-primary: #ec3750;
+  --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #1f2029;
   --sidebar-accent-foreground: #f3f5f8;
   --sidebar-border: #22232b;
-  --sidebar-ring: #5bc0de;
+  --sidebar-ring: #ec3750;
 }
 
 @theme inline {
@@ -180,7 +180,7 @@
   }
 
   ::selection {
-    background: color-mix(in oklab, var(--link) 35%, transparent);
+    background: color-mix(in oklab, var(--primary) 35%, transparent);
   }
 
   .scrollbar-hide::-webkit-scrollbar {

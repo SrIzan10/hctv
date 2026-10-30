@@ -7,7 +7,6 @@ import {
   PenSquare,
   LogOut,
   Code,
-  Heart,
   Radio,
   FolderGit2,
 } from '@lucide/vue';
@@ -132,12 +131,6 @@ async function logout() {
               <DropdownMenuItem :class="menuItemClass">
                 <FolderGit2 :class="iconClass" />
                 Source code
-              </DropdownMenuItem>
-            </a>
-            <a href="https://github.com/sponsors/SrIzan10" target="_blank" rel="noreferrer">
-              <DropdownMenuItem :class="menuItemClass">
-                <Heart :class="iconClass" />
-                Sponsor hctv
               </DropdownMenuItem>
             </a>
           </DropdownMenuGroup>
