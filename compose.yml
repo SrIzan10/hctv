@@ -63,7 +63,7 @@ services:
       dockerfile: docker/mediamtx/Dockerfile
     environment:
       SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
-      MTX_AUTHHTTPADDRESS: ${MEDIAMTX_AUTH_HTTP_ADDRESS:-http://hctv:3000/api/mediamtx/publish}
+      MTX_AUTHHTTPADDRESS: ${MEDIAMTX_AUTH_HTTP_ADDRESS:-http://hctv:3000/api/mediamtx/publish?region=hq}
       MTX_WEBRTCADDITIONALHOSTS: ${MEDIAMTX_WEBRTC_ADDITIONAL_HOSTS:-}
       MTX_HLSCDNSECRET: ${MEDIAMTX_CDN_SECRET:-}
     ports:
@@ -85,6 +85,7 @@ services:
       - '--web.enable-lifecycle'
     volumes:
       - './observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro'
+      - './observability/targets:/etc/prometheus/targets:ro'
       - './observability/web_username:/etc/prometheus/web_username'
       - './observability/web_password:/etc/prometheus/web_password'
       - 'hctv_prometheus_data:/prometheus'

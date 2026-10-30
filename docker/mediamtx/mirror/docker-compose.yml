@@ -25,6 +25,10 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - letsencrypt:/letsencrypt
+      # htpasswd line for the `prometheus` user, matching observability/web_password
+      # on the Prometheus host. Create with:
+      #   htpasswd -nbB prometheus "$(cat observability/web_password)" > metrics.htpasswd
+      - ./metrics.htpasswd:/metrics.htpasswd:ro
     restart: unless-stopped
 
   mediamtx:
@@ -57,6 +61,19 @@ services:
       - traefik.http.routers.mediamtx-api.tls.certresolver=letsencrypt
       - traefik.http.routers.mediamtx-api.service=mediamtx-api
       - traefik.http.services.mediamtx-api.loadbalancer.server.port=9997
+
+      - traefik.http.routers.mediamtx-metrics.rule=Host(`${MEDIAMTX_METRICS_HOST}`)
+      - traefik.http.routers.mediamtx-metrics.entrypoints=websecure
+      - traefik.http.routers.mediamtx-metrics.tls.certresolver=letsencrypt
+      - traefik.http.routers.mediamtx-metrics.service=mediamtx-metrics
+      - traefik.http.routers.mediamtx-metrics.middlewares=mediamtx-metrics-auth
+      - traefik.http.services.mediamtx-metrics.loadbalancer.server.port=9998
+      # MediaMTX does not authenticate its metrics endpoint and path names are
+      # channel names, so Traefik guards it. The htpasswd file is mounted on
+      # traefik (which runs the middleware) rather than passed as an env var:
+      # docker compose eats unescaped `$` in .env values and would silently
+      # truncate the hash.
+      - traefik.http.middlewares.mediamtx-metrics-auth.basicauth.usersfile=/metrics.htpasswd
 
       - traefik.udp.routers.mediamtx-srt.entrypoints=srt
       - traefik.udp.routers.mediamtx-srt.service=mediamtx-srt

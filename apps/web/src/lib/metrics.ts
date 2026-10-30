@@ -120,14 +120,14 @@ function createMetricsStore() {
   const mediamtxAuthRequests = new Counter({
     name: 'hctv_web_mediamtx_auth_requests_total',
     help: 'Total MediaMTX auth decisions handled by the web app.',
-    labelNames: ['action', 'protocol', 'outcome'],
+    labelNames: ['action', 'protocol', 'outcome', 'region'],
     registers: [register],
   });
 
   const mediamtxAuthDuration = new Histogram({
     name: 'hctv_web_mediamtx_auth_duration_seconds',
     help: 'MediaMTX auth request duration in seconds.',
-    labelNames: ['action', 'protocol', 'outcome'],
+    labelNames: ['action', 'protocol', 'outcome', 'region'],
     buckets: [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5],
     registers: [register],
   });
@@ -314,10 +314,11 @@ export function recordMediamtxAuth(
   action: string,
   protocol: string,
   outcome: string,
+  region: string,
   durationSeconds: number
 ): void {
-  metrics.mediamtxAuthRequests.inc({ action, protocol, outcome });
-  metrics.mediamtxAuthDuration.observe({ action, protocol, outcome }, durationSeconds);
+  metrics.mediamtxAuthRequests.inc({ action, protocol, outcome, region });
+  metrics.mediamtxAuthDuration.observe({ action, protocol, outcome, region }, durationSeconds);
 }
 
 export function recordPlaybackMetric(metric: PlaybackMetric): void {

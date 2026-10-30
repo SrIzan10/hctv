@@ -40,7 +40,38 @@ Browsers submit low-cardinality QoE events to `/api/metrics/playback`. Prometheu
 - `hctv_web_playback_dropped_frames_total`
 
 Useful alerts are a startup-time p95 above eight seconds, more than one stall per viewer-minute, or a
-buffer-ahead p50 below four seconds.
+buffer-ahead p50 below four seconds. The Playback Quality row of the hctv Overview dashboard plots all
+three, split by region.
+
+## Regional observability
+
+Regions are defined once in `apps/web/src/lib/utils/mediamtx/regions.ts`. Everything that reports a
+region uses those keys, so the Grafana `Region` variable discovers a new region automatically once
+Prometheus scrapes it.
+
+Adding a region to monitoring takes three steps:
+
+1. Give the mirror a metrics hostname. `docker/mediamtx/mirror/docker-compose.yml` routes
+   `MEDIAMTX_METRICS_HOST` to MediaMTX port 9998 behind a Traefik basic-auth middleware backed by a
+   `metrics.htpasswd` file next to that compose file:
+
+   ```
+   htpasswd -nbB prometheus "$(cat observability/web_password)" > metrics.htpasswd
+   ```
+
+   MediaMTX does not authenticate `/metrics` itself and path names are channel names, so the
+   endpoint must not be exposed unguarded. The hash lives in a file rather than an env var because
+   docker compose expands unescaped `$` in `.env` values and would silently truncate it.
+
+2. Add the region to `observability/targets/mediamtx-mirrors.yml`. Prometheus watches that file, so
+   no restart or `prometheus.yml` edit is needed. The `mediamtx-mirrors` job rewrites `job` to
+   `mediamtx`, so mirrors and HQ answer the same queries and differ only by their `region` label.
+3. Append `?region=<region>` to the mirror's `MEDIAMTX_AUTH_HTTP_ADDRESS`. Every region posts publish
+   and read authorization to the same webhook, and that parameter is how
+   `hctv_web_mediamtx_auth_requests_total` is attributed. A region deployed without it reports as
+   `unknown`.
+
+MediaMTX exports no process or Go runtime metrics, so region CPU and memory are not on the dashboard.
 
 ## Cloudflare operations
 

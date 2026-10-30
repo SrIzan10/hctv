@@ -21,11 +21,32 @@ scrape_configs:
       - targets:
           - chat:8000
 
+  # HQ runs next to the web app on the compose network. Every MediaMTX target
+  # carries a `region` label; the Grafana dashboard groups by it.
   - job_name: mediamtx
     metrics_path: /metrics
     static_configs:
       - targets:
           - mediamtx:9998
+        labels:
+          region: hq
+
+  # Mirror regions (docker/mediamtx/mirror) publish /metrics through Traefik over
+  # HTTPS. Add one entry per region to observability/targets/mediamtx-mirrors.yml;
+  # Prometheus picks the file up without a restart. `job` is rewritten to
+  # `mediamtx` so mirrors and HQ answer the same dashboard queries.
+  - job_name: mediamtx-mirrors
+    metrics_path: /metrics
+    scheme: https
+    basic_auth:
+      username: prometheus
+      password_file: /etc/prometheus/web_password
+    file_sd_configs:
+      - files:
+          - /etc/prometheus/targets/mediamtx-mirrors.yml
+    relabel_configs:
+      - target_label: job
+        replacement: mediamtx
 
   - job_name: redis
     metrics_path: /metrics

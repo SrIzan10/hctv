@@ -1,0 +1,16 @@
+# MediaMTX mirror regions scraped by the `mediamtx-mirrors` job in prometheus.yml.
+#
+# Each entry is one region. The host is the Traefik `MEDIAMTX_METRICS_HOST` of that
+# mirror (docker/mediamtx/mirror/docker-compose.yml), and the `region` label must
+# match the MediaMTXRegion key used by the web app in
+# apps/web/src/lib/utils/mediamtx/regions.ts.
+#
+# Prometheus watches this file, so adding a region takes effect without a restart
+# and without touching prometheus.yml.
+#
+# - targets:
+#     - mtx-metrics-ethande.hackclub.tv
+#   labels:
+#     region: ethande
+
+[]

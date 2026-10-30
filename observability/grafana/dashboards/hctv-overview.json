@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Live health, streaming, chat, and infrastructure metrics for hctv",
+  "description": "Live health, streaming, chat, and infrastructure metrics for hctv across every MediaMTX region",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -57,13 +57,14 @@
                 "value": 1
               }
             ]
-          }
+          },
+          "unit": "none"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 3,
-        "w": 4,
+        "w": 3,
         "x": 0,
         "y": 0
       },
@@ -74,9 +75,7 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -126,14 +125,15 @@
                 "value": 1
               }
             ]
-          }
+          },
+          "unit": "none"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 3,
-        "w": 4,
-        "x": 4,
+        "w": 3,
+        "x": 3,
         "y": 0
       },
       "id": 2,
@@ -143,9 +143,7 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -195,14 +193,15 @@
                 "value": 1
               }
             ]
-          }
+          },
+          "unit": "none"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 3,
-        "w": 4,
-        "x": 8,
+        "w": 3,
+        "x": 6,
         "y": 0
       },
       "id": 3,
@@ -212,78 +211,7 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value"
-      },
-      "targets": [
-        {
-          "expr": "max(up{job=\"mediamtx\"})",
-          "refId": "A"
-        }
-      ],
-      "title": "MediaMTX",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [
-            {
-              "options": {
-                "0": {
-                  "text": "DOWN"
-                },
-                "1": {
-                  "text": "UP"
-                }
-              },
-              "type": "value"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "#73BF69",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 4,
-        "x": 12,
-        "y": 0
-      },
-      "id": 4,
-      "options": {
-        "colorMode": "background_solid",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -333,26 +261,25 @@
                 "value": 1
               }
             ]
-          }
+          },
+          "unit": "none"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 3,
-        "w": 4,
-        "x": 16,
+        "w": 3,
+        "x": 9,
         "y": 0
       },
-      "id": 5,
+      "id": 4,
       "options": {
         "colorMode": "background_solid",
         "graphMode": "none",
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -377,31 +304,77 @@
           "color": {
             "mode": "thresholds"
           },
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
                 "color": "text",
                 "value": null
-              },
-              {
-                "color": "#FF9830",
-                "value": 1
-              },
-              {
-                "color": "#73BF69",
-                "value": 5
               }
             ]
           },
-          "unit": "short"
+          "unit": "none"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 3,
-        "w": 4,
-        "x": 20,
+        "w": 3,
+        "x": 12,
+        "y": 0
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "sum(up{job=\"mediamtx\"})",
+          "refId": "A"
+        }
+      ],
+      "title": "MediaMTX Regions Up",
+      "type": "stat",
+      "description": "Number of MediaMTX regions Prometheus is currently able to scrape. Unaffected by the region filter so a missing region is always visible."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 15,
         "y": 0
       },
       "id": 6,
@@ -411,9 +384,7 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -421,7 +392,7 @@
       },
       "targets": [
         {
-          "expr": "sum(hctv_web_live_streams)",
+          "expr": "sum(hctv_web_live_streams{region=~\"$region\"})",
           "refId": "A"
         }
       ],
@@ -438,28 +409,25 @@
           "color": {
             "mode": "thresholds"
           },
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
                 "color": "text",
                 "value": null
-              },
-              {
-                "color": "#73BF69",
-                "value": 1
               }
             ]
           },
-          "unit": "short"
+          "unit": "none"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 3,
-        "w": 6,
-        "x": 0,
-        "y": 3
+        "w": 3,
+        "x": 18,
+        "y": 0
       },
       "id": 7,
       "options": {
@@ -468,9 +436,7 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -478,7 +444,7 @@
       },
       "targets": [
         {
-          "expr": "hctv_web_active_viewers",
+          "expr": "sum(hctv_web_active_viewers_by_region{region=~\"$region\"})",
           "refId": "A"
         }
       ],
@@ -495,28 +461,25 @@
           "color": {
             "mode": "thresholds"
           },
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
                 "color": "text",
                 "value": null
-              },
-              {
-                "color": "#73BF69",
-                "value": 1
               }
             ]
           },
-          "unit": "short"
+          "unit": "none"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 3,
-        "w": 6,
-        "x": 6,
-        "y": 3
+        "w": 3,
+        "x": 21,
+        "y": 0
       },
       "id": 8,
       "options": {
@@ -525,9 +488,7 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -552,52 +513,47 @@
           "color": {
             "mode": "thresholds"
           },
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
                 "color": "text",
                 "value": null
-              },
-              {
-                "color": "#73BF69",
-                "value": 1
               }
             ]
           },
-          "unit": "short"
+          "unit": "none"
         },
         "overrides": []
       },
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 0,
+        "y": 3
+      },
+      "id": 9,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
         "textMode": "value"
       },
-      "type": "stat",
-      "gridPos": {
-        "h": 3,
-        "w": 6,
-        "x": 12,
-        "y": 3
-      },
-      "id": 49,
       "targets": [
         {
           "expr": "hctv_web_platform_inventory{entity=\"channels\"}",
           "refId": "A"
         }
       ],
-      "title": "Channels"
+      "title": "Channels",
+      "type": "stat"
     },
     {
       "datasource": {
@@ -609,52 +565,151 @@
           "color": {
             "mode": "thresholds"
           },
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
                 "color": "text",
                 "value": null
-              },
-              {
-                "color": "#73BF69",
-                "value": 1
               }
             ]
           },
-          "unit": "short"
+          "unit": "none"
         },
         "overrides": []
       },
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 6,
+        "y": 3
+      },
+      "id": 10,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
         "textMode": "value"
       },
-      "type": "stat",
-      "gridPos": {
-        "h": 3,
-        "w": 6,
-        "x": 18,
-        "y": 3
-      },
-      "id": 50,
       "targets": [
         {
           "expr": "hctv_web_platform_inventory{entity=\"users\"}",
           "refId": "A"
         }
       ],
-      "title": "Onboarded Users"
+      "title": "Onboarded Users",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 12,
+        "y": 3
+      },
+      "id": 11,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "hctv_web_streams_with_viewers",
+          "refId": "A"
+        }
+      ],
+      "title": "Streams With Viewers",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 18,
+        "y": 3
+      },
+      "id": 12,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "hctv_web_hottest_stream_viewers",
+          "refId": "A"
+        }
+      ],
+      "title": "Top Stream Viewers",
+      "type": "stat"
     },
     {
       "collapsed": false,
@@ -664,7 +719,1122 @@
         "x": 0,
         "y": 6
       },
-      "id": 100,
+      "id": 13,
+      "panels": [],
+      "title": "MediaMTX Regions",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "One tile per scraped MediaMTX region. Tiles are generated from the region variable, so a new region appears here as soon as Prometheus scrapes it.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "text": "DOWN"
+                },
+                "1": {
+                  "text": "UP"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "NO DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "#73BF69",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 7
+      },
+      "id": 14,
+      "maxPerRow": 6,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "repeat": "region",
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "expr": "max(up{job=\"mediamtx\", region=\"$region\"})",
+          "refId": "A"
+        }
+      ],
+      "title": "MediaMTX — $region",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Scrape availability per region over time. Gaps mean Prometheus could not reach that region's metrics endpoint.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "fillOpacity": 70,
+            "lineWidth": 0,
+            "spanNulls": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "text": "DOWN"
+                },
+                "1": {
+                  "text": "UP"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "#73BF69",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 11
+      },
+      "id": 15,
+      "options": {
+        "alignValue": "center",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "mergeValues": true,
+        "rowHeight": 0.9,
+        "showValue": "never",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "expr": "up{job=\"mediamtx\", region=~\"$region\"}",
+          "refId": "A",
+          "legendFormat": "{{region}}"
+        }
+      ],
+      "title": "Region Availability",
+      "type": "state-timeline"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 16
+      },
+      "id": 16,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull"],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (region) (paths{job=\"mediamtx\", region=~\"$region\"})",
+          "refId": "A",
+          "legendFormat": "{{region}} — paths"
+        },
+        {
+          "expr": "sum by (region, state) (paths{job=\"mediamtx\", region=~\"$region\"})",
+          "refId": "B",
+          "legendFormat": "{{region}} — {{state}}"
+        },
+        {
+          "expr": "sum by (region) (hctv_web_stream_paths_seen{region=~\"$region\"})",
+          "refId": "C",
+          "legendFormat": "{{region}} — seen by sync"
+        }
+      ],
+      "title": "Active Paths by Region",
+      "type": "timeseries",
+      "description": "Paths the MediaMTX server itself reports, next to what the web app's stream sync saw on its last scrape. A lasting gap between the two means sync is falling behind that region."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 16
+      },
+      "id": 17,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull"],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (region, state) (rtmp_conns{job=\"mediamtx\", region=~\"$region\"})",
+          "refId": "A",
+          "legendFormat": "rtmp {{state}} — {{region}}"
+        },
+        {
+          "expr": "sum by (region, state) (srt_conns{job=\"mediamtx\", region=~\"$region\"})",
+          "refId": "B",
+          "legendFormat": "srt {{state}} — {{region}}"
+        },
+        {
+          "expr": "sum by (region, state) (webrtc_sessions{job=\"mediamtx\", region=~\"$region\"})",
+          "refId": "C",
+          "legendFormat": "webrtc {{state}} — {{region}}"
+        }
+      ],
+      "title": "Ingest Connections by Region",
+      "type": "timeseries",
+      "description": "Publisher and reader connections per protocol. WHIP publishing is only enabled on some regions, so webrtc series are expected to be empty elsewhere."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 16
+      },
+      "id": 18,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull"],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (region) (hls_muxers{job=\"mediamtx\", region=~\"$region\"})",
+          "refId": "A",
+          "legendFormat": "{{region}} — muxers"
+        },
+        {
+          "expr": "sum by (region) (hls_sessions{job=\"mediamtx\", region=~\"$region\"})",
+          "refId": "B",
+          "legendFormat": "{{region}} — sessions"
+        }
+      ],
+      "title": "HLS Delivery by Region",
+      "type": "timeseries",
+      "description": "HLS sessions count requesters hitting the origin directly, which is the Cloudflare edge worker rather than individual viewers. Use Viewers by Region for audience size."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "id": 19,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull"],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (region) (rate(paths_inbound_bytes{job=\"mediamtx\", region=~\"$region\"}[5m])) * 8",
+          "refId": "A",
+          "legendFormat": "{{region}} — ingest"
+        },
+        {
+          "expr": "sum by (region) (rate(paths_outbound_bytes{job=\"mediamtx\", region=~\"$region\"}[5m])) * 8",
+          "refId": "B",
+          "legendFormat": "{{region}} — egress"
+        },
+        {
+          "expr": "sum by (region) (rate(hls_muxers_outbound_bytes{job=\"mediamtx\", region=~\"$region\"}[5m])) * 8",
+          "refId": "C",
+          "legendFormat": "{{region}} — hls out"
+        }
+      ],
+      "title": "Origin Bandwidth by Region",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "id": 20,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull"],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (region) (rate(paths_inbound_frames_in_error{job=\"mediamtx\", region=~\"$region\"}[5m]))",
+          "refId": "A",
+          "legendFormat": "{{region}} — inbound errors"
+        },
+        {
+          "expr": "sum by (region) (rate(hls_muxers_outbound_frames_discarded{job=\"mediamtx\", region=~\"$region\"}[5m]))",
+          "refId": "B",
+          "legendFormat": "{{region}} — hls discarded"
+        },
+        {
+          "expr": "sum by (region) (rate(rtmp_conns_outbound_frames_discarded{job=\"mediamtx\", region=~\"$region\"}[5m]))",
+          "refId": "C",
+          "legendFormat": "{{region}} — rtmp discarded"
+        },
+        {
+          "expr": "sum by (region) (rate(webrtc_sessions_outbound_frames_discarded{job=\"mediamtx\", region=~\"$region\"}[5m]))",
+          "refId": "D",
+          "legendFormat": "{{region}} — webrtc discarded"
+        },
+        {
+          "expr": "sum by (region) (rate(srt_conns_outbound_frames_discarded{job=\"mediamtx\", region=~\"$region\"}[5m]))",
+          "refId": "E",
+          "legendFormat": "{{region}} — srt discarded"
+        }
+      ],
+      "title": "Frame Loss by Region",
+      "type": "timeseries",
+      "description": "Frames per second dropped on ingest or discarded on delivery. Sustained non-zero values point at an overloaded region or a broadcaster sending more than the region can forward."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "id": 21,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull"],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "avg by (region) (srt_conns_ms_rtt{job=\"mediamtx\", region=~\"$region\"})",
+          "refId": "A",
+          "legendFormat": "{{region}}"
+        }
+      ],
+      "title": "SRT Round Trip by Region",
+      "type": "timeseries",
+      "description": "Average SRT round trip time across live connections in each region. Idle regions report zero."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "pps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "id": 22,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull"],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (region) (rate(srt_conns_packets_send_loss{job=\"mediamtx\", region=~\"$region\"}[5m]))",
+          "refId": "A",
+          "legendFormat": "{{region}} — send loss"
+        },
+        {
+          "expr": "sum by (region) (rate(srt_conns_packets_received_loss{job=\"mediamtx\", region=~\"$region\"}[5m]))",
+          "refId": "B",
+          "legendFormat": "{{region}} — receive loss"
+        },
+        {
+          "expr": "sum by (region) (rate(srt_conns_packets_retrans{job=\"mediamtx\", region=~\"$region\"}[5m]))",
+          "refId": "C",
+          "legendFormat": "{{region}} — retransmits"
+        }
+      ],
+      "title": "SRT Packet Loss by Region",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 40
+      },
+      "id": 23,
+      "panels": [],
+      "title": "Playback Quality",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 41
+      },
+      "id": 24,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull"],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (region, event) (rate(hctv_web_playback_events_total{region=~\"$region\"}[5m]))",
+          "refId": "A",
+          "legendFormat": "{{event}} — {{region}}"
+        }
+      ],
+      "title": "Playback Events by Region",
+      "type": "timeseries",
+      "description": "Browser-reported playback lifecycle events. Stalls, resyncs, and recoveries rising together in one region is the earliest sign of a delivery problem there."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 41
+      },
+      "id": 25,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull"],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (region, type) (rate(hctv_web_playback_errors_total{region=~\"$region\"}[15m]))",
+          "refId": "A",
+          "legendFormat": "{{type}} — {{region}}"
+        },
+        {
+          "expr": "sum by (region) (rate(hctv_web_playback_errors_total{fatal=\"true\", region=~\"$region\"}[15m]))",
+          "refId": "B",
+          "legendFormat": "fatal — {{region}}"
+        }
+      ],
+      "title": "Playback Errors by Region",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 41
+      },
+      "id": 26,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull"],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (region) (rate(hctv_web_playback_dropped_frames_total{region=~\"$region\"}[5m]))",
+          "refId": "A",
+          "legendFormat": "{{region}}"
+        }
+      ],
+      "title": "Playback Dropped Frames by Region",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 49
+      },
+      "id": 27,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull"],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by (le, region) (rate(hctv_web_playback_startup_duration_seconds_bucket{region=~\"$region\"}[15m])))",
+          "refId": "A",
+          "legendFormat": "{{region}} p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, region) (rate(hctv_web_playback_startup_duration_seconds_bucket{region=~\"$region\"}[15m])))",
+          "refId": "B",
+          "legendFormat": "{{region}} p95"
+        }
+      ],
+      "title": "Playback Startup Time by Region",
+      "type": "timeseries",
+      "description": "Time from loading a stream to playback starting. A p95 above eight seconds is the documented alert threshold."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 49
+      },
+      "id": 28,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull"],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by (le, region) (rate(hctv_web_playback_latency_seconds_bucket{region=~\"$region\"}[15m])))",
+          "refId": "A",
+          "legendFormat": "{{region}} p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, region) (rate(hctv_web_playback_latency_seconds_bucket{region=~\"$region\"}[15m])))",
+          "refId": "B",
+          "legendFormat": "{{region}} p95"
+        }
+      ],
+      "title": "Live Edge Latency by Region",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 49
+      },
+      "id": 29,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull"],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by (le, region) (rate(hctv_web_playback_buffer_ahead_seconds_bucket{region=~\"$region\"}[15m])))",
+          "refId": "A",
+          "legendFormat": "{{region}} p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, region) (rate(hctv_web_playback_buffer_ahead_seconds_bucket{region=~\"$region\"}[15m])))",
+          "refId": "B",
+          "legendFormat": "{{region}} p95"
+        }
+      ],
+      "title": "Buffer Ahead by Region",
+      "type": "timeseries",
+      "description": "Forward buffer reported by hls.js. A p50 below four seconds is the documented alert threshold."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "Kbits"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 57
+      },
+      "id": 30,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull"],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by (le, region) (rate(hctv_web_playback_bandwidth_kbps_bucket{region=~\"$region\"}[15m])))",
+          "refId": "A",
+          "legendFormat": "{{region}} p50"
+        },
+        {
+          "expr": "histogram_quantile(0.10, sum by (le, region) (rate(hctv_web_playback_bandwidth_kbps_bucket{region=~\"$region\"}[15m])))",
+          "refId": "B",
+          "legendFormat": "{{region}} p10"
+        }
+      ],
+      "title": "Viewer Bandwidth Estimate by Region",
+      "type": "timeseries",
+      "description": "Bandwidth hls.js estimates for viewers. Until an ABR ladder exists every viewer needs to clear the broadcaster's bitrate, so the p10 matters more than the median."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 57
+      },
+      "id": 31,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull"],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (region) (rate(hctv_web_playback_events_total{event=\"stall\", region=~\"$region\"}[15m])) * 60 / clamp_min(sum by (region) (hctv_web_active_viewers_by_region{region=~\"$region\"}), 1)",
+          "refId": "A",
+          "legendFormat": "{{region}}"
+        }
+      ],
+      "title": "Stalls per Viewer Minute by Region",
+      "type": "timeseries",
+      "description": "More than one stall per viewer-minute is the documented alert threshold."
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 65
+      },
+      "id": 32,
       "panels": [],
       "title": "Streams & Viewers",
       "type": "row"
@@ -700,16 +1870,15 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 7
+        "y": 66
       },
-      "id": 9,
+      "id": 33,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -718,14 +1887,14 @@
       },
       "targets": [
         {
-          "expr": "sum by (region) (hctv_web_live_streams)",
-          "legendFormat": "live \u2014 {{region}}",
-          "refId": "A"
+          "expr": "sum by (region) (hctv_web_live_streams{region=~\"$region\"})",
+          "refId": "A",
+          "legendFormat": "live — {{region}}"
         },
         {
-          "expr": "sum by (region) (hctv_web_stream_paths_seen)",
-          "legendFormat": "paths \u2014 {{region}}",
-          "refId": "B"
+          "expr": "sum by (region) (hctv_web_stream_paths_seen{region=~\"$region\"})",
+          "refId": "B",
+          "legendFormat": "paths — {{region}}"
         }
       ],
       "title": "Stream Estate by Region",
@@ -743,8 +1912,10 @@
           },
           "custom": {
             "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 15,
             "gradientMode": "none",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
@@ -760,17 +1931,15 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 7
+        "y": 66
       },
-      "id": 10,
+      "id": 34,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -779,23 +1948,24 @@
       },
       "targets": [
         {
-          "expr": "hctv_web_active_viewers",
-          "legendFormat": "total viewers",
-          "refId": "A"
+          "expr": "sum(hctv_web_active_viewers_by_region{region=~\"$region\"})",
+          "refId": "A",
+          "legendFormat": "total viewers"
         },
         {
           "expr": "hctv_web_hottest_stream_viewers",
-          "legendFormat": "top stream",
-          "refId": "B"
+          "refId": "B",
+          "legendFormat": "top stream"
         },
         {
           "expr": "hctv_web_streams_with_viewers",
-          "legendFormat": "streams w/ viewers",
-          "refId": "C"
+          "refId": "C",
+          "legendFormat": "streams w/ viewers"
         }
       ],
       "title": "Audience Pulse",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "Top stream and streams-with-viewers are platform-wide totals and do not narrow with the region filter."
     },
     {
       "datasource": {
@@ -808,17 +1978,17 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
             "drawStyle": "line",
-            "fillOpacity": 20,
+            "fillOpacity": 15,
             "gradientMode": "none",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            }
+            "spanNulls": true
           },
           "unit": "none"
         },
@@ -828,16 +1998,15 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 7
+        "y": 66
       },
-      "id": 11,
+      "id": 35,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -846,9 +2015,9 @@
       },
       "targets": [
         {
-          "expr": "sum by (region) (hctv_web_active_viewers_by_region)",
-          "legendFormat": "{{region}}",
-          "refId": "A"
+          "expr": "sum by (region) (hctv_web_active_viewers_by_region{region=~\"$region\"})",
+          "refId": "A",
+          "legendFormat": "{{region}}"
         }
       ],
       "title": "Viewers by Region",
@@ -865,32 +2034,35 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 15,
             "gradientMode": "none",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
             "spanNulls": true
           },
-          "unit": "ops"
+          "unit": "none"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 8,
         "x": 0,
-        "y": 15
+        "y": 74
       },
-      "id": 25,
+      "id": 36,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -899,14 +2071,14 @@
       },
       "targets": [
         {
-          "expr": "sum by (region, transition) (rate(hctv_web_live_stream_transitions_total[15m]))",
-          "legendFormat": "{{region}} {{transition}}",
-          "refId": "A"
+          "expr": "sum by (region, transition) (rate(hctv_web_live_stream_transitions_total{region=~\"$region\"}[15m]))",
+          "refId": "A",
+          "legendFormat": "{{region}} {{transition}}"
         },
         {
-          "expr": "sum by (region, status) (rate(hctv_web_stream_sync_scrapes_total[15m]))",
-          "legendFormat": "scrape {{region}} {{status}}",
-          "refId": "B"
+          "expr": "sum by (region, status) (rate(hctv_web_stream_sync_scrapes_total{region=~\"$region\"}[15m]))",
+          "refId": "B",
+          "legendFormat": "scrape {{region}} {{status}}"
         }
       ],
       "title": "Stream Sync Health",
@@ -923,34 +2095,96 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "drawStyle": "bars",
-            "fillOpacity": 80,
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
             "gradientMode": "none",
-            "lineWidth": 0,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            }
+            "spanNulls": true
           },
-          "unit": "short"
+          "unit": "none"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 15
+        "w": 8,
+        "x": 8,
+        "y": 74
       },
-      "id": 24,
+      "id": 37,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (region) (rate(hctv_web_thumbnail_jobs_enqueued_total{region=~\"$region\"}[15m]))",
+          "refId": "A",
+          "legendFormat": "{{region}}"
+        },
+        {
+          "expr": "hctv_web_thumbnail_refresh_targets",
+          "refId": "B",
+          "legendFormat": "targets"
+        }
+      ],
+      "title": "Thumbnail Jobs by Region",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 74
+      },
+      "id": 38,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -960,8 +2194,8 @@
       "targets": [
         {
           "expr": "sum by (entity) (hctv_web_platform_inventory)",
-          "legendFormat": "{{entity}}",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "{{entity}}"
         }
       ],
       "title": "Platform Inventory",
@@ -973,9 +2207,196 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 23
+        "y": 82
       },
-      "id": 200,
+      "id": 39,
+      "panels": [],
+      "title": "Media Ingress & Auth",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 83
+      },
+      "id": 40,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull"],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (region, outcome) (rate(hctv_web_mediamtx_auth_requests_total{region=~\"$region\"}[5m]))",
+          "refId": "A",
+          "legendFormat": "{{region}} — {{outcome}}"
+        }
+      ],
+      "title": "Media Auth Outcomes by Region",
+      "type": "timeseries",
+      "description": "Regions report themselves through the region query parameter on MTX_AUTHHTTPADDRESS. A region that has not been redeployed with that parameter reports as \"unknown\"."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 83
+      },
+      "id": 41,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull"],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (action, protocol) (rate(hctv_web_mediamtx_auth_requests_total{region=~\"$region\"}[5m]))",
+          "refId": "A",
+          "legendFormat": "{{action}}/{{protocol}}"
+        }
+      ],
+      "title": "Media Auth Mix",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 83
+      },
+      "id": 42,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull"],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by (le, region) (rate(hctv_web_mediamtx_auth_duration_seconds_bucket{region=~\"$region\"}[15m])))",
+          "refId": "A",
+          "legendFormat": "{{region}} p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, region) (rate(hctv_web_mediamtx_auth_duration_seconds_bucket{region=~\"$region\"}[15m])))",
+          "refId": "B",
+          "legendFormat": "{{region}} p95"
+        }
+      ],
+      "title": "Media Auth Latency",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 91
+      },
+      "id": 43,
       "panels": [],
       "title": "Chat",
       "type": "row"
@@ -991,58 +2412,35 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
             "drawStyle": "line",
             "fillOpacity": 15,
             "gradientMode": "none",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
             "spanNulls": true
           },
-          "unit": "reqps"
+          "unit": "none"
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "bytes/s"
-            },
-            "properties": [
-              {
-                "id": "custom.axisPlacement",
-                "value": "right"
-              },
-              {
-                "id": "unit",
-                "value": "Bps"
-              },
-              {
-                "id": "custom.drawStyle",
-                "value": "line"
-              },
-              {
-                "id": "custom.fillOpacity",
-                "value": 5
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 24
+        "y": 92
       },
-      "id": 12,
+      "id": 44,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -1052,18 +2450,18 @@
       "targets": [
         {
           "expr": "sum(rate(hctv_chat_messages_delivered_total[5m]))",
-          "legendFormat": "delivered msg/s",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "delivered msg/s"
         },
         {
           "expr": "sum(rate(hctv_chat_incoming_messages_total[5m]))",
-          "legendFormat": "inbound frames/s",
-          "refId": "B"
+          "refId": "B",
+          "legendFormat": "inbound frames/s"
         },
         {
           "expr": "sum(rate(hctv_chat_message_bytes_delivered_total[5m]))",
-          "legendFormat": "bytes/s",
-          "refId": "C"
+          "refId": "C",
+          "legendFormat": "bytes/s"
         }
       ],
       "title": "Chat Throughput",
@@ -1080,19 +2478,19 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
             "drawStyle": "line",
-            "fillOpacity": 20,
+            "fillOpacity": 15,
             "gradientMode": "none",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            }
+            "spanNulls": true
           },
-          "unit": "short"
+          "unit": "none"
         },
         "overrides": []
       },
@@ -1100,16 +2498,15 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 24
+        "y": 92
       },
-      "id": 13,
+      "id": 45,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -1119,8 +2516,8 @@
       "targets": [
         {
           "expr": "sum by (channel) (hctv_chat_websocket_connections_by_channel)",
-          "legendFormat": "{{channel}}",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "{{channel}}"
         }
       ],
       "title": "Socket Load by Channel",
@@ -1137,11 +2534,15 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 15,
             "gradientMode": "none",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
             "spanNulls": true
           },
@@ -1153,16 +2554,15 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 24
+        "y": 92
       },
-      "id": 17,
+      "id": 46,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -1172,18 +2572,18 @@
       "targets": [
         {
           "expr": "histogram_quantile(0.50, sum by (le, type) (rate(hctv_chat_message_duration_seconds_bucket[15m])))",
-          "legendFormat": "{{type}} p50",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "{{type}} p50"
         },
         {
           "expr": "histogram_quantile(0.95, sum by (le, type) (rate(hctv_chat_message_duration_seconds_bucket[15m])))",
-          "legendFormat": "{{type}} p95",
-          "refId": "B"
+          "refId": "B",
+          "legendFormat": "{{type}} p95"
         },
         {
           "expr": "histogram_quantile(0.99, sum by (le, type) (rate(hctv_chat_message_duration_seconds_bucket[15m])))",
-          "legendFormat": "{{type}} p99",
-          "refId": "C"
+          "refId": "C",
+          "legendFormat": "{{type}} p99"
         }
       ],
       "title": "Chat Processing Latency",
@@ -1200,15 +2600,19 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 15,
             "gradientMode": "none",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
             "spanNulls": true
           },
-          "unit": "short"
+          "unit": "none"
         },
         "overrides": []
       },
@@ -1216,16 +2620,15 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 32
+        "y": 100
       },
-      "id": 26,
+      "id": 47,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -1235,13 +2638,13 @@
       "targets": [
         {
           "expr": "sum by (sender_type) (rate(hctv_chat_unique_chatters_total[1h]))",
-          "legendFormat": "chatters \u2014 {{sender_type}}",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "chatters — {{sender_type}}"
         },
         {
           "expr": "sum by (sender_type) (rate(hctv_chat_messages_delivered_total[5m]))",
-          "legendFormat": "msg/s \u2014 {{sender_type}}",
-          "refId": "B"
+          "refId": "B",
+          "legendFormat": "msg/s — {{sender_type}}"
         }
       ],
       "title": "Chat Participation",
@@ -1258,17 +2661,19 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "drawStyle": "bars",
-            "fillOpacity": 60,
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
             "gradientMode": "none",
-            "lineWidth": 0,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            }
+            "spanNulls": true
           },
-          "unit": "Bps"
+          "unit": "none"
         },
         "overrides": []
       },
@@ -1276,16 +2681,15 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 32
+        "y": 100
       },
-      "id": 16,
+      "id": 48,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -1295,8 +2699,8 @@
       "targets": [
         {
           "expr": "sum by (type) (rate(hctv_chat_inbound_payload_bytes_total[5m]))",
-          "legendFormat": "{{type}}",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "{{type}}"
         }
       ],
       "title": "Inbound Payload by Type",
@@ -1313,15 +2717,19 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 15,
             "gradientMode": "none",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
             "spanNulls": true
           },
-          "unit": "short"
+          "unit": "none"
         },
         "overrides": []
       },
@@ -1329,17 +2737,15 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 32
+        "y": 100
       },
-      "id": 40,
+      "id": 49,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "mean"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -1349,18 +2755,18 @@
       "targets": [
         {
           "expr": "sum(rate(hctv_chat_emoji_search_results_count[5m]))",
-          "legendFormat": "searches/s",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "searches/s"
         },
         {
           "expr": "histogram_quantile(0.50, sum by (le) (rate(hctv_chat_emoji_search_results_bucket{outcome=\"matched\"}[15m])))",
-          "legendFormat": "results p50",
-          "refId": "B"
+          "refId": "B",
+          "legendFormat": "results p50"
         },
         {
           "expr": "histogram_quantile(0.95, sum by (le) (rate(hctv_chat_emoji_search_results_bucket{outcome=\"matched\"}[15m])))",
-          "legendFormat": "results p95",
-          "refId": "C"
+          "refId": "C",
+          "legendFormat": "results p95"
         }
       ],
       "title": "Emoji Search Quality",
@@ -1372,9 +2778,9 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 40
+        "y": 108
       },
-      "id": 300,
+      "id": 50,
       "panels": [],
       "title": "Chat Moderation & Auth",
       "type": "row"
@@ -1390,17 +2796,19 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "drawStyle": "bars",
-            "fillOpacity": 60,
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
             "gradientMode": "none",
-            "lineWidth": 0,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            }
+            "spanNulls": true
           },
-          "unit": "short"
+          "unit": "none"
         },
         "overrides": []
       },
@@ -1408,16 +2816,15 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 41
+        "y": 109
       },
-      "id": 15,
+      "id": 51,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -1427,13 +2834,13 @@
       "targets": [
         {
           "expr": "sum by (action) (rate(hctv_chat_moderation_actions_total[15m]))",
-          "legendFormat": "{{action}}",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "{{action}}"
         },
         {
           "expr": "sum by (reason) (rate(hctv_chat_moderation_blocks_total[15m]))",
-          "legendFormat": "blocked: {{reason}}",
-          "refId": "B"
+          "refId": "B",
+          "legendFormat": "blocked: {{reason}}"
         }
       ],
       "title": "Moderation Load",
@@ -1450,15 +2857,19 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 15,
             "gradientMode": "none",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
             "spanNulls": true
           },
-          "unit": "short"
+          "unit": "none"
         },
         "overrides": []
       },
@@ -1466,16 +2877,15 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 41
+        "y": 109
       },
-      "id": 14,
+      "id": 52,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -1485,13 +2895,13 @@
       "targets": [
         {
           "expr": "sum by (auth_method) (hctv_chat_websocket_connections_by_auth_method)",
-          "legendFormat": "active \u2014 {{auth_method}}",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "active — {{auth_method}}"
         },
         {
           "expr": "sum by (auth_method, outcome) (rate(hctv_chat_websocket_connection_attempts_total[15m]))",
-          "legendFormat": "{{auth_method}} {{outcome}}/s",
-          "refId": "B"
+          "refId": "B",
+          "legendFormat": "{{auth_method}} {{outcome}}/s"
         }
       ],
       "title": "Socket Auth Mix",
@@ -1508,15 +2918,19 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 15,
             "gradientMode": "none",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
             "spanNulls": true
           },
-          "unit": "short"
+          "unit": "none"
         },
         "overrides": []
       },
@@ -1524,16 +2938,15 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 41
+        "y": 109
       },
-      "id": 28,
+      "id": 53,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -1543,8 +2956,8 @@
       "targets": [
         {
           "expr": "sum by (channel) (hctv_chat_channel_history_size)",
-          "legendFormat": "{{channel}}",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "{{channel}}"
         }
       ],
       "title": "Chat History Size by Channel",
@@ -1561,14 +2974,19 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
             "drawStyle": "line",
-            "fillOpacity": 5,
-            "lineInterpolation": "stepAfter",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
             "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
             "spanNulls": true
           },
-          "unit": "short"
+          "unit": "none"
         },
         "overrides": []
       },
@@ -1576,16 +2994,15 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 49
+        "y": 117
       },
-      "id": 27,
+      "id": 54,
       "options": {
         "legend": {
           "displayMode": "table",
-          "placement": "right",
-          "calcs": [
-            "lastNotNull"
-          ]
+          "placement": "bottom",
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -1595,8 +3012,8 @@
       "targets": [
         {
           "expr": "sum by (channel, setting) (hctv_chat_moderation_state)",
-          "legendFormat": "{{channel}} \u2014 {{setting}}",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "{{channel}} — {{setting}}"
         }
       ],
       "title": "Channel Moderation Settings",
@@ -1608,205 +3025,9 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 57
+        "y": 125
       },
-      "id": 400,
-      "panels": [],
-      "title": "Media Ingress & Auth",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "bars",
-            "fillOpacity": 60,
-            "gradientMode": "none",
-            "lineWidth": 0,
-            "showPoints": "never",
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            }
-          },
-          "unit": "reqps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 0,
-        "y": 58
-      },
-      "id": 18,
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "expr": "sum by (outcome) (rate(hctv_web_mediamtx_auth_requests_total[5m]))",
-          "legendFormat": "{{outcome}}",
-          "refId": "A"
-        }
-      ],
-      "title": "Media Auth Outcomes",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "showPoints": "never",
-            "spanNulls": true
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 8,
-        "y": 58
-      },
-      "id": 19,
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "expr": "histogram_quantile(0.50, sum by (le, action, protocol) (rate(hctv_web_mediamtx_auth_duration_seconds_bucket[15m])))",
-          "legendFormat": "{{action}}/{{protocol}} p50",
-          "refId": "A"
-        },
-        {
-          "expr": "histogram_quantile(0.95, sum by (le, action, protocol) (rate(hctv_web_mediamtx_auth_duration_seconds_bucket[15m])))",
-          "legendFormat": "{{action}}/{{protocol}} p95",
-          "refId": "B"
-        }
-      ],
-      "title": "Media Auth Latency",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "description": "Native MediaMTX metrics: active HLS, SRT, and WebRTC connections",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 15,
-            "gradientMode": "none",
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "showPoints": "never",
-            "spanNulls": true
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 16,
-        "y": 58
-      },
-      "id": 41,
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "expr": "hls_muxers{job=\"mediamtx\"}",
-          "legendFormat": "HLS muxers",
-          "refId": "A"
-        },
-        {
-          "expr": "srt_conns{job=\"mediamtx\"}",
-          "legendFormat": "SRT connections",
-          "refId": "B"
-        },
-        {
-          "expr": "paths{job=\"mediamtx\"}",
-          "legendFormat": "active paths",
-          "refId": "C"
-        },
-        {
-          "expr": "hls_muxers_bytes_sent{job=\"mediamtx\"}",
-          "legendFormat": "HLS bytes sent",
-          "refId": "D"
-        }
-      ],
-      "title": "MediaMTX Connections",
-      "type": "timeseries"
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 66
-      },
-      "id": 500,
+      "id": 55,
       "panels": [],
       "title": "Background Jobs & Caches",
       "type": "row"
@@ -1822,17 +3043,19 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "drawStyle": "bars",
-            "fillOpacity": 60,
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
             "gradientMode": "none",
-            "lineWidth": 0,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            }
+            "spanNulls": true
           },
-          "unit": "ops"
+          "unit": "none"
         },
         "overrides": []
       },
@@ -1840,16 +3063,15 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 67
+        "y": 126
       },
-      "id": 20,
+      "id": 56,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -1859,8 +3081,8 @@
       "targets": [
         {
           "expr": "sum by (job, status) (rate(hctv_web_background_job_runs_total[15m]))",
-          "legendFormat": "{{job}} \u2014 {{status}}",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "{{job}} — {{status}}"
         }
       ],
       "title": "Background Job Outcomes",
@@ -1877,11 +3099,15 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 15,
             "gradientMode": "none",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
             "spanNulls": true
           },
@@ -1893,17 +3119,15 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 67
+        "y": 126
       },
-      "id": 21,
+      "id": 57,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -1913,13 +3137,13 @@
       "targets": [
         {
           "expr": "histogram_quantile(0.50, sum by (le, job) (rate(hctv_web_background_job_duration_seconds_bucket[15m])))",
-          "legendFormat": "{{job}} p50",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "{{job}} p50"
         },
         {
           "expr": "histogram_quantile(0.95, sum by (le, job) (rate(hctv_web_background_job_duration_seconds_bucket[15m])))",
-          "legendFormat": "{{job}} p95",
-          "refId": "B"
+          "refId": "B",
+          "legendFormat": "{{job}} p95"
         }
       ],
       "title": "Background Job Latency",
@@ -1936,15 +3160,19 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 15,
             "gradientMode": "none",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
             "spanNulls": true
           },
-          "unit": "short"
+          "unit": "none"
         },
         "overrides": []
       },
@@ -1952,16 +3180,15 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 67
+        "y": 126
       },
-      "id": 22,
+      "id": 58,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -1971,8 +3198,8 @@
       "targets": [
         {
           "expr": "sum by (target) (rate(hctv_web_notifications_enqueued_total[15m]))",
-          "legendFormat": "notify \u2014 {{target}}",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "notify — {{target}}"
         }
       ],
       "title": "Notifications Enqueued",
@@ -1989,15 +3216,19 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
             "drawStyle": "line",
             "fillOpacity": 15,
             "gradientMode": "none",
-            "lineInterpolation": "stepAfter",
+            "lineInterpolation": "smooth",
             "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
             "spanNulls": true
           },
-          "unit": "short"
+          "unit": "none"
         },
         "overrides": []
       },
@@ -2005,16 +3236,15 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 75
+        "y": 134
       },
-      "id": 23,
+      "id": 59,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -2024,16 +3254,11 @@
       "targets": [
         {
           "expr": "sum by (cache) (hctv_web_cache_entries)",
-          "legendFormat": "{{cache}}",
-          "refId": "A"
-        },
-        {
-          "expr": "hctv_web_thumbnail_refresh_targets",
-          "legendFormat": "thumbnail targets",
-          "refId": "B"
+          "refId": "A",
+          "legendFormat": "{{cache}}"
         }
       ],
-      "title": "Cache & Thumbnail State",
+      "title": "Cache Entries",
       "type": "timeseries"
     },
     {
@@ -2047,15 +3272,19 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 15,
             "gradientMode": "none",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
             "spanNulls": true
           },
-          "unit": "short"
+          "unit": "none"
         },
         "overrides": []
       },
@@ -2063,16 +3292,15 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 75
+        "y": 134
       },
-      "id": 42,
+      "id": 60,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -2082,8 +3310,8 @@
       "targets": [
         {
           "expr": "sum by (channel) (rate(hctv_chat_history_messages_loaded_total[15m]))",
-          "legendFormat": "history \u2014 {{channel}}",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "history — {{channel}}"
         }
       ],
       "title": "Chat History Loads by Channel",
@@ -2095,9 +3323,9 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 83
+        "y": 142
       },
-      "id": 600,
+      "id": 61,
       "panels": [],
       "title": "Infrastructure",
       "type": "row"
@@ -2113,49 +3341,35 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 15,
             "gradientMode": "none",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
             "spanNulls": true
           },
-          "unit": "short"
+          "unit": "none"
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byRegexp",
-              "options": ".*commits/sec"
-            },
-            "properties": [
-              {
-                "id": "custom.axisPlacement",
-                "value": "right"
-              },
-              {
-                "id": "unit",
-                "value": "ops"
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 84
+        "y": 143
       },
-      "id": 30,
+      "id": 62,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -2165,13 +3379,13 @@
       "targets": [
         {
           "expr": "pg_stat_database_numbackends{datname=~\"hctv|postgres\"}",
-          "legendFormat": "{{datname}} connections",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "{{datname}} connections"
         },
         {
           "expr": "rate(pg_stat_database_xact_commit{datname=~\"hctv|postgres\"}[5m])",
-          "legendFormat": "{{datname}} commits/sec",
-          "refId": "B"
+          "refId": "B",
+          "legendFormat": "{{datname}} commits/sec"
         }
       ],
       "title": "Postgres Activity",
@@ -2182,40 +3396,24 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Cache hit ratio should stay above 99%. Lower values indicate the database is doing too many disk reads.",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 15,
             "gradientMode": "none",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
             "spanNulls": true
           },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 0.95
-              },
-              {
-                "color": "green",
-                "value": 0.99
-              }
-            ]
-          },
-          "min": 0,
-          "max": 1,
           "unit": "percentunit"
         },
         "overrides": []
@@ -2224,17 +3422,15 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 84
+        "y": 143
       },
-      "id": 43,
+      "id": 63,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "min"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -2244,8 +3440,8 @@
       "targets": [
         {
           "expr": "pg_stat_database_blks_hit{datname=\"hctv\"} / (pg_stat_database_blks_hit{datname=\"hctv\"} + pg_stat_database_blks_read{datname=\"hctv\"} + 1)",
-          "legendFormat": "cache hit ratio",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "cache hit ratio"
         }
       ],
       "title": "Postgres Cache Hit Ratio",
@@ -2262,52 +3458,35 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 15,
             "gradientMode": "none",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
             "spanNulls": true
           },
-          "unit": "short"
+          "unit": "none"
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byRegexp",
-              "options": ".*deadlocks.*"
-            },
-            "properties": [
-              {
-                "id": "custom.axisPlacement",
-                "value": "right"
-              },
-              {
-                "id": "color",
-                "value": {
-                  "mode": "fixed",
-                  "fixedColor": "red"
-                }
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 84
+        "y": 143
       },
-      "id": 44,
+      "id": 64,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -2317,18 +3496,18 @@
       "targets": [
         {
           "expr": "rate(pg_stat_database_xact_rollback{datname=\"hctv\"}[5m])",
-          "legendFormat": "rollbacks/s",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "rollbacks/s"
         },
         {
           "expr": "rate(pg_stat_database_deadlocks{datname=\"hctv\"}[5m])",
-          "legendFormat": "deadlocks/s",
-          "refId": "B"
+          "refId": "B",
+          "legendFormat": "deadlocks/s"
         },
         {
           "expr": "rate(pg_stat_database_conflicts{datname=\"hctv\"}[5m])",
-          "legendFormat": "conflicts/s",
-          "refId": "C"
+          "refId": "C",
+          "legendFormat": "conflicts/s"
         }
       ],
       "title": "Postgres Errors",
@@ -2345,50 +3524,35 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
             "drawStyle": "line",
             "fillOpacity": 15,
             "gradientMode": "none",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
             "spanNulls": true
           },
-          "unit": "bytes"
+          "unit": "none"
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "connected clients"
-            },
-            "properties": [
-              {
-                "id": "custom.axisPlacement",
-                "value": "right"
-              },
-              {
-                "id": "unit",
-                "value": "short"
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 92
+        "y": 151
       },
-      "id": 31,
+      "id": 65,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -2398,13 +3562,13 @@
       "targets": [
         {
           "expr": "redis_memory_used_bytes",
-          "legendFormat": "memory used",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "memory used"
         },
         {
           "expr": "redis_connected_clients",
-          "legendFormat": "connected clients",
-          "refId": "B"
+          "refId": "B",
+          "legendFormat": "connected clients"
         }
       ],
       "title": "Redis Memory & Clients",
@@ -2421,57 +3585,35 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
             "drawStyle": "line",
             "fillOpacity": 15,
             "gradientMode": "none",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
             "spanNulls": true
           },
-          "unit": "ops"
+          "unit": "none"
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "hit ratio"
-            },
-            "properties": [
-              {
-                "id": "custom.axisPlacement",
-                "value": "right"
-              },
-              {
-                "id": "unit",
-                "value": "percentunit"
-              },
-              {
-                "id": "min",
-                "value": 0
-              },
-              {
-                "id": "max",
-                "value": 1
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 92
+        "y": 151
       },
-      "id": 45,
+      "id": 66,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -2481,13 +3623,13 @@
       "targets": [
         {
           "expr": "rate(redis_commands_processed_total[5m])",
-          "legendFormat": "commands/s",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "commands/s"
         },
         {
           "expr": "redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total + 1)",
-          "legendFormat": "hit ratio",
-          "refId": "B"
+          "refId": "B",
+          "legendFormat": "hit ratio"
         }
       ],
       "title": "Redis Throughput",
@@ -2504,11 +3646,15 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
             "drawStyle": "line",
             "fillOpacity": 15,
             "gradientMode": "none",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
             "spanNulls": true
           },
@@ -2520,17 +3666,15 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 92
+        "y": 151
       },
-      "id": 32,
+      "id": 67,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -2540,40 +3684,39 @@
       "targets": [
         {
           "expr": "hctv_web_process_resident_memory_bytes",
-          "legendFormat": "web RSS",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "web RSS"
         },
         {
           "expr": "hctv_chat_process_resident_memory_bytes",
-          "legendFormat": "chat RSS",
-          "refId": "B"
-        },
-        {
-          "expr": "process_resident_memory_bytes{job=\"mediamtx\"}",
-          "legendFormat": "mediamtx RSS",
-          "refId": "C"
+          "refId": "B",
+          "legendFormat": "chat RSS"
         }
       ],
       "title": "Service Memory",
-      "type": "timeseries"
+      "type": "timeseries",
+      "description": "MediaMTX does not export process metrics, so region memory is not available here."
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Node.js event loop lag from default metrics. Spikes indicate the main thread is blocked.",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 15,
             "gradientMode": "none",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
             "spanNulls": true
           },
@@ -2585,17 +3728,15 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 100
+        "y": 159
       },
-      "id": 46,
+      "id": 68,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -2605,13 +3746,13 @@
       "targets": [
         {
           "expr": "hctv_web_nodejs_eventloop_lag_seconds",
-          "legendFormat": "web event loop lag",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "web event loop lag"
         },
         {
           "expr": "hctv_chat_nodejs_eventloop_lag_seconds",
-          "legendFormat": "chat event loop lag",
-          "refId": "B"
+          "refId": "B",
+          "legendFormat": "chat event loop lag"
         }
       ],
       "title": "Node.js Event Loop Lag",
@@ -2622,22 +3763,25 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Active handles and file descriptors \u2014 watch for leaks over time.",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 15,
             "gradientMode": "none",
             "lineInterpolation": "smooth",
             "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
             "spanNulls": true
           },
-          "unit": "short"
+          "unit": "none"
         },
         "overrides": []
       },
@@ -2645,17 +3789,15 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 100
+        "y": 159
       },
-      "id": 47,
+      "id": 69,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -2665,23 +3807,23 @@
       "targets": [
         {
           "expr": "hctv_web_nodejs_active_handles_total",
-          "legendFormat": "web active handles",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "web active handles"
         },
         {
           "expr": "hctv_chat_nodejs_active_handles_total",
-          "legendFormat": "chat active handles",
-          "refId": "B"
+          "refId": "B",
+          "legendFormat": "chat active handles"
         },
         {
           "expr": "hctv_web_process_open_fds",
-          "legendFormat": "web open FDs",
-          "refId": "C"
+          "refId": "C",
+          "legendFormat": "web open FDs"
         },
         {
           "expr": "hctv_chat_process_open_fds",
-          "legendFormat": "chat open FDs",
-          "refId": "D"
+          "refId": "D",
+          "legendFormat": "chat open FDs"
         }
       ],
       "title": "Process Handles & File Descriptors",
@@ -2693,9 +3835,9 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 108
+        "y": 167
       },
-      "id": 700,
+      "id": 70,
       "panels": [],
       "title": "Errors",
       "type": "row"
@@ -2711,34 +3853,35 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "drawStyle": "bars",
-            "fillOpacity": 60,
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
             "gradientMode": "none",
-            "lineWidth": 0,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            }
+            "spanNulls": true
           },
-          "unit": "short"
+          "unit": "none"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 8,
         "x": 0,
-        "y": 109
+        "y": 168
       },
-      "id": 29,
+      "id": 71,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -2748,13 +3891,13 @@
       "targets": [
         {
           "expr": "sum by (phase) (rate(hctv_chat_errors_total[15m]))",
-          "legendFormat": "chat \u2014 {{phase}}",
-          "refId": "A"
+          "refId": "A",
+          "legendFormat": "chat — {{phase}}"
         },
         {
           "expr": "sum by (job) (rate(hctv_web_background_job_runs_total{status=\"error\"}[15m]))",
-          "legendFormat": "web job \u2014 {{job}}",
-          "refId": "B"
+          "refId": "B",
+          "legendFormat": "web job — {{job}}"
         }
       ],
       "title": "Application Errors",
@@ -2771,34 +3914,35 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "drawStyle": "bars",
-            "fillOpacity": 60,
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
             "gradientMode": "none",
-            "lineWidth": 0,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
             "showPoints": "never",
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            }
+            "spanNulls": true
           },
-          "unit": "short"
+          "unit": "none"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 109
+        "w": 8,
+        "x": 8,
+        "y": 168
       },
-      "id": 48,
+      "id": 72,
       "options": {
         "legend": {
           "displayMode": "table",
           "placement": "bottom",
-          "calcs": [
-            "lastNotNull"
-          ]
+          "calcs": ["lastNotNull"],
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
@@ -2807,33 +3951,117 @@
       },
       "targets": [
         {
-          "expr": "sum by (outcome) (rate(hctv_web_mediamtx_auth_requests_total{outcome=~\"error|unauthorized\"}[15m]))",
-          "legendFormat": "media auth \u2014 {{outcome}}",
-          "refId": "A"
+          "expr": "sum by (region, outcome) (rate(hctv_web_mediamtx_auth_requests_total{outcome!~\"authorized.*\", region=~\"$region\"}[15m]))",
+          "refId": "A",
+          "legendFormat": "media auth — {{region}} {{outcome}}"
+        },
+        {
+          "expr": "sum by (region) (rate(hctv_web_stream_sync_scrapes_total{status=\"error\", region=~\"$region\"}[15m]))",
+          "refId": "B",
+          "legendFormat": "sync scrape error — {{region}}"
+        }
+      ],
+      "title": "Auth & Sync Errors by Region",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisLabel": "",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 168
+      },
+      "id": 73,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull"],
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (region) (rate(hctv_web_playback_errors_total{fatal=\"true\", region=~\"$region\"}[15m]))",
+          "refId": "A",
+          "legendFormat": "fatal playback — {{region}}"
         },
         {
           "expr": "sum by (auth_method) (rate(hctv_chat_websocket_connection_attempts_total{outcome=\"rejected\"}[15m]))",
-          "legendFormat": "chat reject \u2014 {{auth_method}}",
-          "refId": "B"
-        },
-        {
-          "expr": "sum by (region, status) (rate(hctv_web_stream_sync_scrapes_total{status=\"error\"}[15m]))",
-          "legendFormat": "sync scrape error \u2014 {{region}}",
-          "refId": "C"
+          "refId": "B",
+          "legendFormat": "chat reject — {{auth_method}}"
         }
       ],
-      "title": "Auth & Sync Errors",
+      "title": "Viewer Facing Failures by Region",
       "type": "timeseries"
     }
   ],
   "refresh": "30s",
   "schemaVersion": 39,
-  "tags": [
-    "hackclub.tv",
-    "observability"
-  ],
+  "tags": ["hackclub.tv", "observability"],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": ["All"],
+          "value": ["$__all"]
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "definition": "label_values({region!=\"\"}, region)",
+        "description": "MediaMTX regions, discovered from every series carrying a region label. Adding a region to Prometheus is enough for it to show up here.",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Region",
+        "multi": true,
+        "name": "region",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values({region!=\"\"}, region)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now-6h",
@@ -2843,6 +4071,6 @@
   "timezone": "browser",
   "title": "hctv Overview",
   "uid": "hctv-overview",
-  "version": 4,
+  "version": 5,
   "weekStart": ""
 }

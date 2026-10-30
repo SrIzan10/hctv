@@ -15,11 +15,20 @@ scrape_configs:
       - targets:
           - host.docker.internal:8000
 
+  # Dev runs a single MediaMTX; it stands in for the hq region. Uncomment the
+  # mediamtx2 service in dev/docker-compose.yml and the block below to exercise
+  # the multi-region panels locally.
   - job_name: mediamtx
     metrics_path: /metrics
     static_configs:
       - targets:
           - mediamtx:9998
+        labels:
+          region: hq
+      # - targets:
+      #     - mediamtx2:9998
+      #   labels:
+      #     region: ethande
 
   - job_name: redis
     metrics_path: /metrics

@@ -1,5 +1,6 @@
 import { prisma, getRedisConnection } from '@hctv/db';
 import { recordMediamtxAuth } from '@/lib/metrics';
+import { MEDIAMTX_REGIONS, MediaMTXRegion } from '@/lib/utils/mediamtx/regions';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 
@@ -53,8 +54,13 @@ export async function POST(request: NextRequest) {
   let action = 'invalid';
   let protocol = 'invalid';
 
+  // Every region posts to the same webhook, so each one identifies itself with a
+  // `region` query parameter on its MTX_AUTHHTTPADDRESS. Regions deployed before
+  // that parameter existed report as `unknown`.
+  const region = resolveRegion(request);
+
   const finish = (body: string, status: number, outcome: string) => {
-    recordMediamtxAuth(action, protocol, outcome, (performance.now() - startedAt) / 1000);
+    recordMediamtxAuth(action, protocol, outcome, region, (performance.now() - startedAt) / 1000);
     return new Response(body, { status });
   };
 
@@ -114,6 +120,12 @@ export async function POST(request: NextRequest) {
   }
 
   return finish('uhh', 401, 'unauthorized');
+}
+
+function resolveRegion(request: NextRequest) {
+  const region = new URL(request.url).searchParams.get('region');
+
+  return region && MEDIAMTX_REGIONS.includes(region as MediaMTXRegion) ? region : 'unknown';
 }
 
 const emptyableString = z

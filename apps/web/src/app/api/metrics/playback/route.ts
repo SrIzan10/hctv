@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { recordPlaybackMetric } from '@/lib/metrics';
+import { MEDIAMTX_REGIONS } from '@/lib/utils/mediamtx/regions';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -17,7 +18,7 @@ const schema = z.object({
     'resync',
     'stall',
   ]),
-  region: z.enum(['hq', 'ethande']),
+  region: z.enum(MEDIAMTX_REGIONS),
   bandwidthKbps: z.number().finite().nonnegative().max(1_000_000).optional(),
   bitrateKbps: z.number().finite().nonnegative().max(1_000_000).optional(),
   bufferedSeconds: z.number().finite().nonnegative().max(3600).optional(),

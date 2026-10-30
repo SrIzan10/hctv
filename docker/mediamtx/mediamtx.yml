@@ -21,9 +21,17 @@ rtmp: yes
 rtmpAddress: :1935
 
 authMethod: http
-authHTTPAddress: https://hackclub.tv/api/mediamtx/publish
+authHTTPAddress: https://hackclub.tv/api/mediamtx/publish?region=hq
 
 api: yes
 apiAddress: 0.0.0.0:9997
+# MediaMTX 1.21 stopped excluding `metrics` from HTTP auth by default, which made
+# it ask the web app to authorize its own scrape and get a 401 back. Port 9998 is
+# never published to the host: HQ is reachable only on the compose network, and
+# mirrors sit behind Traefik basic auth. `api` and `pprof` deliberately stay on
+# the webhook, where the API key is checked and pprof is denied.
+authHTTPExclude:
+  - action: metrics
+
 metrics: yes
 metricsAddress: :9998
