@@ -74,11 +74,11 @@ services:
     environment:
       DATA_SOURCE_NAME: 'postgresql://postgres:${PG_PASS}@postgres:5432/hctv?sslmode=disable'
   redis-exporter:
-    image: 'oliver006/redis_exporter:v1.91.1'
+    image: 'oliver006/redis_exporter:v1.96.0'
     environment:
       REDIS_ADDR: 'redis://redis:6379'
   prometheus:
-    image: 'prom/prometheus:v3.14.0'
+    image: 'prom/prometheus:v3.15.1'
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
