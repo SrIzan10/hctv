@@ -20,11 +20,11 @@ services:
     ports:
       - 6379:6379
   redis-exporter:
-    image: oliver006/redis_exporter:v1.91.1
+    image: oliver006/redis_exporter:v1.96.0
     environment:
       REDIS_ADDR: redis://redis:6379
   mediamtx:
-    image: bluenviron/mediamtx:1.19.2
+    image: bluenviron/mediamtx:1.21.3
     ports:
       - 8890:8890/udp
       - 8891:8888
@@ -37,7 +37,7 @@ services:
     extra_hosts:
       - 'host.docker.internal:host-gateway'
   prometheus:
-    image: prom/prometheus:v3.14.0
+    image: prom/prometheus:v3.15.1
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
