@@ -19,6 +19,8 @@ import {
   getMediamtxClientRegionOptions,
 } from '#shared/utils/mediamtx/client';
 import type { MediaMTXRegion } from '#shared/utils/mediamtx/regions';
+import MultistreamSection from './MultistreamSection.vue';
+import StreamHealthSection from './StreamHealthSection.vue';
 import type { ChannelSettingsChannel } from './types';
 
 const props = defineProps<{ channel: ChannelSettingsChannel }>();
@@ -73,6 +75,11 @@ const streamUrl = computed(() => {
   return `srt://${ingestRoute}?streamid=publish:${props.channel.name}:thisusernameislongonpurposesoyoudontaccidentallyleakyourstreamkey:${streamKey.value}&pkt_size=1316`;
 });
 
+const selectedServerLabel = computed(() => {
+  const server = serverOptions.find((option) => option.value === region.value);
+  return server ? `${server.label} ${server.emoji}` : '';
+});
+
 const rtmpServerUrl = computed(() => `rtmp://${getMediamtxClientEnvs(region.value).rtmpRoute}`);
 
 const rtmpStreamKey = computed(() => {
@@ -110,7 +117,11 @@ async function handleStreamInfoActionComplete(result: SettingsFormResult) {
             <p class="text-sm font-medium">Protocol</p>
             <Select v-model="ingestProtocol">
               <SelectTrigger class="w-full" aria-label="Protocol">
-                <SelectValue placeholder="Protocol" />
+                <!-- the label is rendered here instead of resolved from the items, which only
+                     mount on the client, so SSR doesn't flash the placeholder -->
+                <SelectValue placeholder="Protocol">{{
+                  ingestProtocol === 'srt' ? 'SRT' : 'RTMP'
+                }}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="srt">SRT</SelectItem>
@@ -122,7 +133,7 @@ async function handleStreamInfoActionComplete(result: SettingsFormResult) {
             <p class="text-sm font-medium">Server</p>
             <Select v-model="region">
               <SelectTrigger class="w-full" aria-label="Server">
-                <SelectValue placeholder="Select a server" />
+                <SelectValue placeholder="Select a server">{{ selectedServerLabel }}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem
@@ -173,6 +184,8 @@ async function handleStreamInfoActionComplete(result: SettingsFormResult) {
       </div>
     </SettingsSection>
 
+    <StreamHealthSection :channel="channel" />
+
     <SettingsSection
       title="Stream key"
       description="Anyone with this key can stream to your channel. Reset it if it ever leaks."
@@ -190,6 +203,8 @@ async function handleStreamInfoActionComplete(result: SettingsFormResult) {
         </Button>
       </CopyField>
     </SettingsSection>
+
+    <MultistreamSection :channel="channel" />
 
     <SettingsSection
       title="Stream details"

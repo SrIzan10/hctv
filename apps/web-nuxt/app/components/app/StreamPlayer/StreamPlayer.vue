@@ -4,8 +4,9 @@ import type { HlsConfig, ErrorData } from 'hls.js';
 import { Loader2, Maximize, Minimize, Pause, Play, RefreshCw, Volume2, VolumeX } from '@lucide/vue';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip';
 import { cn } from '~/lib/utils';
-import { getMediamtxClientEnvs } from '#shared/utils/mediamtx/client';
+import { getMediamtxClientEnvs, getWhepUrl } from '#shared/utils/mediamtx/client';
 import type { MediaMTXRegion } from '#shared/utils/mediamtx/regions';
+import { WEBRTC_MAX_VIEWERS, WhepReader } from '#shared/utils/mediamtx/whep';
 
 const FATAL_RECOVERY_COOLDOWN_MS = 5000;
 const PLAYBACK_HEARTBEAT_MS = 30_000;
@@ -44,6 +45,15 @@ const RESYNC_BUFFER_MARGIN_SECONDS = 0.5;
 // getting the target lower than this is an infra fix rather than a player setting: argo smart
 // routing, a closer origin, or enough concurrent viewers that edge caching starts hitting. asking
 // streamers for a shorter keyframe interval (1-2s) would also help every part of this.
+// WebRTC first, HLS as the fallback. A small audience watches over WebRTC straight from the
+// origin (well under a second behind), and the MediaMTX auth hook turns away WebRTC viewers past
+// WEBRTC_MAX_VIEWERS so a big audience goes through HLS and the CDN edge instead. A refused or
+// broken WebRTC attempt drops this page view to HLS; the retry button tries WebRTC again.
+// AAC audio (OBS's default) works over WebRTC because hctvmtx transcodes it to Opus, once per
+// stream and only while it has WebRTC viewers. Streams with H.264 B-frames still fall back to HLS.
+// Viewers already on WebRTC stay there when the audience grows, since switching would glitch.
+const WEBRTC_START_TIMEOUT_MS = 6000;
+
 const USE_LOW_LATENCY_HLS = true;
 const TARGET_LATENCY_SECONDS = 4;
 const MAX_LATENCY_SECONDS = 20;
@@ -76,6 +86,12 @@ const streamSrc = computed(() => {
 const containerRef = ref<HTMLElement | null>(null);
 const videoRef = ref<HTMLVideoElement | null>(null);
 const hlsRef = shallowRef<Hls | null>(null);
+const whepRef = shallowRef<WhepReader | null>(null);
+const engine = ref<'hls' | 'webrtc' | null>(null);
+
+const whepUrl = computed(() =>
+  resolvedUsername.value && region.value ? getWhepUrl(resolvedUsername.value, region.value) : null
+);
 
 const isPaused = ref(true);
 const isMuted = ref(false);
@@ -94,6 +110,9 @@ let lastDroppedFrames = 0;
 let lastStallAt = 0;
 let catchUpArmTimeout: ReturnType<typeof setTimeout> | null = null;
 let recoveringTimeout: ReturnType<typeof setTimeout> | null = null;
+let webrtcStartTimeout: ReturnType<typeof setTimeout> | null = null;
+// set once WebRTC was refused or failed, so recoveries go straight to HLS
+let isWebrtcBlocked = false;
 
 function reportPlayback(event: PlaybackMetricEvent, values: PlaybackMetricValues = {}) {
   if (!region.value) {
@@ -199,10 +218,66 @@ function buildHlsConfig(id: string): Partial<HlsConfig> {
 
 function destroyEngine() {
   disarmCatchUp();
+  if (webrtcStartTimeout) {
+    clearTimeout(webrtcStartTimeout);
+    webrtcStartTimeout = null;
+  }
   if (hlsRef.value) {
     hlsRef.value.destroy();
     hlsRef.value = null;
   }
+  if (whepRef.value) {
+    whepRef.value.close();
+    whepRef.value = null;
+  }
+  if (videoRef.value?.srcObject) {
+    videoRef.value.srcObject = null;
+  }
+  engine.value = null;
+}
+
+function shouldTryWebrtc() {
+  return (
+    !isWebrtcBlocked &&
+    Boolean(whepUrl.value) &&
+    WhepReader.isSupported() &&
+    (userInfo.value?.viewers ?? 0) < WEBRTC_MAX_VIEWERS
+  );
+}
+
+function fallBackToHls(reason: string) {
+  isWebrtcBlocked = true;
+  reportPlayback('error', { errorType: `webrtc_${reason}`.slice(0, 64), fatal: false });
+  startPlayback();
+}
+
+function startWebrtc(video: HTMLVideoElement, url: string, id: string) {
+  engine.value = 'webrtc';
+  const reader = new WhepReader({
+    url,
+    user: 'skibiditoilet',
+    pass: id,
+    onTrack: (stream) => {
+      if (whepRef.value !== reader) return;
+      video.srcObject = stream;
+      void video.play().catch(() => {
+        // autoplay can get rejected, the controls are still there for manual playback.
+      });
+    },
+    onFailed: (reason) => {
+      if (whepRef.value !== reader) return;
+      fallBackToHls(reason.replace(/\s+/g, '_'));
+    },
+  });
+  whepRef.value = reader;
+
+  // connected but no frames (or stuck in ICE) is a failure too
+  webrtcStartTimeout = setTimeout(() => {
+    webrtcStartTimeout = null;
+    if (whepRef.value === reader && !hasReportedPlaying) {
+      fallBackToHls('timeout');
+    }
+  }, WEBRTC_START_TIMEOUT_MS);
 }
 
 function startPlayback() {
@@ -227,6 +302,12 @@ function startPlayback() {
   isBuffering.value = true;
   reportPlayback('load');
 
+  if (shouldTryWebrtc()) {
+    startWebrtc(video, whepUrl.value!, sessionId.value);
+    return;
+  }
+
+  engine.value = 'hls';
   if (Hls.isSupported()) {
     const hls = new Hls(buildHlsConfig(sessionId.value));
     hlsRef.value = hls;
@@ -281,6 +362,10 @@ function triggerRecovery(reason: 'fatal' | 'manual') {
   }
 
   lastRecoveryAt = now;
+  if (reason === 'manual') {
+    // let a manual retry try WebRTC again, the audience may have shrunk since
+    isWebrtcBlocked = false;
+  }
   isRecovering.value = true;
   if (recoveringTimeout) {
     clearTimeout(recoveringTimeout);
@@ -311,6 +396,10 @@ function handleWaiting() {
 function handlePlaying() {
   isBuffering.value = false;
   isRecovering.value = false;
+  if (webrtcStartTimeout) {
+    clearTimeout(webrtcStartTimeout);
+    webrtcStartTimeout = null;
+  }
   if (!hasReportedPlaying) {
     hasReportedPlaying = true;
     reportPlayback('playing', {
@@ -372,8 +461,8 @@ function handleVisibilityChange() {
 }
 
 function handleVideoError() {
-  // native-playback failures (hls.js reports its own through the ERROR event)
-  if (hlsRef.value || !videoRef.value?.error) {
+  // native-playback failures (hls.js and the WHEP reader report their own)
+  if (hlsRef.value || whepRef.value || !videoRef.value?.error) {
     return;
   }
   reportPlayback('error', { errorType: String(videoRef.value.error.code), fatal: true });
@@ -632,7 +721,12 @@ interface PlaybackMetricValues {
                 />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="top">Retry stream</TooltipContent>
+            <TooltipContent side="top">
+              Retry stream
+              <span v-if="engine" class="opacity-70">
+                ({{ engine === 'webrtc' ? 'real-time' : 'HLS' }})
+              </span>
+            </TooltipContent>
           </Tooltip>
           <button
             type="button"

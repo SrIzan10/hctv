@@ -77,3 +77,21 @@ export const withPlatformAdmin = (
   roles: readonly ChannelRoleBadgeKey[],
   isPlatformAdmin?: boolean
 ): ChannelRoleBadgeKey[] => (isPlatformAdmin ? [...roles, 'platformAdmin'] : [...roles]);
+
+export type MultistreamDestinationState = 'forwarding' | 'connecting' | 'error' | 'offline';
+
+// payload of /api/stream/multistream
+export type MultistreamDestinationView = {
+  id: string;
+  platform: string;
+  name: string;
+  serverUrl: string;
+  maskedKey: string;
+  enabled: boolean;
+  status: { state: MultistreamDestinationState; error?: string; outboundBytes?: number };
+};
+
+export type MultistreamResponse = {
+  isLive: boolean;
+  destinations: MultistreamDestinationView[];
+};

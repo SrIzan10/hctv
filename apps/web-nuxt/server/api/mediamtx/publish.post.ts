@@ -1,6 +1,8 @@
 import { prisma, getRedisConnection } from '@hctv/db';
 import { MEDIAMTX_REGIONS, type MediaMTXRegion } from '#shared/utils/mediamtx/regions';
 import { z } from 'zod';
+import { WEBRTC_MAX_VIEWERS } from '#shared/utils/mediamtx/whep';
+import { MEDIAMTX_SERVER_REGIONS } from '../../utils/mediamtxServer';
 
 const CHANNEL_PUBLISH_INCLUDE = {
   restriction: true,
@@ -47,6 +49,29 @@ function findPublishDenial(channel: PublishChannel) {
   return null;
 }
 
+// WebRTC viewers connected to the path. The session asking for auth already shows up in the
+// list, but hasn't established its peer connection yet, so it doesn't count itself.
+async function countWebrtcReaders(region: string, path: string): Promise<number | null> {
+  const envs = MEDIAMTX_SERVER_REGIONS[region as MediaMTXRegion];
+  if (!envs?.apiAuthHeader) return null;
+
+  try {
+    const res = await fetch(`${envs.apiUrl}/v3/webrtcsessions/list?itemsPerPage=1000`, {
+      headers: { Authorization: envs.apiAuthHeader },
+      signal: AbortSignal.timeout(2_000),
+    });
+    if (!res.ok) return null;
+    const body = (await res.json()) as {
+      items?: { path: string; state: string; peerConnectionEstablished: boolean }[];
+    };
+    return (body.items ?? []).filter(
+      (session) =>
+        session.path === path && session.state === 'read' && session.peerConnectionEstablished
+    ).length;
+  } catch {
+    return null;
+  }
+}
 
 function resolveRegion(request: Request) {
   const region = new URL(request.url).searchParams.get('region');
@@ -135,6 +160,22 @@ export default defineEventHandler(async (event) => {
     }
 
     return finish('authorized', 200, 'authorized_read');
+  }
+
+  if (parsedAction === 'read' && parsedProtocol === 'webrtc') {
+    const redis = getRedisConnection();
+    const sessionExists = await redis.exists(`sessions:${password}`);
+    if (!sessionExists) {
+      return finish('unauthorized', 401, 'unauthorized_session');
+    }
+
+    // refusing sends the player to HLS, so a reader count we can't get counts as full
+    const readers = await countWebrtcReaders(region, path);
+    if (readers === null || readers >= WEBRTC_MAX_VIEWERS) {
+      return finish('webrtc full, use hls', 403, 'webrtc_full');
+    }
+
+    return finish('authorized', 200, 'authorized_webrtc_read');
   }
 
   if (parsedAction === 'api') {

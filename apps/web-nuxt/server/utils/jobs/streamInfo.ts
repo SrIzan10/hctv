@@ -12,6 +12,7 @@ import { getNotificationQueue } from './queues';
 import client from '../slack';
 import type { paths } from '~~/shared/types/mediamtx';
 import { MEDIAMTX_SERVER_REGIONS } from '../mediamtxServer';
+import { clearMultistreamState, reconcileLiveMultistreams } from '../multistream';
 
 export default async function runner() {
   // if there are no users it explodes so yeah
@@ -147,6 +148,7 @@ export async function syncStream() {
               startedAt: new Date(0),
             },
           });
+          await clearMultistreamState(dbStream.username);
         }
       }
 
@@ -226,6 +228,12 @@ export async function syncStream() {
           );
         }
       }
+
+      // not awaited: a slow platform ingest shouldn't hold up the live/offline sync.
+      // reconcileMultistream takes a per-channel lock, so overlapping ticks don't double-add
+      void reconcileLiveMultistreams(allActiveStreams).catch((error) => {
+        console.error('Error reconciling multistreams:', error);
+      });
     });
   } catch (error) {
     console.error('Error syncing stream status:', error);

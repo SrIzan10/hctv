@@ -82,3 +82,10 @@ export function getMediamtxClientRegionOptions(): MediaMTXClientRegionOption[] {
     },
   ];
 }
+
+// WebRTC playback shares the WHIP server, so it's available wherever WHIP is
+export function getWhepUrl(channelName: string, region: MediaMTXRegion): string | null {
+  const { whip, whipEnabled } = getMediamtxClientEnvs(region);
+  if (!whipEnabled || !whip) return null;
+  return `${whip.replace(/\/$/, '')}/${encodeURIComponent(channelName)}/whep`;
+}

@@ -56,6 +56,9 @@
   --live: #ec3750;
   --live-foreground: #ffffff;
   --link: #338eda;
+  /* status colors for checks (Hack Club green / orange); red stays reserved for "live" */
+  --success: #1fb589;
+  --warning: #f07d1e;
   --surface-1: #eef1f5;
   --surface-2: #e0e6ed;
   --mantle: #ffffff;
@@ -94,6 +97,8 @@
   --live: #ec3750;
   --live-foreground: #ffffff;
   --link: #5bc0de;
+  --success: #33d6a6;
+  --warning: #ff8c37;
   --surface-1: #22232b;
   --surface-2: #2b2d38;
   --mantle: #111116;
@@ -132,6 +137,8 @@
   --color-live: var(--live);
   --color-live-foreground: var(--live-foreground);
   --color-link: var(--link);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --color-surface1: var(--surface-1);
   --color-surface2: var(--surface-2);
   --color-mantle: var(--mantle);

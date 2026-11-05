@@ -80,6 +80,7 @@ model Channel {
   chatBans          ChatUserBan[]
   chatModEvents     ChatModerationEvent[]
   chatReports       ChatUserReport[]
+  multistreamDestinations MultistreamDestination[]
 
   @@index([ownerId])
 }
@@ -127,6 +128,23 @@ model Follow {
 
   @@unique([userId, channelId])
   @@index([userId])
+  @@index([channelId])
+}
+
+// external platforms (YouTube, Twitch...) the channel's stream gets forwarded to by hctvmtx
+model MultistreamDestination {
+  id        String   @id @default(cuid())
+  platform  String
+  name      String
+  serverUrl String
+  streamKey String
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  channelId String
+  channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
   @@index([channelId])
 }
 
