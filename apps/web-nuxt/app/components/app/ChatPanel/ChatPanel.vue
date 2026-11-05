@@ -41,7 +41,9 @@ const chatAccess = ref<ChatAccessState>({
 function buildSocketUrl() {
   return `ws${window.location.protocol === 'https:' ? 's' : ''}://${
     window.location.host
-  }/api/stream/chat/ws/${channelName.value}?grant=${grant.value}`;
+  }/api/stream/chat/ws/${channelName.value}?grant=${grant.value}${
+    props.embedded ? '&presence=off' : ''
+  }`;
 }
 
 function flushEmojiRequests(socket: WebSocket | null) {
@@ -294,6 +296,8 @@ function syncCursor(e: Event) {
 
 interface Props {
   isObsPanel?: boolean;
+  // inside the stream manager: a bordered panel that fills its grid cell
+  embedded?: boolean;
 }
 </script>
 
@@ -302,13 +306,19 @@ interface Props {
     :class="[
       props.isObsPanel
         ? 'w-full text-white'
-        : 'w-full max-w-none md:w-[350px] md:max-w-[350px] md:border-l border-border bg-mantle',
+        : props.embedded
+          ? 'w-full overflow-hidden rounded-xl border border-border bg-card'
+          : 'w-full max-w-none md:w-[350px] md:max-w-[350px] md:border-l border-border bg-mantle',
       'flex flex-col h-full min-w-0',
     ]"
   >
     <div
       v-if="!props.isObsPanel"
-      class="hidden md:flex h-11 shrink-0 items-center border-b border-border px-4 text-sm font-semibold"
+      :class="
+        props.embedded
+          ? 'flex h-9 shrink-0 items-center border-b border-border px-3 text-[13px] font-bold'
+          : 'hidden md:flex h-11 shrink-0 items-center border-b border-border px-4 text-sm font-semibold'
+      "
     >
       Chat
     </div>
@@ -322,6 +332,13 @@ interface Props {
       ]"
     >
       <div class="space-y-1 min-h-full flex flex-col justify-end">
+        <!-- the server only sends history when there is some, so an empty chat gets no messages -->
+        <p
+          v-if="chatMessages.length === 0 && !props.isObsPanel"
+          class="m-auto text-center text-[13px] text-muted-foreground"
+        >
+          No messages yet.
+        </p>
         <Message
           v-for="(msg, i) in chatMessages"
           :key="i"

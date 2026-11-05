@@ -57,6 +57,11 @@ export class WhepReader {
     this.sessionUrl = null;
   }
 
+  // raw WebRTC stats of the connection, for the player's stats overlay
+  getStats = async (): Promise<RTCStatsReport | null> => {
+    return this.pc ? this.pc.getStats() : null;
+  };
+
   private authHeaders(): Record<string, string> {
     if (this.conf.user === undefined && this.conf.pass === undefined) return {};
     return { Authorization: `Basic ${btoa(`${this.conf.user ?? ''}:${this.conf.pass ?? ''}`)}` };

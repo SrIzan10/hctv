@@ -1,10 +1,25 @@
 <script setup lang="ts">
 import Hls from 'hls.js';
 import type { HlsConfig, ErrorData } from 'hls.js';
-import { Loader2, Maximize, Minimize, Pause, Play, RefreshCw, Volume2, VolumeX } from '@lucide/vue';
+import {
+  Activity,
+  Loader2,
+  Maximize,
+  Minimize,
+  Pause,
+  Play,
+  RefreshCw,
+  Volume2,
+  VolumeX,
+} from '@lucide/vue';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip';
 import { cn } from '~/lib/utils';
-import { getMediamtxClientEnvs, getWhepUrl } from '#shared/utils/mediamtx/client';
+import StatsForNerds from './StatsForNerds.vue';
+import {
+  getMediamtxClientEnvs,
+  getMediamtxClientRegionOptions,
+  getWhepUrl,
+} from '#shared/utils/mediamtx/client';
 import type { MediaMTXRegion } from '#shared/utils/mediamtx/regions';
 import { WEBRTC_MAX_VIEWERS, WhepReader } from '#shared/utils/mediamtx/whep';
 
@@ -58,6 +73,8 @@ const USE_LOW_LATENCY_HLS = true;
 const TARGET_LATENCY_SECONDS = 4;
 const MAX_LATENCY_SECONDS = 20;
 
+const props = withDefaults(defineProps<{ startMuted?: boolean }>(), { startMuted: false });
+
 const isDev = import.meta.dev;
 const route = useRoute();
 const resolvedUsername = computed(() => {
@@ -89,12 +106,20 @@ const hlsRef = shallowRef<Hls | null>(null);
 const whepRef = shallowRef<WhepReader | null>(null);
 const engine = ref<'hls' | 'webrtc' | null>(null);
 
+const showStats = ref(false);
+const serverLabel = computed(
+  () =>
+    getMediamtxClientRegionOptions().find((o) => o.value === region.value)?.label ??
+    region.value ??
+    ''
+);
+
 const whepUrl = computed(() =>
   resolvedUsername.value && region.value ? getWhepUrl(resolvedUsername.value, region.value) : null
 );
 
 const isPaused = ref(true);
-const isMuted = ref(false);
+const isMuted = ref(props.startMuted);
 const volume = ref(1);
 const isBuffering = ref(false);
 const isFullscreen = ref(false);
@@ -538,6 +563,10 @@ const onFullscreenChange = () => {
 };
 
 onMounted(() => {
+  // a streamer previewing their own stream would hear themselves with a delay
+  if (props.startMuted && videoRef.value) {
+    videoRef.value.muted = true;
+  }
   canFullscreen.value = Boolean(document.fullscreenEnabled);
   document.addEventListener('visibilitychange', handleVisibilityChange);
   document.addEventListener('fullscreenchange', onFullscreenChange);
@@ -614,6 +643,7 @@ interface PlaybackMetricValues {
   >
     <video
       ref="videoRef"
+      :muted="startMuted"
       crossorigin="use-credentials"
       playsinline
       autoplay
@@ -634,29 +664,39 @@ interface PlaybackMetricValues {
     >
       <Loader2 class="stream-buffering-indicator h-14 w-14 animate-spin text-white" />
     </div>
+    <StatsForNerds
+      v-if="showStats && isLive"
+      :engine="engine"
+      :video="videoRef"
+      :hls="hlsRef"
+      :whep="whepRef"
+      :server="serverLabel"
+      :channel="resolvedUsername"
+      @close="showStats = false"
+    />
     <div
       v-if="isOffline"
       class="absolute inset-0 flex flex-col items-center justify-center gap-4 overflow-hidden px-6 text-center text-white"
     >
-      <img
-        v-if="userInfo?.channel?.pfpUrl"
-        :src="userInfo.channel.pfpUrl"
-        alt=""
-        aria-hidden="true"
-        class="absolute inset-0 h-full w-full scale-125 object-cover opacity-30 blur-3xl"
-      />
-      <img
-        v-if="userInfo?.channel?.pfpUrl"
-        :src="userInfo.channel.pfpUrl"
-        :alt="resolvedUsername"
-        class="relative h-16 w-16 rounded-full object-cover ring-1 ring-white/20 md:h-24 md:w-24"
-      />
-      <div class="relative">
-        <p class="text-lg font-bold md:text-2xl">{{ resolvedUsername }} is offline</p>
-        <p class="mt-1 text-sm text-white/70">
-          Follow to get notified next time they go live.
-        </p>
-      </div>
+      <slot name="offline">
+        <img
+          v-if="userInfo?.channel?.pfpUrl"
+          :src="userInfo.channel.pfpUrl"
+          alt=""
+          aria-hidden="true"
+          class="absolute inset-0 h-full w-full scale-125 object-cover opacity-30 blur-3xl"
+        />
+        <img
+          v-if="userInfo?.channel?.pfpUrl"
+          :src="userInfo.channel.pfpUrl"
+          :alt="resolvedUsername"
+          class="relative h-16 w-16 rounded-full object-cover ring-1 ring-white/20 md:h-24 md:w-24"
+        />
+        <div class="relative">
+          <p class="text-lg font-bold md:text-2xl">{{ resolvedUsername }} is offline</p>
+          <p class="mt-1 text-sm text-white/70">Follow to get notified next time they go live.</p>
+        </div>
+      </slot>
     </div>
     <div
       v-else
@@ -701,12 +741,31 @@ interface PlaybackMetricValues {
               </div>
               <div
                 class="pointer-events-none absolute h-3 w-3 -translate-x-1/2 rounded-full bg-white"
-                :style="{ left: `calc(1rem + (100% - 1rem) * ${(isMuted ? 0 : volume)})` }"
+                :style="{ left: `calc(1rem + (100% - 1rem) * ${isMuted ? 0 : volume})` }"
               />
             </div>
           </div>
         </div>
         <div class="flex items-center gap-1 sm:gap-2">
+          <Tooltip v-if="isLive">
+            <TooltipTrigger as-child>
+              <button
+                type="button"
+                :class="
+                  cn(
+                    'stream-control-button flex h-9 w-9 items-center justify-center text-white',
+                    showStats && 'bg-white/15 rounded-full'
+                  )
+                "
+                aria-label="Stats for nerds"
+                :aria-pressed="showStats"
+                @click="showStats = !showStats"
+              >
+                <Activity class="h-5 w-5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top">Stats for nerds</TooltipContent>
+          </Tooltip>
           <Tooltip v-if="isDev || isLive">
             <TooltipTrigger as-child>
               <button

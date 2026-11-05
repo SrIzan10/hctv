@@ -14,10 +14,7 @@ import CopyField from '~/components/settings/CopyField.vue';
 import SettingsForm from '~/components/settings/SettingsForm.vue';
 import SettingsSection from '~/components/settings/SettingsSection.vue';
 import type { SettingsFormField, SettingsFormResult } from '~/components/settings/SettingsForm.vue';
-import {
-  getMediamtxClientEnvs,
-  getMediamtxClientRegionOptions,
-} from '#shared/utils/mediamtx/client';
+import { getMediamtxClientRegionOptions } from '#shared/utils/mediamtx/client';
 import type { MediaMTXRegion } from '#shared/utils/mediamtx/regions';
 import MultistreamSection from './MultistreamSection.vue';
 import StreamHealthSection from './StreamHealthSection.vue';
@@ -69,22 +66,15 @@ async function handleRegenerateStreamKey() {
   }
 }
 
-const streamUrl = computed(() => {
-  if (!streamKey.value) return '';
-  const { ingestRoute } = getMediamtxClientEnvs(region.value);
-  return `srt://${ingestRoute}?streamid=publish:${props.channel.name}:thisusernameislongonpurposesoyoudontaccidentallyleakyourstreamkey:${streamKey.value}&pkt_size=1316`;
-});
+const {
+  srtUrl: streamUrl,
+  rtmpServerUrl,
+  rtmpStreamKey,
+} = useIngestUrls(() => props.channel.name, streamKey, region);
 
 const selectedServerLabel = computed(() => {
   const server = serverOptions.find((option) => option.value === region.value);
   return server ? `${server.label} ${server.emoji}` : '';
-});
-
-const rtmpServerUrl = computed(() => `rtmp://${getMediamtxClientEnvs(region.value).rtmpRoute}`);
-
-const rtmpStreamKey = computed(() => {
-  if (!streamKey.value) return '';
-  return `${props.channel.name}?user=thisusernameislongonpurposesoyoudontaccidentallyleakyourstreamkey&pass=${streamKey.value}`;
 });
 
 function streamInfoFields(

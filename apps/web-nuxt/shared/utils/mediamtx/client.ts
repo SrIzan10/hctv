@@ -20,6 +20,14 @@ export interface MediaMTXClientRegionOption {
   whipEnabled: boolean;
 }
 
+// whether a region serves WebRTC (WHIP publishing and WHEP playback) to browsers. HQ doesn't
+// expose its WebRTC ports in production; NEXT_PUBLIC_MEDIAMTX_WEBRTC_<REGION>=true turns it on
+// (local dev, or once the ports are open).
+function isWebrtcEnabled(region: MediaMTXRegion, fallback: boolean): boolean {
+  const value = getEnv(`NEXT_PUBLIC_MEDIAMTX_WEBRTC_${region.toUpperCase()}`);
+  return value === undefined ? fallback : value === 'true';
+}
+
 export function getMediamtxClientEnvs(region: MediaMTXRegion = 'hq'): MediaMTXClientEnvs {
   const edgeUrl = getHlsEdgeUrl();
   const envs: Record<MediaMTXRegion, MediaMTXClientEnvs> = {
@@ -28,7 +36,7 @@ export function getMediamtxClientEnvs(region: MediaMTXRegion = 'hq'): MediaMTXCl
       ingestRoute: getEnv('NEXT_PUBLIC_MEDIAMTX_INGEST_ROUTE_HQ')!,
       rtmpRoute: getEnv('NEXT_PUBLIC_MEDIAMTX_RTMP_ROUTE_HQ')!,
       whip: getEnv('NEXT_PUBLIC_MEDIAMTX_WHIP_ROUTE_HQ')!,
-      whipEnabled: false,
+      whipEnabled: isWebrtcEnabled('hq', false),
       emoji: '🇺🇸',
       string: 'HQ Server A',
     },
@@ -37,9 +45,9 @@ export function getMediamtxClientEnvs(region: MediaMTXRegion = 'hq'): MediaMTXCl
       ingestRoute: getEnv('NEXT_PUBLIC_MEDIAMTX_INGEST_ROUTE_ETHANDE')!,
       rtmpRoute: getEnv('NEXT_PUBLIC_MEDIAMTX_RTMP_ROUTE_ETHANDE')!,
       whip: getEnv('NEXT_PUBLIC_MEDIAMTX_WHIP_ROUTE_ETHANDE')!,
-      whipEnabled: true,
+      whipEnabled: isWebrtcEnabled('ethande', true),
       emoji: '🇩🇪',
-      string: 'eth0\'s VPS',
+      string: "eth0's VPS",
     },
   };
 
@@ -72,13 +80,13 @@ export function getMediamtxClientRegionOptions(): MediaMTXClientRegionOption[] {
       value: 'hq',
       emoji: '🇺🇸',
       label: 'HQ Server A',
-      whipEnabled: false,
+      whipEnabled: isWebrtcEnabled('hq', false),
     },
     {
       value: 'ethande',
       emoji: '🇩🇪',
-      label: 'eth0\'s VPS',
-      whipEnabled: true,
+      label: "eth0's VPS",
+      whipEnabled: isWebrtcEnabled('ethande', true),
     },
   ];
 }

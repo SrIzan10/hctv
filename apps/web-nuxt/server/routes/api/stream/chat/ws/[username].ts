@@ -241,7 +241,10 @@ export default defineWebSocketHandler({
     socket.personalChannel = personalChannel;
     socket.viewerId = randomString(10);
     socket.isModerator = isModerator;
-    socket.excludeFromViewerCount = Boolean(dbGrant);
+    // OBS chat overlays and the streamer's own stream manager aren't viewers. presence=off only
+    // ever stops the connection that sends it from being counted, so it needs no permission check.
+    socket.excludeFromViewerCount =
+      Boolean(dbGrant) || url.searchParams.get('presence') === 'off';
     socket.metricsTracked = true;
     socket.metricsAuthMethod = authMethod;
     registerSocket(socket);
