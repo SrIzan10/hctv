@@ -1,0 +1,21 @@
+# Nuxt build output and generated types
+.nuxt
+.output
+dist
+
+# Nitro dev storage
+.data
+
+# dependencies
+node_modules
+
+# logs
+*.log*
+
+# local env files (.env itself is a symlink to apps/web/.env, ignored by root .gitignore)
+.env
+.env.*
+!.env.example
+
+# editor / OS
+.DS_Store

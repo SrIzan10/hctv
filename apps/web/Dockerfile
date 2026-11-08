@@ -18,7 +18,7 @@ RUN git rev-parse --short HEAD > /tmp/commit_hash || echo "unknown" > /tmp/commi
  
 # Generate a partial monorepo with a pruned lockfile for a target workspace.
 # Assuming "web" is the name entered in the project's package.json: { name: "web" }
-RUN turbo prune @hctv/web --docker
+RUN turbo prune @hctv/web-nuxt --docker
  
 # Add lockfile and package.json's of isolated subworkspace
 FROM base AS installer
@@ -55,9 +55,9 @@ RUN ARCH=$(dpkg --print-architecture) && \
       curl -fsSL -o /tmp/slack-import-emojis-bin "$RELEASE_URL" && \
       chmod +x /tmp/slack-import-emojis-bin && \
       /tmp/slack-import-emojis-bin default; then \
-      cp /app/emojis.json /app/apps/web/emojis.json; \
+      cp /app/emojis.json /app/apps/web-nuxt/emojis.json; \
     else \
-      cp /app/apps/web/src/lib/instrumentation/emojis.json /app/apps/web/emojis.json; \
+      cp /app/apps/web-nuxt/server/utils/jobs/emojis.json /app/apps/web-nuxt/emojis.json; \
     fi
 
 RUN --mount=type=secret,id=TURBO_TOKEN --mount=type=secret,id=TURBO_TEAM --mount=type=secret,id=SENTRY_AUTH_TOKEN \
@@ -91,21 +91,24 @@ RUN COMMIT_VALUE=$(cat /tmp/commit_hash 2>/dev/null || echo "unknown") && \
     echo "node /opt/prisma-cli/node_modules/prisma/build/index.js migrate deploy --schema /app/packages/db/prisma/schema.prisma" >> /usr/local/bin/start.sh && \
     echo "cd /app" >> /usr/local/bin/start.sh && \
     echo "export commit=$COMMIT_VALUE" >> /usr/local/bin/start.sh && \
-    echo "echo 'Starting Next.js application...'" >> /usr/local/bin/start.sh && \
-    echo "exec node apps/web/server.js" >> /usr/local/bin/start.sh && \
+    echo "echo 'Starting Nuxt application...'" >> /usr/local/bin/start.sh && \
+    echo "exec node .output/server/index.mjs" >> /usr/local/bin/start.sh && \
     chmod +x /usr/local/bin/start.sh
 
 USER nextjs
- 
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
-COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
-COPY --from=installer --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
-COPY --from=installer --chown=nextjs:nodejs /app/apps/web/emojis.json ./emojis.json
+
+# The Prisma client is bundled into the server build, so point it at the engine explicitly
+ENV PRISMA_QUERY_ENGINE_LIBRARY=/app/prisma-engine/libquery_engine-debian-openssl-3.0.x.so.node
+ENV NITRO_PORT=3000
+ENV NODE_ENV=production
+
+COPY --from=installer --chown=nextjs:nodejs /app/apps/web-nuxt/.output ./.output
+COPY --from=installer --chown=nextjs:nodejs /app/apps/web-nuxt/emojis.json ./emojis.json
+COPY --from=installer --chown=nextjs:nodejs /app/packages/db/generated/client/libquery_engine-debian-openssl-3.0.x.so.node ./prisma-engine/libquery_engine-debian-openssl-3.0.x.so.node
 
 # Copy Prisma schema and migrations for prisma migrate deploy
 COPY --from=installer --chown=nextjs:nodejs /app/packages/db/prisma ./packages/db/prisma
 COPY --from=installer --chown=nextjs:nodejs /opt/prisma-cli /opt/prisma-cli
 
+EXPOSE 3000
 CMD ["/usr/local/bin/start.sh"]

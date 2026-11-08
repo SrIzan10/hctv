@@ -1,4 +1,6 @@
-FROM bluenviron/mediamtx:1 AS mediamtx
+# hctvmtx: MediaMTX fork with the on-demand forward-dests API used for multistreaming, in the
+# transcode variant, which converts AAC audio to Opus so WebRTC viewers of OBS streams get sound
+FROM ghcr.io/srizan10/hctvmtx:latest-transcode AS mediamtx
 
 FROM alpine:3.24
 
